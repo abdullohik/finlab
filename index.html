@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinLab — Finance Education Platform</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{
+  --ink:#0d1117;--ink2:#24292f;--ink3:#57606a;--ink4:#8c959f;
+  --line:#d0d7de;--line2:#eaeef2;--surface:#ffffff;--canvas:#f6f8fa;--canvas2:#f0f3f7;
+  --blue:#0969da;--blue-bg:#ddf4ff;--blue-dk:#0550ae;
+  --teal:#0d9488;--teal-bg:#ccfbf1;
+  --amber:#b45309;--amber-bg:#fef3c7;
+  --green:#1a7f37;--green-bg:#dafbe1;
+  --red:#cf222e;--red-bg:#ffebe9;
+  --purple:#6639ba;--purple-bg:#fbefff;
+  --gold:#f59e0b;--gold-bg:#fffbeb;
+  --r:6px;--r2:10px;--r3:16px;
+  --sans:'Inter',sans-serif;--display:'Sora',sans-serif;--mono:'JetBrains Mono',monospace;
+  --shadow:0 1px 3px rgba(27,31,36,.12),0 8px 24px rgba(66,74,83,.06);
+  --shadow-sm:0 1px 2px rgba(27,31,36,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;}
+body{font-family:var(--sans);background:var(--canvas);color:var(--ink2);min-height:100vh;display:flex;flex-direction:column;}
+
+/* TOPBAR */
+.topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:100;flex-shrink:0;}
+.logo{font-family:var(--display);font-size:18px;font-weight:800;color:var(--blue);letter-spacing:-.03em;margin-right:32px;display:flex;align-items:center;gap:8px;}
+.logo-badge{font-size:9px;font-weight:700;background:var(--blue);color:white;padding:2px 6px;border-radius:20px;letter-spacing:.06em;font-family:var(--sans);}
+.top-nav{display:flex;height:100%;}
+.top-nav-btn{font-size:13px;font-weight:500;color:var(--ink3);padding:0 14px;cursor:pointer;display:flex;align-items:center;gap:6px;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+.top-nav-btn:hover{color:var(--ink2);background:var(--canvas);}
+.top-nav-btn.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.xp-badge{display:flex;align-items:center;gap:6px;background:var(--gold-bg);border:1px solid #fcd34d;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--amber);font-family:var(--mono);}
+
+/* LAYOUT */
+.workspace{display:flex;flex:1;overflow:hidden;height:calc(100vh - 52px);}
+
+/* SIDEBAR */
+.sidebar{width:256px;min-width:256px;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;}
+.sidebar-section{padding:16px 0 8px;}
+.sidebar-label{font-size:10px;font-weight:700;color:var(--ink4);letter-spacing:.1em;text-transform:uppercase;padding:0 16px 8px;}
+.path-item{display:flex;align-items:center;padding:0 12px;margin-bottom:2px;cursor:pointer;}
+.path-connector{display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0;}
+.path-dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--ink4);transition:all .15s;flex-shrink:0;}
+.path-dot.done{background:var(--green);border-color:var(--green);color:white;}
+.path-dot.active{background:var(--blue);border-color:var(--blue);color:white;box-shadow:0 0 0 3px rgba(9,105,218,.2);}
+.path-line{width:2px;height:8px;background:var(--line);margin:1px 0;}
+.path-line.done{background:var(--green);}
+.path-content{flex:1;padding:6px 8px;border-radius:var(--r);transition:background .12s;}
+.path-item:hover .path-content{background:var(--canvas);}
+.path-item.active .path-content{background:var(--blue-bg);}
+.path-title{font-size:12.5px;font-weight:500;color:var(--ink2);line-height:1.4;}
+.path-item.active .path-title{color:var(--blue-dk);font-weight:600;}
+.path-meta{font-size:10.5px;color:var(--ink4);margin-top:1px;display:flex;align-items:center;gap:6px;}
+.path-tag{font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;letter-spacing:.04em;}
+.tag-lesson{background:var(--blue-bg);color:var(--blue);}
+.tag-practice{background:var(--green-bg);color:var(--green);}
+.tag-quiz{background:var(--purple-bg);color:var(--purple);}
+.tag-case{background:var(--amber-bg);color:var(--amber);}
+.sidebar-divider{height:1px;background:var(--line2);margin:8px 16px;}
+.sidebar-footer{margin-top:auto;padding:12px 16px;border-top:1px solid var(--line2);}
+.progress-label{font-size:11px;color:var(--ink3);margin-bottom:4px;display:flex;justify-content:space-between;}
+.progress-bar{height:6px;background:var(--line2);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--teal));border-radius:3px;transition:width .4s;}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;background:var(--canvas);}
+.page{display:none;}
+.page.active{display:block;}
+
+/* HOME HERO */
+.home-hero{background:linear-gradient(135deg,#0969da 0%,#0550ae 50%,#0d9488 100%);padding:48px 40px 56px;color:white;position:relative;overflow:hidden;}
+.home-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.06);}
+.hero-eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:12px;}
+.hero-title{font-family:var(--display);font-size:34px;font-weight:800;line-height:1.15;margin-bottom:12px;letter-spacing:-.03em;position:relative;z-index:1;}
+.hero-sub{font-size:15px;color:rgba(255,255,255,.82);line-height:1.7;max-width:560px;margin-bottom:24px;position:relative;z-index:1;}
+.hero-stats{display:flex;gap:32px;position:relative;z-index:1;}
+.hero-stat-val{font-family:var(--display);font-size:26px;font-weight:800;color:white;line-height:1;}
+.hero-stat-lbl{font-size:11px;color:rgba(255,255,255,.65);margin-top:3px;}
+.hero-cta{display:inline-flex;align-items:center;gap:8px;background:white;color:var(--blue-dk);font-weight:700;font-size:14px;padding:10px 22px;border-radius:8px;cursor:pointer;border:none;margin-top:24px;transition:all .15s;position:relative;z-index:1;}
+.hero-cta:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.2);}
+
+/* HOME CONTENT */
+.home-content{padding:32px 40px;}
+.section-heading{font-family:var(--display);font-size:18px;font-weight:700;color:var(--ink);margin-bottom:16px;letter-spacing:-.02em;}
+.module-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:36px;}
+.module-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:18px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;}
+.module-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.module-card.m-blue::before{background:var(--blue);}
+.module-card.m-teal::before{background:var(--teal);}
+.module-card.m-purple::before{background:var(--purple);}
+.module-card.m-amber::before{background:var(--amber);}
+.module-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--blue);}
+.module-icon{font-size:24px;margin-bottom:10px;}
+.module-name{font-family:var(--display);font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+.module-desc{font-size:12px;color:var(--ink3);line-height:1.6;margin-bottom:12px;}
+.module-footer{display:flex;align-items:center;justify-content:space-between;}
+.module-lessons{font-size:11px;color:var(--ink4);font-weight:500;}
+.module-progress-bar{height:3px;background:var(--line2);border-radius:2px;margin-top:8px;overflow:hidden;}
+.module-progress-fill{height:100%;border-radius:2px;}
+
+/* LESSON */
+.lesson-header{background:var(--surface);border-bottom:1px solid var(--line);padding:20px 40px 0;}
+.lesson-breadcrumb{font-size:12px;color:var(--ink4);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.lesson-breadcrumb span{cursor:pointer;}
+.lesson-breadcrumb span:hover{color:var(--blue);text-decoration:underline;}
+.lesson-title{font-family:var(--display);font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.03em;line-height:1.2;}
+.lesson-subtitle{font-size:13px;color:var(--ink3);margin-top:4px;line-height:1.6;}
+.lesson-tabs{display:flex;margin-top:12px;}
+.lesson-tab{font-size:13px;font-weight:500;color:var(--ink3);padding:8px 16px;cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;}
+.lesson-tab:hover{color:var(--ink2);}
+.lesson-tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
+.lesson-body{padding:32px 40px;max-width:820px;}
+
+/* CONTENT BLOCKS */
+.concept-block{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:24px;margin-bottom:20px;box-shadow:var(--shadow-sm);}
+.block-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.block-label::after{content:'';flex:1;height:1px;background:var(--line2);}
+.concept-q{font-family:var(--display);font-size:16px;font-weight:700;color:var(--ink);margin-bottom:10px;letter-spacing:-.02em;line-height:1.35;}
+.concept-a{font-size:13.5px;color:var(--ink2);line-height:1.85;}
+.concept-a strong{color:var(--ink);font-weight:600;}
+
+.analogy-block,.warn-block,.insight-block{border-radius:0 var(--r) var(--r) 0;padding:14px 16px;margin:14px 0;font-size:13px;color:var(--ink2);line-height:1.75;}
+.analogy-block{background:var(--blue-bg);border-left:3px solid var(--blue);}
+.warn-block{background:var(--amber-bg);border-left:3px solid var(--amber);}
+.insight-block{background:var(--teal-bg);border-left:3px solid var(--teal);}
+.analogy-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);margin-bottom:5px;}
+.warn-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-bottom:5px;}
+.insight-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-bottom:5px;}
+
+.formula-card{background:var(--ink);border-radius:var(--r2);padding:18px 20px;margin:14px 0;font-family:var(--mono);font-size:12.5px;color:#e6edf3;line-height:2.1;}
+.formula-card .fc{color:#7ee787;}
+.formula-card .fv{color:#79c0ff;}
+.formula-card .fo{color:#ff7b72;}
+.formula-card .cm{color:#8b949e;font-style:italic;}
+
+.key-terms{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;}
+.key-term{background:var(--canvas);border:1px solid var(--line2);border-radius:var(--r);padding:10px 12px;}
+.key-term-name{font-size:11px;font-weight:700;color:var(--blue);font-family:var(--mono);margin-bottom:3px;}
+.key-term-def{font-size:12px;color:var(--ink3);line-height:1.5;}
+
+.real-world{background:var(--green-bg);border:1px solid #b7e4c7;border-radius:var(--r2);padding:16px;margin:14px 0;}
+.rw-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin-bottom:8px;}
+.rw-body{font-size:13px;color:var(--ink2);line-height:1.75;}
+
+.steps-list{margin:14px 0;}
+.step-item{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--blue);color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-text{font-size:13.5px;color:var(--ink2);line-height:1.75;}
+.step-text strong{color:var(--ink);}
+
+/* QUIZ */
+.quiz-block{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:24px;margin:20px 0;box-shadow:var(--shadow-sm);}
+.quiz-q{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:14px;line-height:1.5;}
+.quiz-options{display:flex;flex-direction:column;gap:8px;}
+.quiz-option{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--line);border-radius:var(--r);cursor:pointer;font-size:13px;color:var(--ink2);transition:all .12s;}
+.quiz-option:hover{border-color:var(--blue);background:var(--blue-bg);}
+.quiz-option.correct{border-color:var(--green);background:var(--green-bg);color:var(--green);font-weight:600;}
+.quiz-option.wrong{border-color:var(--red);background:var(--red-bg);color:var(--red);}
+.quiz-option.disabled{pointer-events:none;opacity:.6;}
+.quiz-radio{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;transition:all .12s;}
+.quiz-option:hover .quiz-radio{border-color:var(--blue);}
+.quiz-option.correct .quiz-radio{background:var(--green);border-color:var(--green);}
+.quiz-option.wrong .quiz-radio{background:var(--red);border-color:var(--red);}
+.quiz-feedback{margin-top:12px;padding:10px 14px;border-radius:var(--r);font-size:13px;font-weight:500;display:none;}
+.quiz-feedback.show{display:block;}
+.quiz-feedback.ok{background:var(--green-bg);color:var(--green);}
+.quiz-feedback.no{background:var(--red-bg);color:var(--red);}
+
+/* CALCULATOR */
+.calc-embed{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;margin:20px 0;box-shadow:var(--shadow-sm);}
+.calc-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--canvas);border-bottom:1px solid var(--line);}
+.calc-title{font-size:13px;font-weight:700;color:var(--ink);}
+.calc-body{padding:20px;}
+.slider-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.slider-lbl{font-size:12px;color:var(--ink3);min-width:160px;}
+input[type=range]{flex:1;-webkit-appearance:none;height:4px;background:var(--line2);border-radius:2px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--blue);border:2px solid white;box-shadow:0 0 0 1px var(--blue);cursor:pointer;}
+.slider-val{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--blue);min-width:68px;text-align:right;}
+.calc-outputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:16px;}
+.calc-out{background:var(--canvas);border:1px solid var(--line2);border-radius:var(--r);padding:12px 14px;}
+.calc-out-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink4);margin-bottom:4px;}
+.calc-out-val{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--ink);line-height:1;}
+.calc-out-sub{font-size:11px;color:var(--ink4);margin-top:3px;}
+
+/* LESSON NAV */
+.lesson-nav{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-top:1px solid var(--line);background:var(--surface);position:sticky;bottom:0;}
+.lesson-nav-btn{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--line);background:var(--surface);color:var(--ink2);transition:all .12s;}
+.lesson-nav-btn:hover{border-color:var(--blue);color:var(--blue);}
+.lesson-nav-btn.primary{background:var(--blue);color:white;border-color:var(--blue);}
+.lesson-nav-btn.primary:hover{background:var(--blue-dk);}
+.lesson-progress-dots{display:flex;gap:6px;align-items:center;}
+.dot-step{width:8px;height:8px;border-radius:50%;background:var(--line);transition:all .2s;}
+.dot-step.done{background:var(--green);}
+.dot-step.active{background:var(--blue);width:20px;border-radius:4px;}
+
+/* DEAL ROOM */
+.deal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:28px 40px;}
+.deal-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;cursor:pointer;transition:all .15s;box-shadow:var(--shadow-sm);}
+.deal-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+.deal-card-top{padding:18px 18px 14px;border-bottom:1px solid var(--line2);}
+.deal-tag{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:10px;}
+.tag-sellside{background:var(--blue-bg);color:var(--blue);}
+.tag-buyside{background:var(--purple-bg);color:var(--purple);}
+.tag-lbo{background:var(--amber-bg);color:var(--amber);}
+.deal-name{font-family:var(--display);font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+.deal-desc{font-size:12.5px;color:var(--ink3);line-height:1.6;}
+.deal-card-bottom{padding:12px 18px;display:flex;align-items:center;justify-content:space-between;background:var(--canvas);}
+.deal-model-pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:var(--line2);color:var(--ink3);}
+
+/* TABLES */
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px;margin:14px 0;}
+.data-table th{background:var(--canvas);padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--line);}
+.data-table td{padding:9px 12px;border-bottom:1px solid var(--line2);color:var(--ink2);}
+.data-table tr:hover td{background:var(--canvas);}
+.data-table .mono{font-family:var(--mono);font-size:12px;}
+.sens-hi{background:#dafbe1;color:#1a7f37;font-weight:700;}
+.sens-md{background:#fff8c5;color:#9a6700;}
+.sens-lo{background:#ffebe9;color:#cf222e;}
+.sens-base{background:#ddf4ff;color:#0550ae;font-weight:800;outline:2px solid #0969da;outline-offset:-2px;}
+
+/* COMPLETE BANNER */
+.complete-banner{background:linear-gradient(135deg,var(--green),var(--teal));color:white;padding:16px 20px;border-radius:var(--r2);display:none;align-items:center;gap:14px;margin:20px 0;}
+.complete-banner.show{display:flex;}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">FinLab<span class="logo-badge">BETA</span></div>
+  <div class="top-nav">
+    <div class="top-nav-btn active" onclick="showPage('home')">🏠 Home</div>
+    <div class="top-nav-btn" onclick="showPage('learn')">📚 Learn</div>
+    <div class="top-nav-btn" onclick="showPage('practice')">🔧 Practice</div>
+    <div class="top-nav-btn" onclick="showPage('dealroom')">💼 Deal Room</div>
+    <div class="top-nav-btn" onclick="showPage('glossary')">📖 Glossary</div>
+  </div>
+  <div class="top-right">
+    <div class="xp-badge">⚡ <span id="xpCount">0</span> XP</div>
+    <div style="font-size:12px;font-weight:600;color:var(--ink3);">🔥 <span id="streakCount">1</span> day</div>
+  </div>
+</div>
+
+<div class="workspace">
+<div class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Learning Path</div>
+    <div class="path-item active" onclick="openLesson('fs-intro')">
+      <div class="path-connector"><div class="path-dot active" id="dot-fs-intro">1</div><div class="path-line" id="line-fs-intro"></div></div>
+      <div class="path-content"><div class="path-title">What Are Financial Statements?</div><div class="path-meta"><span class="path-tag tag-lesson">Lesson</span> 8 min</div></div>
+    </div>
+    <div class="path-item" onclick="openLesson('income-stmt')">
+      <div class="path-connector"><div class="path-dot" id="dot-income-stmt">2</div><div class="path-line" id="line-income-stmt"></div></div>
+      <div class="path-content"><div class="path-title">The Income Statement</div><div class="path-meta"><span class="path-tag tag-lesson">Lesson</span> 10 min</div></div>
+    </div>
+    <div class="path-item" onclick="openLesson('balance-sheet')">
+      <div class="path-connector"><div class="path-dot" id="dot-balance-sheet">3</div><div class="path-line" id="line-balance-sheet"></div></div>
+      <div class="path-content"><div class="path-title">The Balance Sheet</div><div class="path-meta"><span class="path-tag tag-lesson">Lesson</span> 10 min</div></div>
+    </div>
+    <div class="path-item" onclick="openLesson('cashflow')">
+      <div class="path-connector"><div class="path-dot" id="dot-cashflow">4</div><div class="path-line" id="line-cashflow"></div></div>
+      <div class="path-content"><div class="path-title">Cash Flow Statement</div><div class="path-meta"><span class="path-tag tag-lesson">Lesson</span> 10 min</div></div>
+    </div>
+    <div class="path-item" onclick="openLesson('fs-quiz')">
+      <div class="path-connector"><div class="path-dot" id="dot-fs-quiz">★</div><div class="path-line" id="line-fs-quiz"></div></div>
+      <div class="path-content"><div class="path-title">Statements Quiz</div><div class="path-meta"><span class="path-tag tag-quiz">Quiz</span> 5 min</div></div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="path-item" onclick="openLesson('val-intro')">
+      <div class="path-connector"><div class="path-dot" id="dot-val-intro">5</div><div class="path-line" id="line-val-intro"></div></div>
+      <div class="path-content"><div class="path-title">What Is Valuation?</div><div class="path-meta"><span class="path-tag tag-lesson">Lesson</span> 6 min</div></div>
+    </div>
+    <div class="path-item" onclick="openLesson('dcf')">
+      <div class="path-connector"><div class="path-dot" id="dot-dcf">6</div><div class="path-line" id="line-dcf"></div></div>
+      <div class="path-content"><div class="path-title">DCF — Intrinsic Value</div><div class="path-meta"><span class="path-tag tag-lesson">Lesson</span> 12 min</div></div>
+    </div>
+    <div class="path-item" onclick="openLesson('dcf-calc')">
+      <div class="path-connector"><div class="path-dot" id="dot-dcf-calc">▶</div><div class="path-line" id="line-dcf-calc"></div></div>
+      <div class="path-content"><div class="path-title">Build a DCF Model</div><div class="path-meta"><span class="path-tag tag-practice">Practice</span> 15 min</div></div>
+    </div>
+    <div class="path-item" onclick="openLesson('comps')">
+      <div class="path-connector"><div class="path-dot" id="dot-comps">7</div><div class="path-line" id="line-comps"></div></div>
+      <div class="path-content"><div class="path-title">Comps — Market Multiples</div><div class="path-meta"><span class="path-tag tag-lesson">Lesson</span> 10 min</div></div>
+    </div>
+    <div class="path-item" onclick="openLesson('prec')">
+      <div class="path-connector"><div class="path-dot" id="dot-prec">8</div><div class="path-line" id="line-prec"></div></div>
+      <div class="path-content"><div class="path-title">Precedent Transactions</div><div class="path-meta"><span class="path-tag tag-lesson">Lesson</span> 9 min</div></div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="path-item" onclick="openLesson('lbo')">
+      <div class="path-connector"><div class="path-dot" id="dot-lbo">9</div><div class="path-line" id="line-lbo"></div></div>
+      <div class="path-content"><div class="path-title">LBO — Private Equity</div><div class="path-meta"><span class="path-tag tag-lesson">Lesson</span> 14 min</div></div>
+    </div>
+    <div class="path-item" onclick="openLesson('lbo-calc')">
+      <div class="path-connector"><div class="path-dot" id="dot-lbo-calc">▶</div><div class="path-line" id="line-lbo-calc"></div></div>
+      <div class="path-content"><div class="path-title">Build an LBO Model</div><div class="path-meta"><span class="path-tag tag-practice">Practice</span> 20 min</div></div>
+    </div>
+    <div class="path-item" onclick="openLesson('merger')">
+      <div class="path-connector"><div class="path-dot" id="dot-merger">10</div><div class="path-line" id="line-merger"></div></div>
+      <div class="path-content"><div class="path-title">Merger Model — M&amp;A</div><div class="path-meta"><span class="path-tag tag-lesson">Lesson</span> 11 min</div></div>
+    </div>
+    <div class="path-item" onclick="openLesson('credit')">
+      <div class="path-connector"><div class="path-dot" id="dot-credit">11</div><div class="path-line" id="line-credit"></div></div>
+      <div class="path-content"><div class="path-title">Credit Analysis</div><div class="path-meta"><span class="path-tag tag-lesson">Lesson</span> 10 min</div></div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="path-item" onclick="openLesson('football')">
+      <div class="path-connector"><div class="path-dot" id="dot-football">12</div><div class="path-line" id="line-football"></div></div>
+      <div class="path-content"><div class="path-title">Football Field Chart</div><div class="path-meta"><span class="path-tag tag-lesson">Lesson</span> 8 min</div></div>
+    </div>
+    <div class="path-item" onclick="openLesson('redflag')">
+      <div class="path-connector"><div class="path-dot" id="dot-redflag">13</div><div class="path-line" id="line-redflag"></div></div>
+      <div class="path-content"><div class="path-title">Red Flags to Spot</div><div class="path-meta"><span class="path-tag tag-lesson">Lesson</span> 12 min</div></div>
+    </div>
+    <div class="path-item" onclick="openLesson('final-quiz')">
+      <div class="path-connector"><div class="path-dot" id="dot-final-quiz">🏆</div></div>
+      <div class="path-content"><div class="path-title">Final Assessment</div><div class="path-meta"><span class="path-tag tag-quiz">Quiz</span> 20 min</div></div>
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="progress-label"><span>Overall Progress</span><span id="progressPct">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div class="main" id="mainArea">
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+<div class="home-hero">
+  <div class="hero-eyebrow">Investment Banking · Private Equity · Credit · Asset Management</div>
+  <div class="hero-title">Finance education built<br>for people who are serious.</div>
+  <div class="hero-sub">The same analytical frameworks used by senior analysts at top banks, PE firms, and credit funds — taught from first principles, with real examples and live models.</div>
+  <div class="hero-stats">
+    <div><div class="hero-stat-val">13</div><div class="hero-stat-lbl">Lessons</div></div>
+    <div><div class="hero-stat-val">8</div><div class="hero-stat-lbl">Live Calculators</div></div>
+    <div><div class="hero-stat-val">3</div><div class="hero-stat-lbl">Full Deal Cases</div></div>
+    <div><div class="hero-stat-val">26</div><div class="hero-stat-lbl">Glossary Terms</div></div>
+  </div>
+  <button class="hero-cta" onclick="openLesson('fs-intro')">Start Learning →</button>
+</div>
+<div class="home-content">
+  <div class="section-heading">Learning Modules</div>
+  <div class="module-grid">
+    <div class="module-card m-blue" onclick="openLesson('fs-intro')">
+      <div class="module-icon">📊</div>
+      <div class="module-name">Financial Statements</div>
+      <div class="module-desc">Learn to read Income Statements, Balance Sheets, and Cash Flow Statements the way analysts actually do. Everything starts here.</div>
+      <div class="module-footer"><span class="module-lessons">5 lessons · ~43 min</span><span style="font-size:11px;color:var(--blue);font-weight:600">Start →</span></div>
+      <div class="module-progress-bar"><div class="module-progress-fill" style="width:0%;background:var(--blue)"></div></div>
+    </div>
+    <div class="module-card m-teal" onclick="openLesson('val-intro')">
+      <div class="module-icon">🎯</div>
+      <div class="module-name">Valuation Models</div>
+      <div class="module-desc">DCF, Comps, and Precedent Transactions — how to value any company, with live calculators to practice on every concept.</div>
+      <div class="module-footer"><span class="module-lessons">5 lessons · ~52 min</span><span style="font-size:11px;color:var(--teal);font-weight:600">Start →</span></div>
+      <div class="module-progress-bar"><div class="module-progress-fill" style="width:0%;background:var(--teal)"></div></div>
+    </div>
+    <div class="module-card m-purple" onclick="openLesson('lbo')">
+      <div class="module-icon">⚡</div>
+      <div class="module-name">Deals &amp; Transactions</div>
+      <div class="module-desc">LBO modelling, merger analysis, credit assessment — the deal-execution toolkit used by PE firms and investment banks.</div>
+      <div class="module-footer"><span class="module-lessons">4 lessons · ~46 min</span><span style="font-size:11px;color:var(--purple);font-weight:600">Start →</span></div>
+      <div class="module-progress-bar"><div class="module-progress-fill" style="width:0%;background:var(--purple)"></div></div>
+    </div>
+    <div class="module-card m-amber" onclick="openLesson('football')">
+      <div class="module-icon">🔍</div>
+      <div class="module-name">Advanced Analysis</div>
+      <div class="module-desc">Football field charts, red flag detection, and understanding how bankers, PE investors, and credit officers think differently.</div>
+      <div class="module-footer"><span class="module-lessons">3 lessons · ~30 min</span><span style="font-size:11px;color:var(--amber);font-weight:600">Start →</span></div>
+      <div class="module-progress-bar"><div class="module-progress-fill" style="width:0%;background:var(--amber)"></div></div>
+    </div>
+  </div>
+  <div class="section-heading">How FinLab Works</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:36px;">
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:18px;"><div style="font-size:22px;margin-bottom:8px;">📖</div><div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:5px;">Concept First</div><div style="font-size:12px;color:var(--ink3);line-height:1.6;">Every lesson starts with the plain-English idea before any formula. You understand why before you learn how.</div></div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:18px;"><div style="font-size:22px;margin-bottom:8px;">💡</div><div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:5px;">Real Analogies</div><div style="font-size:12px;color:var(--ink3);line-height:1.6;">Every abstract concept is anchored to something you already understand — a mortgage, a used car, a corner shop.</div></div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:18px;"><div style="font-size:22px;margin-bottom:8px;">🔧</div><div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:5px;">Live Calculators</div><div style="font-size:12px;color:var(--ink3);line-height:1.6;">Move sliders, watch values change. You don't understand DCF until you've broken it by setting terminal growth above WACC.</div></div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:18px;"><div style="font-size:22px;margin-bottom:8px;">🌍</div><div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:5px;">Real Examples</div><div style="font-size:12px;color:var(--ink3);line-height:1.6;">Every lesson cites a real company, real deal, or real failure. Luckin Coffee, Hilton, Enron, Peloton — the concepts come alive.</div></div>
+  </div>
+</div>
+</div>
+
+<!-- LESSON: WHAT ARE FINANCIAL STATEMENTS -->
+<div class="page" id="page-fs-intro">
+<div class="lesson-header">
+  <div class="lesson-breadcrumb"><span onclick="showPage('home')">Home</span> / <span>Financial Statements</span> / What Are Financial Statements?</div>
+  <div class="lesson-title">What Are Financial Statements?</div>
+  <div class="lesson-subtitle">Module 1 · Lesson 1 of 5 · 8 min read</div>
+  <div class="lesson-tabs">
+    <div class="lesson-tab active" onclick="switchTab('fs-intro','learn',this)">📖 Learn</div>
+    <div class="lesson-tab" onclick="switchTab('fs-intro','check',this)">✅ Check</div>
+  </div>
+</div>
+<div id="fs-intro-learn" class="lesson-body">
+  <div class="concept-block">
+    <div class="block-label">The Big Picture</div>
+    <div class="concept-q">What is a financial statement, and why does every banker read one first?</div>
+    <div class="concept-a">A financial statement is a company's official record of its financial activity — how much it earned, what it owns, what it owes, and how much cash moved in and out. Every public company publishes these every quarter and year. <strong>Analysts, bankers, and investors use these three documents to make every major financial decision.</strong><br><br>When JPMorgan evaluates whether to lend to a company, they read its financial statements. When a PE firm considers buying a business, they read its financial statements. When you value a company in a DCF, every input comes from financial statements. Everything in finance starts here.</div>
+  </div>
+  <div class="analogy-block">
+    <div class="analogy-label">💡 Think of it this way</div>
+    Imagine you're buying a used car from someone. You'd want to know three things: How much did they earn from using it? (Income Statement). What is it worth today, and does it have any loans on it? (Balance Sheet). Did it actually generate cash, or was it always being repaired? (Cash Flow). Same logic — just much bigger numbers.
+  </div>
+  <div class="concept-block">
+    <div class="block-label">The Three Statements</div>
+    <div class="concept-q">Three documents. Each answers a completely different question.</div>
+    <div class="concept-a">
+      <div class="steps-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-text"><strong>Income Statement</strong> — "Did we make money this period?" Covers a window of time (Q1, or the full year). Shows revenue, costs, and profit. Also called the P&amp;L (Profit &amp; Loss). This is what most people look at first — and what most people misread.</div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-text"><strong>Balance Sheet</strong> — "What do we own and owe right now?" A snapshot at a single point in time — not a period. Shows assets (what the company owns), liabilities (what it owes), and equity (what's left for shareholders). Must always balance: Assets = Liabilities + Equity. Always.</div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-text"><strong>Cash Flow Statement</strong> — "Where did the actual cash go?" Shows the movement of real cash — in and out. Often reveals a completely different picture from the profit numbers. The most honest of the three.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="concept-block">
+    <div class="block-label">How They Connect</div>
+    <div class="concept-q">These three are not separate documents — they are one interconnected system.</div>
+    <div class="concept-a">
+      <strong>Net Income</strong> from the Income Statement flows into <strong>Retained Earnings</strong> on the Balance Sheet every single period. This is how profitable companies build equity over time.<br><br>
+      The Cash Flow Statement <strong>starts with Net Income</strong> from the Income Statement, then adjusts for every non-cash item to arrive at actual cash generated. The final net change in cash must match the <strong>change in the Cash line</strong> on the Balance Sheet.<br><br>
+      If any of these links don't reconcile — something is wrong. Either an accounting error, or something deliberately hidden.
+    </div>
+  </div>
+  <div class="warn-block">
+    <div class="warn-label">⚠ The most important rule in all of accounting</div>
+    <strong>Net Income is not Cash.</strong> A company can report $200M of profit and simultaneously be running out of money. It can also report a loss while generating strong cash. This disconnect — between what is earned and what is collected — is the entire reason the Cash Flow Statement exists. And it is the most common place where financial problems (and outright fraud) are hidden.
+  </div>
+  <div class="real-world">
+    <div class="rw-label">🌍 Real Example — Luckin Coffee (2020)</div>
+    <div class="rw-body">Luckin Coffee reported strong revenue growth for years. But analysts who compared the Income Statement to the Cash Flow Statement noticed operating cash flow was consistently far below reported profits — revenue was being recognised before cash was collected. In April 2020 the company admitted it had fabricated $310M of revenue. The red flag was visible in the financial statements quarters earlier — if you knew what to look for.</div>
+  </div>
+  <div class="complete-banner" id="fs-intro-complete">
+    <div style="font-size:28px;">🎉</div>
+    <div><div style="font-family:var(--display);font-size:15px;font-weight:700;">Lesson Complete! +50 XP</div><div style="font-size:12.5px;opacity:.85;margin-top:2px;">You now understand the three financial statements and why they matter.</div></div>
+  </div>
+</div>
+<div id="fs-intro-check" class="lesson-body" style="display:none;">
+  <div class="quiz-block">
+    <div class="quiz-q">1. Which financial statement shows a company's revenue, costs, and profit over a period of time?</div>
+    <div class="quiz-options" id="q1-opts">
+      <div class="quiz-option" onclick="answer('q1',this,false)"><div class="quiz-radio"></div>Balance Sheet</div>
+      <div class="quiz-option" onclick="answer('q1',this,true)"><div class="quiz-radio"></div>Income Statement</div>
+      <div class="quiz-option" onclick="answer('q1',this,false)"><div class="quiz-radio"></div>Cash Flow Statement</div>
+      <div class="quiz-option" onclick="answer('q1',this,false)"><div class="quiz-radio"></div>Statement of Changes in Equity</div>
+    </div>
+    <div class="quiz-feedback" id="q1-fb"></div>
+  </div>
+  <div class="quiz-block">
+    <div class="quiz-q">2. A company reports $150M net income but only $20M cash from operations. What does this most likely indicate?</div>
+    <div class="quiz-options" id="q2-opts">
+      <div class="quiz-option" onclick="answer('q2',this,false)"><div class="quiz-radio"></div>The company is very efficient at collecting cash</div>
+      <div class="quiz-option" onclick="answer('q2',this,false)"><div class="quiz-radio"></div>The balance sheet must be negative</div>
+      <div class="quiz-option" onclick="answer('q2',this,true)"><div class="quiz-radio"></div>Revenue is being recognised before cash is collected — an earnings quality concern</div>
+      <div class="quiz-option" onclick="answer('q2',this,false)"><div class="quiz-radio"></div>The company should pay a larger dividend</div>
+    </div>
+    <div class="quiz-feedback" id="q2-fb"></div>
+  </div>
+  <div class="quiz-block">
+    <div class="quiz-q">3. Which equation must ALWAYS hold on a Balance Sheet?</div>
+    <div class="quiz-options" id="q3-opts">
+      <div class="quiz-option" onclick="answer('q3',this,false)"><div class="quiz-radio"></div>Revenue − Costs = Profit</div>
+      <div class="quiz-option" onclick="answer('q3',this,true)"><div class="quiz-radio"></div>Assets = Liabilities + Equity</div>
+      <div class="quiz-option" onclick="answer('q3',this,false)"><div class="quiz-radio"></div>Cash In − Cash Out = Net Change</div>
+      <div class="quiz-option" onclick="answer('q3',this,false)"><div class="quiz-radio"></div>EV = Market Cap + Net Debt</div>
+    </div>
+    <div class="quiz-feedback" id="q3-fb"></div>
+  </div>
+</div>
+<div class="lesson-nav">
+  <button class="lesson-nav-btn" onclick="showPage('home')">← Home</button>
+  <div class="lesson-progress-dots"><div class="dot-step active"></div><div class="dot-step"></div><div class="dot-step"></div><div class="dot-step"></div><div class="dot-step"></div></div>
+  <button class="lesson-nav-btn primary" onclick="completeAndNext('fs-intro','income-stmt')">Next Lesson →</button>
+</div>
+</div>
+
+<!-- LESSON: DCF -->
+<div class="page" id="page-dcf">
+<div class="lesson-header">
+  <div class="lesson-breadcrumb"><span onclick="showPage('home')">Home</span> / <span>Valuation Models</span> / DCF</div>
+  <div class="lesson-title">Discounted Cash Flow (DCF)</div>
+  <div class="lesson-subtitle">Module 2 · Lesson 2 of 5 · 12 min read</div>
+  <div class="lesson-tabs">
+    <div class="lesson-tab active" onclick="switchTab('dcf','learn',this)">📖 Learn</div>
+    <div class="lesson-tab" onclick="switchTab('dcf','calc',this)">🔧 Calculator</div>
+    <div class="lesson-tab" onclick="switchTab('dcf','check',this)">✅ Check</div>
+  </div>
+</div>
+<div id="dcf-learn" class="lesson-body">
+  <div class="concept-block">
+    <div class="block-label">Core Concept</div>
+    <div class="concept-q">What is a DCF and what question does it answer?</div>
+    <div class="concept-a">A DCF asks: <em>what is this company intrinsically worth, based purely on the cash it will generate in the future?</em><br><br>The core idea: <strong>a dollar you receive in the future is worth less than a dollar you receive today.</strong> Two reasons: you could invest today's dollar and earn a return, and there's always risk the future dollar never arrives. A DCF captures both factors — discounting every future cash flow back to its present value, then adding them up.</div>
+  </div>
+  <div class="analogy-block">
+    <div class="analogy-label">💡 Simple analogy</div>
+    Someone offers to pay you $100 in one year. If you could earn 10% investing elsewhere, you'd only pay $90.91 today for that promise ($100 ÷ 1.10). That's discounting. A DCF does this for every single year of a company's future cash flows — usually 10 years — then adds a "terminal value" for everything after.
+  </div>
+  <div class="concept-block">
+    <div class="block-label">The Three Inputs</div>
+    <div class="concept-q">Every DCF needs exactly three things.</div>
+    <div class="key-terms">
+      <div class="key-term"><div class="key-term-name">Free Cash Flow (FCF)</div><div class="key-term-def">The actual cash generated after maintaining and growing the business. Not profit — cash. = Operating Cash Flow minus CapEx. This is what gets discounted.</div></div>
+      <div class="key-term"><div class="key-term-name">WACC</div><div class="key-term-def">The discount rate. What return investors require to commit capital to this business. Higher risk = higher WACC = lower valuation today.</div></div>
+      <div class="key-term"><div class="key-term-name">Terminal Value</div><div class="key-term-def">The value of all cash flows beyond year 10, into perpetuity. Typically 60–80% of total DCF value. The most important and most dangerous input.</div></div>
+      <div class="key-term"><div class="key-term-name">Enterprise Value (EV)</div><div class="key-term-def">The output. Total value of the business to all capital providers. Subtract Net Debt to get Equity Value, divide by shares for per-share price.</div></div>
+    </div>
+  </div>
+  <div class="concept-block">
+    <div class="block-label">The Formula</div>
+    <div class="concept-q">How the math actually works</div>
+    <div class="formula-card">
+<span class="fc">EV</span> = <span class="fo">Σ</span> [<span class="fv">FCFₜ</span> ÷ (<span class="fc">1 + WACC</span>)<span class="fv">ᵗ</span>]  +  <span class="fc">Terminal Value</span> ÷ (<span class="fc">1 + WACC</span>)<span class="fv">ⁿ</span>
+
+<span class="cm">// Terminal Value — Gordon Growth Model:</span>
+<span class="fc">TV</span> = <span class="fv">FCFₙ</span> × (<span class="fv">1 + g</span>) ÷ (<span class="fc">WACC</span> - <span class="fv">g</span>)
+<span class="cm">// g = terminal growth rate (~2–3%, close to long-run GDP)</span>
+<span class="cm">// WACC must be greater than g — or the formula breaks</span>
+
+<span class="cm">// Bridge to Equity:</span>
+<span class="fc">Equity Value</span> = EV - Net Debt
+<span class="fc">Share Price</span>  = Equity Value ÷ Diluted Shares Outstanding</div>
+  </div>
+  <div class="warn-block">
+    <div class="warn-label">⚠ The Terminal Value Trap</div>
+    In most DCFs, <strong>60–80% of total EV comes from terminal value</strong> — not from the 10 years you projected. A tiny change in terminal growth rate or WACC moves the final answer by 20–40%. This is why DCF outputs are always presented as a range with a full sensitivity table — never as a single number.
+  </div>
+  <div class="steps-list">
+    <div style="font-weight:700;font-size:13px;color:var(--ink);margin-bottom:10px;">How to build a DCF — 6 steps</div>
+    <div class="step-item"><div class="step-num">1</div><div class="step-text"><strong>Project Revenue &amp; Margins</strong> — Forecast 5–10 years based on historical growth, industry trends, and management guidance.</div></div>
+    <div class="step-item"><div class="step-num">2</div><div class="step-text"><strong>Calculate FCF each year</strong> — EBIT × (1 − tax rate) + D&amp;A − CapEx ± Working Capital changes. This is cash available to all capital providers.</div></div>
+    <div class="step-item"><div class="step-num">3</div><div class="step-text"><strong>Calculate WACC</strong> — Blend cost of equity (via CAPM: Rf + β × ERP) and after-tax cost of debt, weighted by capital structure. Typical range: 7–14%.</div></div>
+    <div class="step-item"><div class="step-num">4</div><div class="step-text"><strong>Calculate Terminal Value</strong> — Gordon Growth Model using a terminal growth rate, or an exit multiple applied to year-10 EBITDA.</div></div>
+    <div class="step-item"><div class="step-num">5</div><div class="step-text"><strong>Discount everything</strong> — Divide each year's FCF and the terminal value by (1 + WACC)^t. Sum all present values.</div></div>
+    <div class="step-item"><div class="step-num">6</div><div class="step-text"><strong>Bridge to equity</strong> — EV minus Net Debt = Equity Value. Divide by diluted shares for implied share price. Compare to market price.</div></div>
+  </div>
+  <div class="insight-block">
+    <div class="insight-label">💡 Senior Analyst Insight</div>
+    At any top bank or fund, DCF is the theoretical anchor — never the only answer shown to a client. A DCF showing $2B when comps trade at $1.4B needs a clear explanation: either the assumptions are too aggressive or the market is mispricing. The analyst's job is to understand why the models disagree, not just run them.
+  </div>
+  <div class="real-world">
+    <div class="rw-label">🌍 Real Example — Why Tech Crashed in 2022</div>
+    <div class="rw-body">Zoom, Peloton, DocuSign lost 70–80% of their value in 2022 — not because their businesses collapsed, but because interest rates rose sharply. Higher rates → higher WACC → the same future cash flows are worth much less today. Companies where most of the DCF value was in distant future cash flows (high terminal value %) got hit hardest. Pure DCF theory playing out in real markets.</div>
+  </div>
+</div>
+<div id="dcf-calc" class="lesson-body" style="display:none;">
+  <p style="font-size:13.5px;color:var(--ink3);line-height:1.75;margin-bottom:20px;">Move the sliders and watch the enterprise value respond. Pay close attention to WACC and terminal growth — notice how small changes produce large EV swings. That's the sensitivity problem every analyst has to manage.</p>
+  <div class="calc-embed">
+    <div class="calc-header"><div class="calc-title">🔧 DCF Calculator</div><span style="font-size:11px;color:var(--ink4);">Sliders update outputs instantly</span></div>
+    <div class="calc-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Inputs</div>
+          <div class="slider-row"><label class="slider-lbl">Revenue ($M)</label><input type="range" min="50" max="5000" value="500" step="50" oninput="dcfCalc()" id="dc_rev"><span class="slider-val" id="dc_revV">$500M</span></div>
+          <div class="slider-row"><label class="slider-lbl">FCF Margin (%)</label><input type="range" min="5" max="45" value="20" step="1" oninput="dcfCalc()" id="dc_m"><span class="slider-val" id="dc_mV">20%</span></div>
+          <div class="slider-row"><label class="slider-lbl">Revenue Growth (%)</label><input type="range" min="1" max="40" value="10" step="1" oninput="dcfCalc()" id="dc_g"><span class="slider-val" id="dc_gV">10%</span></div>
+          <div class="slider-row"><label class="slider-lbl">WACC (%)</label><input type="range" min="5" max="20" value="10" step="0.5" oninput="dcfCalc()" id="dc_w"><span class="slider-val" id="dc_wV">10.0%</span></div>
+          <div class="slider-row"><label class="slider-lbl">Terminal Growth (%)</label><input type="range" min="0.5" max="5" value="3" step="0.25" oninput="dcfCalc()" id="dc_tg"><span class="slider-val" id="dc_tgV">3.0%</span></div>
+          <div class="slider-row"><label class="slider-lbl">Net Debt ($M)</label><input type="range" min="-200" max="3000" value="200" step="50" oninput="dcfCalc()" id="dc_nd"><span class="slider-val" id="dc_ndV">$200M</span></div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Output</div>
+          <div class="calc-outputs">
+            <div class="calc-out" style="border-top:3px solid var(--blue);"><div class="calc-out-label">Enterprise Value</div><div class="calc-out-val" id="dc_ev">—</div><div class="calc-out-sub">Total business value</div></div>
+            <div class="calc-out" style="border-top:3px solid var(--teal);"><div class="calc-out-label">Equity Value</div><div class="calc-out-val" id="dc_eqv">—</div><div class="calc-out-sub">EV minus Net Debt</div></div>
+            <div class="calc-out"><div class="calc-out-label">EV / Revenue</div><div class="calc-out-val" id="dc_evrev">—</div><div class="calc-out-sub">Implied multiple</div></div>
+            <div class="calc-out"><div class="calc-out-label">Terminal Val %</div><div class="calc-out-val" id="dc_tvpct">—</div><div class="calc-out-sub">Of total EV</div></div>
+          </div>
+          <div style="margin-top:16px;">
+            <div style="font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Sensitivity — EV by WACC × Terminal Growth</div>
+            <div style="overflow-x:auto;"><table class="data-table" id="dc_sens" style="font-size:11px;"></table></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="dcf-check" class="lesson-body" style="display:none;">
+  <div class="quiz-block">
+    <div class="quiz-q">1. In a typical DCF, terminal value represents what fraction of total enterprise value?</div>
+    <div class="quiz-options" id="dq1-opts">
+      <div class="quiz-option" onclick="answer('dq1',this,false)"><div class="quiz-radio"></div>10–20% — most value comes from the 10-year projection</div>
+      <div class="quiz-option" onclick="answer('dq1',this,false)"><div class="quiz-radio"></div>30–50% — roughly half and half</div>
+      <div class="quiz-option" onclick="answer('dq1',this,true)"><div class="quiz-radio"></div>60–80% — terminal value dominates almost all DCFs</div>
+      <div class="quiz-option" onclick="answer('dq1',this,false)"><div class="quiz-radio"></div>90–100% — the projection period barely matters</div>
+    </div>
+    <div class="quiz-feedback" id="dq1-fb"></div>
+  </div>
+  <div class="quiz-block">
+    <div class="quiz-q">2. Interest rates rise sharply. What happens to DCF valuations of high-growth companies?</div>
+    <div class="quiz-options" id="dq2-opts">
+      <div class="quiz-option" onclick="answer('dq2',this,false)"><div class="quiz-radio"></div>They increase — growth companies benefit from rising rates</div>
+      <div class="quiz-option" onclick="answer('dq2',this,true)"><div class="quiz-radio"></div>They decrease sharply — higher WACC discounts future cash flows more heavily</div>
+      <div class="quiz-option" onclick="answer('dq2',this,false)"><div class="quiz-radio"></div>They stay the same — rates don't affect equity valuation</div>
+      <div class="quiz-option" onclick="answer('dq2',this,false)"><div class="quiz-radio"></div>It depends only on revenue growth</div>
+    </div>
+    <div class="quiz-feedback" id="dq2-fb"></div>
+  </div>
+  <div class="quiz-block">
+    <div class="quiz-q">3. Your DCF shows EV of $2B. Comps trade at EV of $1.4B. What is the correct response?</div>
+    <div class="quiz-options" id="dq3-opts">
+      <div class="quiz-option" onclick="answer('dq3',this,false)"><div class="quiz-radio"></div>Always trust the DCF — it's theoretically superior</div>
+      <div class="quiz-option" onclick="answer('dq3',this,false)"><div class="quiz-radio"></div>Ignore the DCF and use Comps only</div>
+      <div class="quiz-option" onclick="answer('dq3',this,true)"><div class="quiz-radio"></div>Investigate why they diverge — check if DCF assumptions are too aggressive or if the market is mispricing</div>
+      <div class="quiz-option" onclick="answer('dq3',this,false)"><div class="quiz-radio"></div>Average them and present $1.7B</div>
+    </div>
+    <div class="quiz-feedback" id="dq3-fb"></div>
+  </div>
+</div>
+<div class="lesson-nav">
+  <button class="lesson-nav-btn" onclick="openLesson('val-intro')">← Previous</button>
+  <div class="lesson-progress-dots"><div class="dot-step done"></div><div class="dot-step done"></div><div class="dot-step active"></div><div class="dot-step"></div><div class="dot-step"></div></div>
+  <button class="lesson-nav-btn primary" onclick="completeAndNext('dcf','comps')">Next: Comps →</button>
+</div>
+</div>
+
+<!-- LESSON: LBO -->
+<div class="page" id="page-lbo">
+<div class="lesson-header">
+  <div class="lesson-breadcrumb"><span onclick="showPage('home')">Home</span> / <span>Deals &amp; Transactions</span> / LBO</div>
+  <div class="lesson-title">The Leveraged Buyout (LBO)</div>
+  <div class="lesson-subtitle">Module 3 · Lesson 1 of 4 · 14 min read</div>
+  <div class="lesson-tabs">
+    <div class="lesson-tab active" onclick="switchTab('lbo','learn',this)">📖 Learn</div>
+    <div class="lesson-tab" onclick="switchTab('lbo','calc',this)">🔧 Calculator</div>
+    <div class="lesson-tab" onclick="switchTab('lbo','check',this)">✅ Check</div>
+  </div>
+</div>
+<div id="lbo-learn" class="lesson-body">
+  <div class="concept-block">
+    <div class="block-label">Core Concept</div>
+    <div class="concept-q">What is an LBO and why does private equity use leverage?</div>
+    <div class="concept-a">An LBO is when a private equity firm buys a company using mostly borrowed money. The PE firm puts in a small equity check — typically 30–40% of the purchase price — and borrows the rest (60–70%) from banks and bond markets. <em>The company itself then uses its own cash flows to repay that debt over 4–7 years.</em><br><br>The reason PE uses leverage is simple: it amplifies returns. Buy a $100 business with your own $100, sell for $120 — you made 20%. Buy the same $100 business with $40 of your money and $60 borrowed, sell for $120, pay back the $60 — you turned $40 into $60. That's 50%. <strong>Same business outcome. Dramatically different equity return.</strong></div>
+  </div>
+  <div class="analogy-block">
+    <div class="analogy-label">💡 Mortgage analogy</div>
+    Exactly like buying a house with a mortgage. Put down 20% ($40K), borrow 80% ($160K), buy a $200K house. House goes to $240K — you made $40K profit on your $40K investment: 100% return. Without the mortgage you'd have made $40K on $200K — only 20%. Leverage is the same mechanic, just applied to entire companies.
+  </div>
+  <div class="concept-block">
+    <div class="block-label">Three Value Creation Levers</div>
+    <div class="concept-q">LBO returns come from exactly three places — and they are not all equally legitimate.</div>
+    <div class="steps-list">
+      <div class="step-item"><div class="step-num" style="background:var(--blue);">1</div><div class="step-text"><strong>EBITDA Growth (~45% of returns)</strong> — Revenue expansion, cost cutting, new products, bolt-on acquisitions. Real operational improvement. The most legitimate lever — real value created from the business itself.</div></div>
+      <div class="step-item"><div class="step-num" style="background:var(--purple);">2</div><div class="step-text"><strong>Debt Paydown (~27% of returns)</strong> — Every dollar the business repays from its own cash flows transfers directly to equity value. Pure financial mechanics. No business improvement required. This is the financial engineering lever.</div></div>
+      <div class="step-item"><div class="step-num" style="background:var(--teal);">3</div><div class="step-text"><strong>Multiple Expansion (~28% of returns)</strong> — Selling at a higher EV/EBITDA multiple than you paid. Can be market-driven or from transforming the business quality. <em>Conservative models never assume this. Never build a return case that requires multiple expansion to work.</em></div></div>
+    </div>
+  </div>
+  <div class="concept-block">
+    <div class="block-label">Return Metrics</div>
+    <div class="concept-q">PE firms measure returns with exactly two numbers: IRR and MOIC.</div>
+    <div class="key-terms">
+      <div class="key-term"><div class="key-term-name">IRR</div><div class="key-term-def">Internal Rate of Return. Annualised return on equity invested. PE target: 20–25%+. Below 15% = typically a failed investment that returns money but misses the fund hurdle.</div></div>
+      <div class="key-term"><div class="key-term-name">MOIC</div><div class="key-term-def">Multiple on Invested Capital. Exit equity ÷ entry equity. 3x means you tripled the money. Target: 2.5–3.5x. Below 2x = considered a failure regardless of IRR.</div></div>
+      <div class="key-term"><div class="key-term-name">Hold Period</div><div class="key-term-def">Typically 4–7 years. A 3x MOIC over 5 years ≈ 25% IRR. Same 3x over 7 years ≈ 17% IRR. Timing matters enormously. PE funds have a ~10-year life.</div></div>
+      <div class="key-term"><div class="key-term-name">Entry / Exit Multiple</div><div class="key-term-def">EV/EBITDA paid at purchase vs received at sale. Typical LBO entry: 8–14x. Conservative models hold entry = exit multiple. Multiple expansion is upside, never the base case.</div></div>
+    </div>
+  </div>
+  <div class="warn-block">
+    <div class="warn-label">⚠ Leverage amplifies losses too</div>
+    If the business EBITDA falls 30% in a recession, the equity can be completely wiped out while the debt sits at full face value. The company still owes every dollar. This is exactly why JPMorgan's credit committee stress-tests every LBO against a severe downside scenario before approving the debt package — and why covenant structures exist.
+  </div>
+  <div class="real-world">
+    <div class="rw-label">🌍 Real Example — Blackstone / Hilton Hotels (2007–2018)</div>
+    <div class="rw-body">Blackstone acquired Hilton for $26B in 2007 — just before the financial crisis. Hilton's EBITDA fell ~40% in 2008–2009. Disaster scenario. Yet Blackstone generated ~$14B profit on exit in 2018 — the largest PE profit ever at that time. How? They renegotiated the debt during the crisis, installed new management, invested heavily in Hilton's Honors loyalty program, and expanded from 3,000 to 5,700 hotels globally. EBITDA more than doubled. Final return: ~3.0x MOIC, ~25% IRR over 10 years. The lesson: the best LBO returns come from real operational improvement — not financial engineering.</div>
+  </div>
+</div>
+<div id="lbo-calc" class="lesson-body" style="display:none;">
+  <p style="font-size:13.5px;color:var(--ink3);line-height:1.75;margin-bottom:20px;">Adjust the deal parameters and watch IRR and MOIC respond. Try pushing leverage from 40% to 70% — watch the return jump. Then cut EBITDA growth to 0% and see how quickly the deal breaks. That's the stress test every credit officer runs.</p>
+  <div class="calc-embed">
+    <div class="calc-header"><div class="calc-title">⚡ LBO Return Calculator</div><span style="font-size:11px;color:var(--ink4);">Try leverage 40% → 70% — watch the IRR</span></div>
+    <div class="calc-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Deal Structure</div>
+          <div class="slider-row"><label class="slider-lbl">Entry EBITDA ($M)</label><input type="range" min="10" max="1000" value="100" step="10" oninput="lboCalc()" id="lb_eb"><span class="slider-val" id="lb_ebV">$100M</span></div>
+          <div class="slider-row"><label class="slider-lbl">Entry Multiple (x)</label><input type="range" min="5" max="20" value="10" step="0.5" oninput="lboCalc()" id="lb_em"><span class="slider-val" id="lb_emV">10x</span></div>
+          <div class="slider-row"><label class="slider-lbl">Leverage (Debt/EV %)</label><input type="range" min="20" max="75" value="60" step="1" oninput="lboCalc()" id="lb_lev"><span class="slider-val" id="lb_levV">60%</span></div>
+          <div class="slider-row"><label class="slider-lbl">Interest Rate (%)</label><input type="range" min="3" max="14" value="7" step="0.25" oninput="lboCalc()" id="lb_rate"><span class="slider-val" id="lb_rateV">7.0%</span></div>
+          <div class="slider-row"><label class="slider-lbl">EBITDA Growth p.a. (%)</label><input type="range" min="0" max="30" value="10" step="1" oninput="lboCalc()" id="lb_grow"><span class="slider-val" id="lb_growV">10%</span></div>
+          <div class="slider-row"><label class="slider-lbl">Exit Multiple (x)</label><input type="range" min="5" max="20" value="10" step="0.5" oninput="lboCalc()" id="lb_xm"><span class="slider-val" id="lb_xmV">10x</span></div>
+          <div class="slider-row"><label class="slider-lbl">Hold Period (years)</label><input type="range" min="2" max="10" value="5" step="1" oninput="lboCalc()" id="lb_yrs"><span class="slider-val" id="lb_yrsV">5 yrs</span></div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Returns</div>
+          <div class="calc-outputs">
+            <div class="calc-out" style="border-top:3px solid var(--blue);"><div class="calc-out-label">IRR</div><div class="calc-out-val" id="lb_irr" style="font-size:28px;">—</div><div class="calc-out-sub">Target: 20–25%+</div></div>
+            <div class="calc-out" style="border-top:3px solid var(--purple);"><div class="calc-out-label">MOIC</div><div class="calc-out-val" id="lb_moic" style="font-size:28px;">—</div><div class="calc-out-sub">Target: 2.5–3.5x</div></div>
+          </div>
+          <div class="calc-outputs" style="margin-top:10px;">
+            <div class="calc-out"><div class="calc-out-label">Entry EV</div><div class="calc-out-val" id="lb_entEV" style="font-size:16px;">—</div></div>
+            <div class="calc-out"><div class="calc-out-label">Equity Check</div><div class="calc-out-val" id="lb_eq" style="font-size:16px;">—</div></div>
+            <div class="calc-out"><div class="calc-out-label">Exit EV</div><div class="calc-out-val" id="lb_exitEV" style="font-size:16px;">—</div></div>
+            <div class="calc-out"><div class="calc-out-label">Exit Equity</div><div class="calc-out-val" id="lb_exitEq" style="font-size:16px;">—</div></div>
+          </div>
+          <div id="lb_verdict" style="margin-top:14px;padding:12px 14px;border-radius:var(--r);font-size:13px;font-weight:600;text-align:center;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="lbo-check" class="lesson-body" style="display:none;">
+  <div class="quiz-block">
+    <div class="quiz-q">1. A PE firm buys a company for $500M: $200M equity, $300M debt. Sells for $700M five years later, having repaid $120M of debt. Approximate MOIC?</div>
+    <div class="quiz-options" id="lq1-opts">
+      <div class="quiz-option" onclick="answer('lq1',this,false)"><div class="quiz-radio"></div>1.4x — Exit EV ($700M) divided by Entry EV ($500M)</div>
+      <div class="quiz-option" onclick="answer('lq1',this,true)"><div class="quiz-radio"></div>2.6x — Exit equity ($520M) divided by Entry equity ($200M)</div>
+      <div class="quiz-option" onclick="answer('lq1',this,false)"><div class="quiz-radio"></div>3.5x</div>
+      <div class="quiz-option" onclick="answer('lq1',this,false)"><div class="quiz-radio"></div>1.0x — effectively broke even</div>
+    </div>
+    <div class="quiz-feedback" id="lq1-fb"></div>
+  </div>
+  <div class="quiz-block">
+    <div class="quiz-q">2. Which value creation lever is considered the most legitimate in an LBO?</div>
+    <div class="quiz-options" id="lq2-opts">
+      <div class="quiz-option" onclick="answer('lq2',this,false)"><div class="quiz-radio"></div>Multiple expansion — buying cheap and selling at a premium</div>
+      <div class="quiz-option" onclick="answer('lq2',this,false)"><div class="quiz-radio"></div>Debt paydown — using FCF to reduce borrowings mechanically</div>
+      <div class="quiz-option" onclick="answer('lq2',this,true)"><div class="quiz-radio"></div>EBITDA growth — actually improving the business operationally</div>
+      <div class="quiz-option" onclick="answer('lq2',this,false)"><div class="quiz-radio"></div>All three are equally legitimate</div>
+    </div>
+    <div class="quiz-feedback" id="lq2-fb"></div>
+  </div>
+  <div class="quiz-block">
+    <div class="quiz-q">3. Why does JPMorgan stress-test every LBO deal against a severe downside scenario before approving the loan?</div>
+    <div class="quiz-options" id="lq3-opts">
+      <div class="quiz-option" onclick="answer('lq3',this,false)"><div class="quiz-radio"></div>To calculate a more accurate base-case return</div>
+      <div class="quiz-option" onclick="answer('lq3',this,false)"><div class="quiz-radio"></div>Regulatory requirement with no practical purpose</div>
+      <div class="quiz-option" onclick="answer('lq3',this,true)"><div class="quiz-radio"></div>If EBITDA falls significantly, the equity is wiped out but the debt still exists — the bank could lose the full loan</div>
+      <div class="quiz-option" onclick="answer('lq3',this,false)"><div class="quiz-radio"></div>To negotiate a lower interest rate with the PE sponsor</div>
+    </div>
+    <div class="quiz-feedback" id="lq3-fb"></div>
+  </div>
+</div>
+<div class="lesson-nav">
+  <button class="lesson-nav-btn" onclick="openLesson('prec')">← Previous</button>
+  <div class="lesson-progress-dots"><div class="dot-step done"></div><div class="dot-step done"></div><div class="dot-step done"></div><div class="dot-step active"></div><div class="dot-step"></div></div>
+  <button class="lesson-nav-btn primary" onclick="completeAndNext('lbo','merger')">Next: Merger Model →</button>
+</div>
+</div>
+
+<!-- DEAL ROOM -->
+<div class="page" id="page-dealroom">
+<div class="lesson-header" style="padding-bottom:16px;">
+  <div class="lesson-title" style="color:var(--amber);">💼 Deal Room</div>
+  <div class="lesson-subtitle">Apply everything you've learned to real company briefs — exactly like a first-year analyst would.</div>
+</div>
+<div class="deal-grid">
+  <div class="deal-card">
+    <div class="deal-card-top">
+      <div class="deal-tag tag-sellside">SELL-SIDE M&amp;A</div>
+      <div class="deal-name">Atlas Robotics — Fairness Opinion</div>
+      <div class="deal-desc">A $340M revenue industrial automation company has received a $1.65B takeover offer. Build the full valuation range and advise the board whether to accept. Does the offer reflect fair value?</div>
+    </div>
+    <div class="deal-card-bottom">
+      <div style="display:flex;gap:5px;flex-wrap:wrap;"><span class="deal-model-pill">DCF</span><span class="deal-model-pill">Comps</span><span class="deal-model-pill">Prec Tx</span><span class="deal-model-pill">Football Field</span></div>
+      <div style="font-size:11px;font-weight:600;color:var(--ink4);">⭐⭐ Intermediate</div>
+    </div>
+  </div>
+  <div class="deal-card">
+    <div class="deal-card-top">
+      <div class="deal-tag tag-lbo">PE BUYOUT</div>
+      <div class="deal-name">Vantage Logistics — Take-Private</div>
+      <div class="deal-desc">A PE sponsor wants to take a freight company private at 9x EBITDA with 65% leverage. Size the debt package, underwrite the return model, and stress-test whether JPM should approve the loan.</div>
+    </div>
+    <div class="deal-card-bottom">
+      <div style="display:flex;gap:5px;flex-wrap:wrap;"><span class="deal-model-pill">LBO</span><span class="deal-model-pill">Credit</span><span class="deal-model-pill">Scenario</span></div>
+      <div style="font-size:11px;font-weight:600;color:var(--ink4);">⭐⭐⭐ Advanced</div>
+    </div>
+  </div>
+  <div class="deal-card">
+    <div class="deal-card-top">
+      <div class="deal-tag tag-buyside">CORPORATE M&amp;A</div>
+      <div class="deal-name">Northwind + Cascade — Merger</div>
+      <div class="deal-desc">Northwind Software ($2B revenue) wants to acquire Cascade, a faster-growing SaaS competitor. Determine the deal structure, run the accretion/dilution analysis, and decide: cash, stock, or blended?</div>
+    </div>
+    <div class="deal-card-bottom">
+      <div style="display:flex;gap:5px;flex-wrap:wrap;"><span class="deal-model-pill">Merger Model</span><span class="deal-model-pill">Comps</span><span class="deal-model-pill">Synergies</span></div>
+      <div style="font-size:11px;font-weight:600;color:var(--ink4);">⭐⭐ Intermediate</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- GLOSSARY -->
+<div class="page" id="page-glossary">
+<div style="padding:32px 40px;">
+  <div class="section-heading">Finance Glossary</div>
+  <p style="font-size:13.5px;color:var(--ink3);line-height:1.75;margin-bottom:24px;">Every term you'll encounter — defined plainly, not academically. 26 terms.</p>
+  <input type="text" placeholder="Search terms..." oninput="filterGlossary(this.value)" style="width:100%;max-width:400px;padding:10px 14px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;font-family:var(--sans);color:var(--ink2);outline:none;margin-bottom:20px;display:block;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--line)'">
+  <div id="glossary-list"></div>
+</div>
+</div>
+
+<!-- LEARN INDEX -->
+<div class="page" id="page-learn">
+<div style="padding:32px 40px;">
+  <div class="section-heading">All Modules</div>
+  <div class="module-grid">
+    <div class="module-card m-blue" onclick="openLesson('fs-intro')"><div class="module-icon">📊</div><div class="module-name">Financial Statements</div><div class="module-desc">Income Statement, Balance Sheet, Cash Flow — the foundation of everything.</div><div class="module-footer"><span class="module-lessons">5 lessons · ~43 min</span></div></div>
+    <div class="module-card m-teal" onclick="openLesson('val-intro')"><div class="module-icon">🎯</div><div class="module-name">Valuation Models</div><div class="module-desc">DCF, Comps, Precedent Transactions — how to determine what any company is worth.</div><div class="module-footer"><span class="module-lessons">5 lessons · ~52 min</span></div></div>
+    <div class="module-card m-purple" onclick="openLesson('lbo')"><div class="module-icon">⚡</div><div class="module-name">Deals &amp; Transactions</div><div class="module-desc">LBO modelling, merger analysis, and credit assessment for real deals.</div><div class="module-footer"><span class="module-lessons">4 lessons · ~46 min</span></div></div>
+    <div class="module-card m-amber" onclick="openLesson('football')"><div class="module-icon">🔍</div><div class="module-name">Advanced Analysis</div><div class="module-desc">Football field charts, red flag detection, and role-based thinking.</div><div class="module-footer"><span class="module-lessons">3 lessons · ~30 min</span></div></div>
+  </div>
+</div>
+</div>
+
+<!-- PRACTICE -->
+<div class="page" id="page-practice">
+<div style="padding:28px 40px;max-width:820px;">
+  <div class="section-heading">🔧 Practice Calculators</div>
+  <p style="font-size:13.5px;color:var(--ink3);line-height:1.75;margin-bottom:24px;">All live models in one place. Use these to explore freely, test edge cases, or rehearse for an interview. The best way to understand a model is to break it.</p>
+</div>
+<div style="padding:0 40px 40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
+  <div class="module-card m-blue" onclick="openLesson('dcf-calc')"><div class="module-icon">∫</div><div class="module-name">DCF Model</div><div class="module-desc">Adjust WACC, growth, and margins. Watch EV change live. Includes sensitivity table. Try setting terminal growth above WACC to see the formula break.</div></div>
+  <div class="module-card m-purple" onclick="openLesson('lbo-calc')"><div class="module-icon">⚡</div><div class="module-name">LBO Returns</div><div class="module-desc">Model entry, leverage, EBITDA growth, and exit. See IRR and MOIC update instantly. Stress test: set growth to 0% and see how quickly the deal fails.</div></div>
+  <div class="module-card m-teal" onclick="openLesson('credit')"><div class="module-icon">🛡</div><div class="module-name">Credit Ratios</div><div class="module-desc">Input EBITDA, debt, and interest to get leverage, coverage, and DSCR with implied ratings — the ratios JPM checks on every loan.</div></div>
+  <div class="module-card m-amber" onclick="openLesson('football')"><div class="module-icon">◫</div><div class="module-name">Football Field</div><div class="module-desc">Set your valuation ranges from each method and see where any offer stands relative to all methodologies simultaneously.</div></div>
+</div>
+</div>
+
+</div><!-- end main -->
+</div><!-- end workspace -->
+
+<script>
+const STATE = { xp:0, completed:new Set() };
+const ANSWERED = {};
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById('page-' + id);
+  if (page) page.classList.add('active');
+  document.querySelectorAll('.top-nav-btn').forEach(b => {
+    if (b.getAttribute('onclick') === `showPage('${id}')`) b.classList.add('active');
+  });
+  document.getElementById('mainArea').scrollTop = 0;
+  if (id === 'glossary') renderGlossary();
+}
+
+function openLesson(id) {
+  if (id === 'dcf-calc') { openLesson('dcf'); setTimeout(() => switchTabById('dcf','calc'), 80); return; }
+  if (id === 'lbo-calc') { openLesson('lbo'); setTimeout(() => switchTabById('lbo','calc'), 80); return; }
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById('page-' + id);
+  if (page) {
+    page.classList.add('active');
+    document.getElementById('mainArea').scrollTop = 0;
+    updateSidebarHighlight(id);
+    if (id === 'dcf') setTimeout(dcfCalc, 80);
+    if (id === 'lbo') setTimeout(lboCalc, 80);
+  } else { showPlaceholder(id); }
+}
+
+function showPlaceholder(id) {
+  const names = {'income-stmt':'The Income Statement','balance-sheet':'The Balance Sheet','cashflow':'Cash Flow Statement','fs-quiz':'Statements Quiz','val-intro':'What Is Valuation?','comps':'Comparable Company Analysis','prec':'Precedent Transactions','merger':'Merger Model','credit':'Credit Analysis','football':'Football Field Chart','redflag':'Financial Red Flags','final-quiz':'Final Assessment'};
+  const name = names[id] || id;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  let ph = document.getElementById('page-ph');
+  if (!ph) { ph = document.createElement('div'); ph.id='page-ph'; ph.className='page'; document.getElementById('mainArea').appendChild(ph); }
+  ph.innerHTML = `<div style="padding:48px 40px;max-width:640px;"><div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4);margin-bottom:12px;"><span onclick="showPage('home')" style="cursor:pointer;color:var(--blue)">Home</span> / ${name}</div><div style="font-family:var(--display);font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:12px;">${name}</div><div style="background:var(--blue-bg);border:1px solid rgba(9,105,218,.2);border-radius:var(--r2);padding:20px;margin-bottom:20px;"><div style="font-size:13px;font-weight:700;color:var(--blue);margin-bottom:6px;">🚧 Coming Soon</div><div style="font-size:13px;color:var(--ink3);line-height:1.75;">This lesson is in production. The full FinLab curriculum covers every topic with the same concept → real-world example → calculator → quiz format you've seen in the other lessons. Check back soon.</div></div><div style="display:flex;gap:12px;"><button onclick="showPage('home')" style="padding:9px 18px;border-radius:var(--r);border:1.5px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;cursor:pointer;color:var(--ink2);">← Home</button><button onclick="openLesson('fs-intro')" style="padding:9px 18px;border-radius:var(--r);border:none;background:var(--blue);font-size:13px;font-weight:600;cursor:pointer;color:white;">Start from Lesson 1</button></div></div>`;
+  ph.classList.add('active');
+  updateSidebarHighlight(id);
+}
+
+function switchTab(lesson, tab, el) {
+  document.querySelectorAll('#page-'+lesson+' .lesson-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  ['learn','calc','check'].forEach(t => { const p=document.getElementById(lesson+'-'+t); if(p) p.style.display='none'; });
+  const active = document.getElementById(lesson+'-'+tab);
+  if (active) active.style.display = 'block';
+  if (tab==='calc') { if(lesson==='dcf') dcfCalc(); if(lesson==='lbo') lboCalc(); }
+}
+
+function switchTabById(lesson, tab) {
+  const tabs = document.querySelectorAll('#page-'+lesson+' .lesson-tab');
+  const idx = ['learn','calc','check'].indexOf(tab);
+  if (tabs[idx]) switchTab(lesson, tab, tabs[idx]);
+}
+
+function updateSidebarHighlight(id) {
+  document.querySelectorAll('.path-item').forEach(i => {
+    i.classList.remove('active');
+    if (i.getAttribute('onclick') === `openLesson('${id}')`) i.classList.add('active');
+  });
+}
+
+function completeAndNext(cid, nid) {
+  if (!STATE.completed.has(cid)) {
+    STATE.completed.add(cid);
+    STATE.xp += 50;
+    document.getElementById('xpCount').textContent = STATE.xp;
+    const dot = document.getElementById('dot-'+cid);
+    if (dot) { dot.classList.remove('active'); dot.classList.add('done'); dot.textContent = '✓'; }
+    const line = document.getElementById('line-'+cid);
+    if (line) line.classList.add('done');
+    const banner = document.getElementById(cid+'-complete');
+    if (banner) banner.classList.add('show');
+    const pct = Math.round(STATE.completed.size/13*100);
+    document.getElementById('progressPct').textContent = pct+'%';
+    document.getElementById('progressFill').style.width = pct+'%';
+  }
+  openLesson(nid);
+}
+
+function answer(qid, el, correct) {
+  if (ANSWERED[qid]) return;
+  ANSWERED[qid] = true;
+  el.closest('.quiz-options').querySelectorAll('.quiz-option').forEach(o => o.classList.add('disabled'));
+  if (correct) {
+    el.classList.add('correct');
+    STATE.xp += 10;
+    document.getElementById('xpCount').textContent = STATE.xp;
+    const fb = document.getElementById(qid+'-fb');
+    fb.textContent = '✓ Correct! +10 XP';
+    fb.className = 'quiz-feedback show ok';
+  } else {
+    el.classList.add('wrong');
+    const fb = document.getElementById(qid+'-fb');
+    fb.textContent = '✗ Not quite — review the lesson and try again.';
+    fb.className = 'quiz-feedback show no';
+    el.closest('.quiz-options').querySelectorAll('.quiz-option').forEach(o => {
+      if (o.getAttribute('onclick')?.includes(',true)')) o.classList.add('correct');
+    });
+  }
+}
+
+function fmtB(n) {
+  if (Math.abs(n)>=1e9) return '$'+(n/1e9).toFixed(1)+'B';
+  if (Math.abs(n)>=1e6) return '$'+(n/1e6).toFixed(1)+'M';
+  return '$'+Math.round(n).toLocaleString();
+}
+
+function dcfCalc() {
+  const rev=+document.getElementById('dc_rev').value, m=+document.getElementById('dc_m').value/100;
+  const g=+document.getElementById('dc_g').value/100, wacc=+document.getElementById('dc_w').value/100;
+  const tg=+document.getElementById('dc_tg').value/100, nd=+document.getElementById('dc_nd').value;
+  document.getElementById('dc_revV').textContent='$'+rev+'M';
+  document.getElementById('dc_mV').textContent=Math.round(m*100)+'%';
+  document.getElementById('dc_gV').textContent=Math.round(g*100)+'%';
+  document.getElementById('dc_wV').textContent=(wacc*100).toFixed(1)+'%';
+  document.getElementById('dc_tgV').textContent=(tg*100).toFixed(2)+'%';
+  document.getElementById('dc_ndV').textContent='$'+nd+'M';
+  let pv=0,r=rev,lastFCF=0;
+  for(let i=1;i<=10;i++){r*=(1+g);const fcf=r*m;pv+=fcf/Math.pow(1+wacc,i);lastFCF=fcf;}
+  const tv=(wacc>tg)?lastFCF*(1+tg)/(wacc-tg)/Math.pow(1+wacc,10):0;
+  const ev=pv+tv, eqv=ev-nd;
+  document.getElementById('dc_ev').textContent=fmtB(ev);
+  document.getElementById('dc_eqv').textContent=fmtB(eqv);
+  document.getElementById('dc_evrev').textContent=(ev/rev).toFixed(1)+'x';
+  document.getElementById('dc_tvpct').textContent=ev>0?Math.round(tv/ev*100)+'%':'—';
+  const waccs=[7,8,9,10,11,12,13],tgs=[1.5,2.0,2.5,3.0,3.5,4.0];
+  function getEV(w,t){let p=0,rv=rev;for(let i=1;i<=10;i++){rv*=(1+g);p+=rv*m/Math.pow(1+w,i);}if(w<=t)return 0;return p+rv*m*(1+t)/((w-t)*Math.pow(1+w,10));}
+  const all=waccs.flatMap(w=>tgs.map(t=>getEV(w/100,t/100))).filter(v=>v>0);
+  const mn=Math.min(...all),mx=Math.max(...all);
+  let html='<tr><th>WACC \\ TG</th>'+tgs.map(t=>`<th>${t}%</th>`).join('')+'</tr>';
+  waccs.forEach(w=>{
+    html+=`<tr><td class="mono" style="font-weight:700">${w}%</td>`;
+    tgs.forEach(t=>{
+      const v=getEV(w/100,t/100),isBase=Math.abs(w-wacc*100)<0.6&&Math.abs(t-tg*100)<0.3;
+      const norm=(v-mn)/(mx-mn);
+      const cls=isBase?'sens-base':norm>0.65?'sens-hi':norm<0.35?'sens-lo':'sens-md';
+      html+=`<td class="mono ${cls}">${fmtB(v)}</td>`;
+    });
+    html+='</tr>';
+  });
+  document.getElementById('dc_sens').innerHTML=html;
+}
+
+function lboCalc() {
+  const eb=+document.getElementById('lb_eb').value, em=+document.getElementById('lb_em').value;
+  const lev=+document.getElementById('lb_lev').value/100, rate=+document.getElementById('lb_rate').value/100;
+  const grow=+document.getElementById('lb_grow').value/100, xm=+document.getElementById('lb_xm').value;
+  const yrs=+document.getElementById('lb_yrs').value;
+  document.getElementById('lb_ebV').textContent='$'+eb+'M';
+  document.getElementById('lb_emV').textContent=em+'x';
+  document.getElementById('lb_levV').textContent=Math.round(lev*100)+'%';
+  document.getElementById('lb_rateV').textContent=(rate*100).toFixed(2)+'%';
+  document.getElementById('lb_growV').textContent=Math.round(grow*100)+'%';
+  document.getElementById('lb_xmV').textContent=xm+'x';
+  document.getElementById('lb_yrsV').textContent=yrs+' yrs';
+  const entEV=eb*em, debt=entEV*lev, equity=entEV-debt;
+  let debtBal=debt;
+  for(let y=1;y<=yrs;y++){
+    const ebitdaY=eb*Math.pow(1+grow,y), interest=debtBal*rate;
+    const fcf=ebitdaY*0.60, repay=Math.max(0,Math.min(fcf-interest,debtBal));
+    debtBal=Math.max(0,debtBal-repay);
+  }
+  const exitEBITDA=eb*Math.pow(1+grow,yrs), exitEV=exitEBITDA*xm;
+  const exitEq=Math.max(0,exitEV-debtBal), moic=exitEq/equity;
+  const irr=(Math.pow(Math.max(moic,0.001),1/yrs)-1)*100;
+  document.getElementById('lb_entEV').textContent=fmtB(entEV);
+  document.getElementById('lb_eq').textContent=fmtB(equity);
+  document.getElementById('lb_exitEV').textContent=fmtB(exitEV);
+  document.getElementById('lb_exitEq').textContent=fmtB(exitEq);
+  const irrEl=document.getElementById('lb_irr');
+  irrEl.textContent=irr.toFixed(1)+'%';
+  irrEl.style.color=irr>=20?'var(--green)':irr>=15?'var(--amber)':'var(--red)';
+  const moicEl=document.getElementById('lb_moic');
+  moicEl.textContent=moic.toFixed(2)+'x';
+  moicEl.style.color=moic>=2.5?'var(--green)':moic>=2?'var(--amber)':'var(--red)';
+  const vd=document.getElementById('lb_verdict');
+  if(irr>=20&&moic>=2.5){vd.style.cssText='margin-top:14px;padding:12px 14px;border-radius:var(--r);font-size:13px;font-weight:600;text-align:center;background:var(--green-bg);color:var(--green);border:1px solid #b7e4c7;';vd.textContent='✓ Deal works — above PE hurdle rate';}
+  else if(irr>=15){vd.style.cssText='margin-top:14px;padding:12px 14px;border-radius:var(--r);font-size:13px;font-weight:600;text-align:center;background:var(--amber-bg);color:var(--amber);border:1px solid #fcd34d;';vd.textContent='~ Marginal — below 20% IRR target';}
+  else{vd.style.cssText='margin-top:14px;padding:12px 14px;border-radius:var(--r);font-size:13px;font-weight:600;text-align:center;background:var(--red-bg);color:var(--red);border:1px solid #f5c6cb;';vd.textContent='✗ Returns too low — PE would not do this deal';}
+}
+
+const GLOSSARY=[
+  {t:'EBITDA',d:'Earnings Before Interest, Taxes, Depreciation and Amortization. The most widely used proxy for operating cash generation. Used in almost every valuation multiple and credit ratio in finance. Strips out capital structure choices and accounting policy.'},
+  {t:'Free Cash Flow (FCF)',d:'Cash generated after maintaining and growing the asset base. = Operating Cash Flow minus CapEx. The input to every DCF model. More honest than net income because it\'s harder to manipulate.'},
+  {t:'Enterprise Value (EV)',d:'Total value of a business to all capital providers — both debt and equity holders. EV = Market Cap + Net Debt. Used in multiples like EV/EBITDA because it\'s capital-structure neutral.'},
+  {t:'WACC',d:'Weighted Average Cost of Capital. The discount rate in a DCF. Blends cost of equity (via CAPM) and after-tax cost of debt, weighted by their proportions in the capital structure.'},
+  {t:'Net Debt',d:'Total Debt minus Cash. The bridge between Enterprise Value and Equity Value: EV minus Net Debt = Equity Value. Negative net debt = the company holds more cash than it owes.'},
+  {t:'Terminal Value',d:'In a DCF, the present value of all cash flows beyond the forecast period, into perpetuity. Typically 60–80% of total EV. Most sensitive and most important assumption in any DCF model.'},
+  {t:'LBO',d:'Leveraged Buyout. A PE firm acquires a company using mostly borrowed money, with the company\'s own cash flows repaying the debt over time. Leverage amplifies equity returns — and equity losses.'},
+  {t:'IRR',d:'Internal Rate of Return. The annualised return on equity invested. PE firms target 20–25%+. Below 15% is generally considered a failed investment that still returned capital but missed the hurdle rate.'},
+  {t:'MOIC',d:'Multiple on Invested Capital. Exit Equity divided by Entry Equity. 3x MOIC means you tripled the money. PE target: 2.5–3.5x. Below 2x = failed investment even if IRR looks acceptable.'},
+  {t:'DSCR',d:'Debt Service Coverage Ratio. EBITDA divided by all debt service (interest + scheduled principal). JPMorgan requires 1.25–1.50x at underwriting. Below 1.0x means the company cannot service its debt from operations.'},
+  {t:'Leverage Ratio',d:'Net Debt divided by EBITDA. Primary measure of debt burden relative to cash generation. Below 2x is conservative. 3–4x is standard investment grade. Above 5x is speculative territory requiring scrutiny.'},
+  {t:'Control Premium',d:'Extra price paid above market value to acquire a controlling stake. Historical average: 25–40% above the unaffected share price. Justified by synergies and full operational control.'},
+  {t:'Comps',d:'Comparable Company Analysis. Values a company by applying trading multiples (EV/EBITDA, P/E, EV/Revenue) from similar publicly traded peers. The market\'s live verdict — fast and market-anchored.'},
+  {t:'DCF',d:'Discounted Cash Flow. Values a company based on present value of all future free cash flows discounted at WACC. The theoretical intrinsic value method — most rigorous but most assumption-sensitive.'},
+  {t:'Accretion / Dilution',d:'In M&A, whether the deal increases (accretive) or decreases (dilutive) the acquirer\'s EPS. Boards are intensely focused on this. A deal can be accretive while still destroying long-run shareholder value.'},
+  {t:'Goodwill',d:'Premium paid above fair value of net identifiable assets in an acquisition. Not a real asset. When acquisitions disappoint, goodwill is impaired — a large non-cash charge destroying book equity instantly.'},
+  {t:'Working Capital',d:'Current Assets minus Current Liabilities. Rising working capital relative to revenue is a cash drain — the business is growing faster than it can collect cash or is paying suppliers faster than it collects from customers.'},
+  {t:'CapEx',d:'Capital Expenditures. Cash spent on long-term physical assets. Maintenance CapEx keeps assets working; growth CapEx expands capacity. Subtracted from Operating Cash Flow to calculate Free Cash Flow.'},
+  {t:'Covenant',d:'Contractual guardrails in a loan agreement. Maintenance covenants must be met every quarter — breach is a technical default. Incurrence covenants only apply when the borrower takes a specific action. Cov-lite = incurrence only.'},
+  {t:'Retained Earnings',d:'Cumulative profits ever earned minus all dividends ever paid. Grows by net income each period. The critical link between Income Statement and Balance Sheet. Negative retained earnings = accumulated deficit.'},
+  {t:'Interest Coverage',d:'EBITDA divided by Interest Expense. Below 3x is a warning sign. Below 1.5x means the company struggles to pay even interest from operations — any EBITDA miss triggers potential default.'},
+  {t:'LTV/CAC',d:'Lifetime Value to Customer Acquisition Cost. Above 3x = healthy unit economics. Below 1x = destroying value with every customer acquired regardless of revenue growth.'},
+  {t:'EV/EBITDA',d:'Enterprise Value divided by EBITDA. The most widely used valuation multiple. Capital-structure neutral. Typical ranges: Enterprise SaaS 20–40x, Consumer 8–14x, Industrials 8–13x, Energy 5–9x.'},
+  {t:'Football Field Chart',d:'Standard pitch book visual showing valuation ranges from all methods (DCF, Comps, Precedent Tx, LBO, trading range) as horizontal bars, with the current offer as a vertical dashed line. In every JPM pitch book.'},
+  {t:'Synergies',d:'Value created by combining two businesses that neither could generate alone. Cost synergies (headcount, procurement) are more reliable. Revenue synergies (cross-selling, new markets) are harder to achieve and should be discounted.'},
+  {t:'Fairness Opinion',d:'Formal written statement from an investment bank that the deal consideration is fair from a financial point of view to shareholders. The football field chart is the analytical core of every fairness opinion.'},
+];
+
+function renderGlossary(filter='') {
+  const f=filter.toLowerCase().trim();
+  const items=GLOSSARY.filter(g=>!f||g.t.toLowerCase().includes(f)||g.d.toLowerCase().includes(f));
+  document.getElementById('glossary-list').innerHTML=items.map(g=>`<div style="border-bottom:1px solid var(--line2);padding:14px 0;"><div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--blue);margin-bottom:5px;">${g.t}</div><div style="font-size:13px;color:var(--ink3);line-height:1.75;">${g.d}</div></div>`).join('')||'<div style="color:var(--ink4);font-size:13px;padding:16px 0;">No terms match.</div>';
+}
+
+function filterGlossary(v){renderGlossary(v);}
+setTimeout(()=>{dcfCalc();lboCalc();},200);
+</script>
+</body>
+</html>
