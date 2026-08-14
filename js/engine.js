@@ -33,6 +33,27 @@ saveState();
 
 function addXP(n){ STATE.xp += n; saveState(); byId('xpCount').textContent = STATE.xp; }
 
+/* ---------------- ANALYTICS HOOK ----------------
+   No third-party network calls — the CSP stays locked to 'self' and nothing
+   about a student's usage leaves their browser. track() is the single choke
+   point every interaction flows through, so wiring in a real backend later
+   (Plausible, GoatCounter, a custom endpoint) is a one-function edit here,
+   not a hunt through the codebase — see README for how. Until then it keeps
+   a small rolling local event log for local debugging via
+   FinLabDebug.events() in the browser console. */
+const MAX_EVENTS = 200;
+function track(event, props){
+  try {
+    const entry = { t:Date.now(), event, props:props||{} };
+    const log = JSON.parse(sessionStorage.getItem('finlab_events_v1') || '[]');
+    log.push(entry);
+    if (log.length > MAX_EVENTS) log.splice(0, log.length - MAX_EVENTS);
+    sessionStorage.setItem('finlab_events_v1', JSON.stringify(log));
+  } catch(e){ /* best-effort only — must never block the UI */ }
+  if (window.console && console.debug) console.debug('[finlab:event]', event, props||{});
+}
+window.FinLabDebug = { events: () => { try { return JSON.parse(sessionStorage.getItem('finlab_events_v1')||'[]'); } catch(e){ return []; } } };
+
 /* ---------------- SMALL HELPERS ---------------- */
 function byId(id){ return document.getElementById(id); }
 function el(tag, attrs, ...kids){
@@ -55,6 +76,14 @@ function fmtB(n){
   return sign+'$'+Math.round(n).toLocaleString();
 }
 function clamp(v,lo,hi){ return Math.max(lo, Math.min(hi, v)); }
+function hashStr(s){
+  // Small stable FNV-1a-style hash — used to key quiz answers by question
+  // content instead of array index, so inserting/reordering a question in
+  // data.js can't silently attach an old saved answer to a different question.
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(36);
+}
 
 /* ---------------- CONTENT BLOCK RENDERING ---------------- */
 function renderConceptBody(b){
@@ -122,12 +151,12 @@ function renderBlock(b){
 }
 
 /* ---------------- QUIZ RENDERING ---------------- */
-function quizKey(lessonId, qi){ return lessonId + '-q' + qi; }
+function quizKey(lessonId, q){ return lessonId + '-' + hashStr(q.q); }
 
 function renderQuiz(lessonId, quiz){
   const container = el('div');
   quiz.forEach((q, qi) => {
-    const key = quizKey(lessonId, qi);
+    const key = quizKey(lessonId, q);
     const block = el('fieldset', { class:'quiz-block' });
     block.append(el('legend', { class:'quiz-q', text:(qi+1)+'. '+q.q }));
     const optsWrap = el('div', { class:'quiz-options', role:'radiogroup' });
@@ -169,6 +198,7 @@ function renderQuiz(lessonId, quiz){
         STATE.quizAnswers[key] = { chosen:oi, xpAwarded };
         saveState();
         if (correct) addXP(10);
+        track('quiz_answer', { lessonId, correct });
         paint();
       });
       optsWrap.append(btn);
@@ -244,10 +274,16 @@ function highlightSidebar(id){
   if (item) item.classList.add('active');
 }
 
-/* ---------------- PAGE NAV ---------------- */
-function showPage(id){
+/* ---------------- PAGE NAV ----------------
+   showPage(id)/openLesson(id) are the public entry points every click handler
+   calls. Both route through go(), which owns location.hash — this gives every
+   page a real, bookmarkable/shareable/back-button-able URL for free, and is
+   also what makes Deal Room cards (page ids like "deal-atlas") work: renderRoute
+   falls through to showPageInternal for any id that isn't a lesson. */
+function showPageInternal(id){
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.top-nav-btn').forEach(b => b.removeAttribute('aria-current'));
+  document.querySelectorAll('.path-item').forEach(i => i.classList.remove('active'));
   const page = byId('page-'+id);
   if (page) page.classList.add('active');
   const navBtn = document.querySelector(`.top-nav-btn[data-page="${id}"]`);
@@ -255,12 +291,12 @@ function showPage(id){
   byId('mainArea').scrollTop = 0;
   closeMobileSidebar();
   if (id === 'glossary') renderGlossaryList('');
-  if (id === 'home') { document.querySelectorAll('.path-item').forEach(i=>i.classList.remove('active')); }
+  track('page_view', { id });
 }
 
-function openLesson(id){
+function openLessonInternal(id){
   const lesson = LESSON_BY_ID[id];
-  if (!lesson) return;
+  if (!lesson) { showPageInternal('home'); return; }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.top-nav-btn').forEach(b => b.removeAttribute('aria-current'));
   byId('page-'+id).classList.add('active');
@@ -271,7 +307,24 @@ function openLesson(id){
   if (lesson.calc === 'lbo') lboCalc(id);
   if (lesson.calc === 'credit') creditCalc(id);
   if (lesson.calc === 'football') footballCalc(id);
+  track('lesson_view', { id, type:lesson.type });
 }
+
+function parseHash(){
+  const raw = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
+  return raw || 'home';
+}
+function renderRoute(id){
+  if (LESSON_BY_ID[id]) openLessonInternal(id);
+  else if (byId('page-'+id)) showPageInternal(id);
+  else showPageInternal('home');
+}
+function showPage(id){
+  const newHash = '#/' + id;
+  if (location.hash === newHash) renderRoute(id);
+  else location.hash = newHash; // triggers the hashchange listener, which renders
+}
+function openLesson(id){ showPage(id); } // same dispatcher handles both — kept as a separate name for readability at call sites
 
 function switchTab(lessonId, tab){
   const page = byId('page-'+lessonId);
@@ -283,6 +336,7 @@ function switchTab(lessonId, tab){
     if (lesson.calc === 'lbo') lboCalc(lessonId);
     if (lesson.calc === 'credit') creditCalc(lessonId);
     if (lesson.calc === 'football') footballCalc(lessonId);
+    track('calc_open', { lessonId, calc:lesson.calc });
   }
 }
 
@@ -294,6 +348,7 @@ function completeAndNext(id){
     applyCompletionState();
     const banner = byId(id+'-complete');
     if (banner) banner.classList.add('show');
+    track('lesson_complete', { id });
   }
   const idx = NAV_ORDER.indexOf(id);
   const next = NAV_ORDER[idx+1];
@@ -550,7 +605,7 @@ function sliderRow(id,label,min,max,val,step,onInput){
   return row;
 }
 function numInput(id, val, onInput){
-  const input = el('input', { type:'number', id, value:val, style:'width:100%;padding:7px 9px;border:1.5px solid var(--line);border-radius:var(--r);font:inherit;font-size:12.5px;' });
+  const input = el('input', { type:'number', id, value:val, style:'width:100%;padding:7px 9px;border:1.5px solid var(--line-ui);border-radius:var(--r);font:inherit;font-size:12.5px;' });
   input.addEventListener('input', onInput);
   return input;
 }
@@ -942,7 +997,7 @@ function buildGlossaryPage(){
   const wrap = el('div', { style:'padding:32px 40px;' });
   wrap.append(el('div', { class:'section-heading' }, 'Finance Glossary'));
   wrap.append(el('p', { style:'font-size:13.5px;color:var(--ink3);line-height:1.75;margin-bottom:24px;', text:`Every term you'll encounter — defined plainly, not academically. ${GLOSSARY.length} terms.` }));
-  const search = el('input', { type:'text', placeholder:'Search terms...', 'aria-label':'Search glossary terms', style:'width:100%;max-width:400px;padding:10px 14px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;font-family:var(--sans);color:var(--ink2);outline:none;margin-bottom:20px;display:block;' });
+  const search = el('input', { type:'text', placeholder:'Search terms...', 'aria-label':'Search glossary terms', style:'width:100%;max-width:400px;padding:10px 14px;border:1.5px solid var(--line-ui);border-radius:var(--r);font-size:14px;font-family:var(--sans);color:var(--ink2);outline:none;margin-bottom:20px;display:block;' });
   search.addEventListener('input', () => renderGlossaryList(search.value));
   wrap.append(search);
   wrap.append(el('div', { id:'glossary-list' }));
@@ -980,7 +1035,10 @@ function init(){
   });
   byId('sidebarScrim').addEventListener('click', closeMobileSidebar);
 
-  showPage('home');
+  window.addEventListener('hashchange', () => renderRoute(parseHash()));
+  const initial = parseHash();
+  if (!location.hash) history.replaceState(null, '', '#/home');
+  renderRoute(initial);
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  FinLab is a single-page app: every route below is a hash fragment on the
+  same document (https://abdullohik.github.io/finlab/), not a separate
+  server-rendered URL. Fragment URLs have limited SEO value with crawlers
+  that don't execute JavaScript — this file is here mainly so the root URL
+  isn't the only thing discoverable, and for any tool that does resolve
+  fragments. If you add/remove/rename a lesson in js/data.js, update this
+  list to match (see README for the full id list).
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://abdullohik.github.io/finlab/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/home</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/learn</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/practice</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/dealroom</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/glossary</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
+
+  <url><loc>https://abdullohik.github.io/finlab/#/fs-intro</loc><priority>0.6</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/income-stmt</loc><priority>0.6</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/balance-sheet</loc><priority>0.6</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/cashflow</loc><priority>0.6</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/fs-quiz</loc><priority>0.4</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/val-intro</loc><priority>0.6</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/dcf</loc><priority>0.6</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/comps</loc><priority>0.6</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/prec</loc><priority>0.6</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/lbo</loc><priority>0.6</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/merger</loc><priority>0.6</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/credit</loc><priority>0.6</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/football</loc><priority>0.6</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/redflag</loc><priority>0.6</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/final-quiz</loc><priority>0.4</priority></url>
+
+  <url><loc>https://abdullohik.github.io/finlab/#/deal-atlas</loc><priority>0.5</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/deal-vantage</loc><priority>0.5</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/#/deal-northwind</loc><priority>0.5</priority></url>
+</urlset>
