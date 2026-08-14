@@ -28,7 +28,7 @@ function loadState(){
   return s;
 }
 const STATE = loadState();
-function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(STATE)); }
+function saveState(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(STATE)); } catch(e){ /* private-browsing/quota — progress just won't persist this session */ } }
 saveState();
 
 function addXP(n){ STATE.xp += n; saveState(); byId('xpCount').textContent = STATE.xp; }
