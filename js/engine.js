@@ -4,7 +4,10 @@
 
 /* ---------------- STATE + PERSISTENCE ---------------- */
 const STORE_KEY = 'finlab_state_v1';
-const NAV_ORDER = LESSONS.map(l => l.id);
+// Grouped by MODULES order (not raw array order) so prev/next navigation always
+// matches the sidebar's visual grouping, regardless of where a lesson was
+// inserted into the LESSONS array in data.js.
+const NAV_ORDER = MODULES.flatMap(m => LESSONS.filter(l => l.module === m.id).map(l => l.id));
 const LESSON_BY_ID = Object.fromEntries(LESSONS.map(l => [l.id, l]));
 
 function todayStr(){ return new Date().toISOString().slice(0,10); }
@@ -266,6 +269,125 @@ function applyCompletionState(){
   byId('progressFill').style.width = pct + '%';
   byId('xpCount').textContent = STATE.xp;
   byId('streakCount').textContent = STATE.streak;
+  renderCertSection();
+}
+
+/* ---------------- COMPLETION CERTIFICATE ----------------
+   Fully client-side (canvas → PNG download) — no backend, no accounts.
+   Honest about what it is: self-paced coursework completion, not an
+   accredited credential (says so on the certificate itself). */
+function renderCertSection(){
+  const section = byId('certSection');
+  if (!section) return;
+  section.innerHTML = '';
+  const isComplete = NAV_ORDER.length > 0 && STATE.completed.length === NAV_ORDER.length;
+  if (!isComplete) return;
+
+  const card = el('div', { class:'cert-card' },
+    el('div', { style:'font-size:28px;', 'aria-hidden':'true' }, '🎓'),
+    el('div', { class:'cert-card-title' }, "You've completed the FinLab curriculum!"),
+    el('div', { class:'cert-card-sub' }, `${NAV_ORDER.length} lessons, ${STATE.xp} XP. Download a certificate to share — enter your name as you'd like it to appear.`)
+  );
+  const nameInput = el('input', { type:'text', class:'cert-name-input', placeholder:'Your name', value: STATE.studentName || '', 'aria-label':'Your name for the certificate' });
+  const dlBtn = el('button', { type:'button', class:'hero-cta', style:'margin-top:0;color:white;background:var(--blue-dk);', text:'⬇ Download Certificate' });
+  nameInput.addEventListener('input', () => { STATE.studentName = nameInput.value; saveState(); });
+  dlBtn.addEventListener('click', () => {
+    const name = (nameInput.value || 'A FinLab Student').trim();
+    track('certificate_download', { name_length: name.length });
+    downloadCertificate(name);
+  });
+  const row = el('div', { class:'cert-card-actions' }, nameInput, dlBtn);
+  card.append(row);
+  section.append(card);
+}
+
+function roundRectPath(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function wrapText(ctx,text,cx,y,maxWidth,lineHeight){
+  const words = text.split(' ');
+  let line = '', lines = [];
+  words.forEach(w => {
+    const test = line ? line+' '+w : w;
+    if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = w; }
+    else line = test;
+  });
+  if (line) lines.push(line);
+  lines.forEach((l,i) => ctx.fillText(l, cx, y + i*lineHeight));
+  return lines.length;
+}
+
+function downloadCertificate(name){
+  const W = 1400, H = 990;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.textAlign = 'center';
+
+  const grad = ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,'#0969da'); grad.addColorStop(0.5,'#0550ae'); grad.addColorStop(1,'#0a6f66');
+  ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+
+  const m = 34;
+  ctx.fillStyle = '#ffffff';
+  roundRectPath(ctx, m, m, W-2*m, H-2*m, 18); ctx.fill();
+
+  const cx = W/2;
+  ctx.fillStyle = '#0969da';
+  ctx.font = "800 34px Sora, sans-serif";
+  ctx.fillText('FinLab', cx, 145);
+  ctx.fillStyle = '#5f6672';
+  ctx.font = "700 13px Inter, sans-serif";
+  ctx.fillText('F I N A N C E   E D U C A T I O N   P L A T F O R M', cx, 172);
+
+  ctx.strokeStyle = '#eaeef2'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(cx-160,200); ctx.lineTo(cx+160,200); ctx.stroke();
+
+  ctx.fillStyle = '#57606a';
+  ctx.font = "600 15px Inter, sans-serif";
+  ctx.fillText('CERTIFICATE OF COMPLETION', cx, 250);
+
+  ctx.fillStyle = '#0d1117';
+  ctx.font = "500 20px Inter, sans-serif";
+  ctx.fillText('This certifies that', cx, 320);
+
+  ctx.fillStyle = '#0550ae';
+  ctx.font = "800 54px Sora, sans-serif";
+  ctx.fillText(name, cx, 400);
+
+  ctx.fillStyle = '#24292f';
+  ctx.font = "400 19px Inter, sans-serif";
+  wrapText(ctx, `has completed the FinLab curriculum — ${NAV_ORDER.length} lessons across Financial Statements, Valuation, Deals & Transactions, Advanced Analysis, and Recruiting & Fit.`, cx, 460, 920, 28);
+
+  ctx.fillStyle = '#57606a';
+  ctx.font = "600 15px JetBrains Mono, monospace";
+  const dateStr = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  ctx.fillText(`Issued ${dateStr}  ·  ${STATE.xp} XP earned`, cx, 590);
+
+  ctx.fillStyle = '#8c959f';
+  ctx.font = "400 12px Inter, sans-serif";
+  wrapText(ctx, 'FinLab is an independent educational project. This certificate reflects completion of self-paced coursework and is not an accredited or professional credential.', cx, H-90, 900, 17);
+
+  const doDownload = (url) => {
+    const a = document.createElement('a');
+    a.href = url; a.download = 'finlab-certificate.png';
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+  if (canvas.toBlob) {
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      doDownload(url);
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    }, 'image/png');
+  } else {
+    doDownload(canvas.toDataURL('image/png'));
+  }
 }
 
 function highlightSidebar(id){
@@ -291,7 +413,17 @@ function showPageInternal(id){
   byId('mainArea').scrollTop = 0;
   closeMobileSidebar();
   if (id === 'glossary') renderGlossaryList('');
+  if (id === 'recall') startRecallSession();
+  updateFeedbackLink(id);
   track('page_view', { id });
+}
+
+function updateFeedbackLink(context){
+  const link = byId('feedbackLink');
+  if (!link) return;
+  const title = encodeURIComponent(`Issue on "${context}"`);
+  const body = encodeURIComponent(`What's wrong, and where:\n\n\n---\nPage: ${context}\nURL: ${location.href}`);
+  link.href = `https://github.com/abdullohik/finlab/issues/new?title=${title}&body=${body}&labels=feedback`;
 }
 
 function openLessonInternal(id){
@@ -307,6 +439,9 @@ function openLessonInternal(id){
   if (lesson.calc === 'lbo') lboCalc(id);
   if (lesson.calc === 'credit') creditCalc(id);
   if (lesson.calc === 'football') footballCalc(id);
+  if (lesson.calc === 'comps') compsCalc(id);
+  if (lesson.calc === 'merger') mergerCalc(id);
+  updateFeedbackLink(lesson.title);
   track('lesson_view', { id, type:lesson.type });
 }
 
@@ -336,6 +471,8 @@ function switchTab(lessonId, tab){
     if (lesson.calc === 'lbo') lboCalc(lessonId);
     if (lesson.calc === 'credit') creditCalc(lessonId);
     if (lesson.calc === 'football') footballCalc(lessonId);
+    if (lesson.calc === 'comps') compsCalc(lessonId);
+    if (lesson.calc === 'merger') mergerCalc(lessonId);
     track('calc_open', { lessonId, calc:lesson.calc });
   }
 }
@@ -459,6 +596,8 @@ function buildCalcEmbed(calcType, lessonId){
     lbo:     { title:'⚡ LBO Return Calculator',  note:'Try leverage 40% → 70% — watch the IRR' },
     credit:  { title:'🛡 Credit Ratio Calculator', note:'Used by lenders to underwrite a loan' },
     football:{ title:'◫ Football Field Builder',  note:'Plot every method on one chart' },
+    comps:   { title:'📊 Comps Calculator',        note:'Median peer multiple → implied value' },
+    merger:  { title:'🤝 Accretion / Dilution Calculator', note:'Cash, stock, or blended — see the EPS impact' },
   }[calcType];
   const embed = el('div', { class:'calc-embed', id:'embed-'+lessonId+'-'+calcType });
   embed.append(el('div', { class:'calc-header' },
@@ -592,6 +731,74 @@ function buildCalcInputs(calcType, body, lessonId){
     offerRow.append(numInput(p('ff_offer'), 1650, ()=>footballCalc(lessonId)));
     body.append(offerRow);
     body.append(el('div', { class:'ff-chart', id:p('ff_chart') }));
+  }
+  if (calcType === 'comps') {
+    body.append(el('p', { class:'calc-note', text:'Enter each peer\'s EV/EBITDA multiple, then the target\'s own numbers. The median peer multiple gets applied to the target — try dropping one peer to an outlier value and watch the median barely move while the average would swing hard.' }));
+    const grid = el('div', { style:'display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-bottom:16px;max-width:420px;' });
+    grid.append(el('div',{style:'font-size:11px;font-weight:700;color:var(--ink4);'},'Peer'), el('div',{style:'font-size:11px;font-weight:700;color:var(--ink4);'},'EV / EBITDA'));
+    [['cp_p1','Peer 1',9.5],['cp_p2','Peer 2',11.2],['cp_p3','Peer 3',8.7],['cp_p4','Peer 4',13.0],['cp_p5','Peer 5',10.1]]
+      .forEach(([key,label,val]) => {
+        grid.append(el('div',{style:'font-size:12.5px;color:var(--ink2);align-self:center;'},label));
+        grid.append(numInput(p(key), val, ()=>compsCalc(lessonId)));
+      });
+    body.append(grid);
+    const cols = el('div', { class:'calc-cols' });
+    const left = el('div');
+    left.append(el('div', { style:'font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;', text:'Target Company' }));
+    [
+      ['cp_eb','Target EBITDA ($M)',5,2000,340*0.24,5],
+      ['cp_nd','Target Net Debt ($M)',-200,3000,120,10],
+      ['cp_sh','Target Diluted Shares (M)',1,500,40,1],
+    ].forEach(([key,label,min,max,val,step]) => left.append(sliderRow(p(key),label,min,max,Math.round(val*10)/10,step,()=>compsCalc(lessonId))));
+    cols.append(left);
+    const right = el('div');
+    right.append(el('div', { style:'font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;', text:'Implied Value' }));
+    const outs = el('div', { class:'calc-outputs' });
+    outs.append(
+      calcOut(p('cp_med'),'Median Multiple','Low–high range shown below','var(--blue)'),
+      calcOut(p('cp_ev'),'Implied EV','Median × Target EBITDA','var(--teal)'),
+      calcOut(p('cp_eqv'),'Implied Equity Value','EV minus Net Debt'),
+      calcOut(p('cp_px'),'Implied Share Price','Equity Value ÷ Shares'),
+    );
+    right.append(outs);
+    right.append(el('div', { id:p('cp_range'), style:'margin-top:12px;font-size:12px;color:var(--ink3);' }));
+    cols.append(right);
+    body.append(cols);
+  }
+  if (calcType === 'merger') {
+    body.append(el('p', { class:'calc-note', text:'Set the deal size and financing mix, then watch whether the combined company\'s EPS rises (accretive) or falls (dilutive) versus the acquirer on its own. Try moving the mix from Stock toward Cash/Debt and see accretion improve — that\'s the "cheap financing" effect the lesson warns about.' }));
+    const cols = el('div', { class:'calc-cols' });
+    const left = el('div');
+    left.append(el('div', { style:'font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;', text:'Acquirer & Target' }));
+    [
+      ['mg_ani','Acquirer Net Income ($M)',10,5000,400,10],
+      ['mg_ash','Acquirer Diluted Shares (M)',10,2000,200,5],
+      ['mg_apx','Acquirer Share Price ($)',5,500,80,1],
+      ['mg_tni','Target Net Income ($M)',1,2000,60,5],
+      ['mg_price','Purchase Price ($M)',10,20000,1200,50],
+    ].forEach(([key,label,min,max,val,step]) => left.append(sliderRow(p(key),label,min,max,val,step,()=>mergerCalc(lessonId))));
+    cols.append(left);
+    const right = el('div');
+    right.append(el('div', { style:'font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;', text:'Financing Mix & Synergies' }));
+    [
+      ['mg_cash','Cash-Funded (%)',0,100,30,5],
+      ['mg_stock','Stock-Funded (%)',0,100,40,5],
+      ['mg_rate','Cost of Cash/Debt (%)',1,12,5,0.5],
+      ['mg_tax','Tax Rate (%)',10,35,25,1],
+      ['mg_syn','Annual Pre-Tax Synergies ($M)',0,500,20,5],
+    ].forEach(([key,label,min,max,val,step]) => right.append(sliderRow(p(key),label,min,max,val,step,()=>mergerCalc(lessonId))));
+    right.append(el('p', { style:'font-size:10.5px;color:var(--ink4);line-height:1.6;margin-top:4px;', text:'Debt-funded % is whatever\'s left after Cash + Stock. "Cost of Cash/Debt" applies to both — new debt as after-tax interest expense, cash used as after-tax foregone interest income (opportunity cost).' }));
+    cols.append(right);
+    body.append(cols);
+    const outs = el('div', { class:'calc-outputs', style:'margin-top:16px;' });
+    outs.append(
+      calcOut(p('mg_peps'),'Pro Forma EPS','Combined NI ÷ new share count','var(--blue)'),
+      calcOut(p('mg_aeps'),'Acquirer Standalone EPS','Before the deal','var(--teal)'),
+      calcOut(p('mg_adacc'),'Accretion / (Dilution)','% change in EPS'),
+      calcOut(p('mg_shares'),'New Shares Issued','Stock portion ÷ share price'),
+    );
+    body.append(outs);
+    body.append(el('div', { id:p('mg_verdict') }));
   }
 }
 
@@ -819,6 +1026,79 @@ function footballCalc(lessonId){
   container.append(chart);
 }
 
+function compsCalc(lessonId){
+  const p = id => id + '__' + lessonId;
+  const g = k => byId(p(k));
+  if (!g('cp_p1')) return;
+  const peers = ['cp_p1','cp_p2','cp_p3','cp_p4','cp_p5'].map(k => +g(k).value).filter(v => v > 0);
+  const eb = +g('cp_eb').value, nd = +g('cp_nd').value, sh = +g('cp_sh').value;
+  byId(p('cp_eb')+'V').textContent = '$'+eb.toFixed(1)+'M';
+  byId(p('cp_nd')+'V').textContent = '$'+nd+'M';
+  byId(p('cp_sh')+'V').textContent = sh+'M';
+
+  const sorted = [...peers].sort((a,b)=>a-b);
+  const mid = Math.floor(sorted.length/2);
+  const median = sorted.length % 2 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
+  const low = sorted[0], high = sorted[sorted.length-1];
+  const ev = median * eb, eqv = ev - nd, px = sh > 0 ? eqv/sh : 0;
+
+  byId(p('cp_med')).textContent = median.toFixed(1)+'x';
+  byId(p('cp_ev')).textContent = fmtB(ev);
+  byId(p('cp_eqv')).textContent = fmtB(eqv);
+  byId(p('cp_px')).textContent = '$'+px.toFixed(2);
+  byId(p('cp_range')).textContent = `Peer range: ${low.toFixed(1)}x – ${high.toFixed(1)}x across ${peers.length} peers · implied EV range ${fmtB(low*eb)} – ${fmtB(high*eb)}`;
+}
+
+function mergerCalc(lessonId){
+  const p = id => id + '__' + lessonId;
+  const g = k => byId(p(k));
+  if (!g('mg_ani')) return;
+  const ani=+g('mg_ani').value, ash=+g('mg_ash').value, apx=+g('mg_apx').value;
+  const tni=+g('mg_tni').value, price=+g('mg_price').value;
+  let cashPct=+g('mg_cash').value, stockPct=+g('mg_stock').value;
+  if (cashPct+stockPct > 100) { stockPct = 100-cashPct; g('mg_stock').value = stockPct; }
+  const debtPct = Math.max(0, 100-cashPct-stockPct);
+  const rate=+g('mg_rate').value/100, taxRate=+g('mg_tax').value/100, synergies=+g('mg_syn').value;
+
+  byId(p('mg_ani')+'V').textContent='$'+ani+'M';
+  byId(p('mg_ash')+'V').textContent=ash+'M';
+  byId(p('mg_apx')+'V').textContent='$'+apx;
+  byId(p('mg_tni')+'V').textContent='$'+tni+'M';
+  byId(p('mg_price')+'V').textContent='$'+price+'M';
+  byId(p('mg_cash')+'V').textContent=cashPct+'%';
+  byId(p('mg_stock')+'V').textContent=stockPct+'%';
+  byId(p('mg_rate')+'V').textContent=rate*100+'%';
+  byId(p('mg_tax')+'V').textContent=taxRate*100+'%';
+  byId(p('mg_syn')+'V').textContent='$'+synergies+'M';
+
+  const cashUsed = price*(cashPct/100);
+  const debtRaised = price*(debtPct/100);
+  const stockUsed = price*(stockPct/100);
+  const newShares = apx > 0 ? stockUsed/apx : 0;
+
+  const afterTaxSynergies = synergies*(1-taxRate);
+  const afterTaxInterestCost = debtRaised*rate*(1-taxRate);
+  const afterTaxForegoneInterest = cashUsed*rate*(1-taxRate);
+  const combinedNI = ani + tni + afterTaxSynergies - afterTaxInterestCost - afterTaxForegoneInterest;
+  const proFormaShares = ash + newShares;
+  const proFormaEPS = proFormaShares > 0 ? combinedNI/proFormaShares : 0;
+  const standaloneEPS = ash > 0 ? ani/ash : 0;
+  const accretion = standaloneEPS !== 0 ? (proFormaEPS/standaloneEPS - 1)*100 : 0;
+
+  byId(p('mg_peps')).textContent = '$'+proFormaEPS.toFixed(2);
+  byId(p('mg_aeps')).textContent = '$'+standaloneEPS.toFixed(2);
+  const adEl = byId(p('mg_adacc'));
+  adEl.textContent = (accretion>=0?'+':'')+accretion.toFixed(1)+'%';
+  adEl.style.color = accretion >= 0 ? 'var(--green)' : 'var(--red)';
+  byId(p('mg_shares')).textContent = newShares.toFixed(1)+'M';
+
+  const vd = byId(p('mg_verdict'));
+  const vdStyle='margin-top:14px;padding:12px 14px;border-radius:var(--r);font-size:13px;font-weight:600;text-align:center;';
+  if (accretion >= 1) { vd.style.cssText=vdStyle+'background:var(--green-bg);color:var(--green);border:1px solid #b7e4c7;'; vd.textContent=`✓ Accretive — pro forma EPS is ${accretion.toFixed(1)}% above the acquirer's standalone EPS. Debt-funded: ${debtPct.toFixed(0)}%.`; }
+  else if (accretion <= -1) { vd.style.cssText=vdStyle+'background:var(--red-bg);color:var(--red);border:1px solid #f5c6cb;'; vd.textContent=`✗ Dilutive — pro forma EPS is ${Math.abs(accretion).toFixed(1)}% below standalone. More stock financing usually means more dilution.`; }
+  else { vd.style.cssText=vdStyle+'background:var(--amber-bg);color:var(--amber);border:1px solid #fcd34d;'; vd.textContent='~ Roughly neutral — within 1% of standalone EPS.'; }
+}
+
 /* ---------------- HOME / LEARN / PRACTICE PAGES ---------------- */
 function buildHomePage(){
   const page = el('div', { class:'page active', id:'page-home' });
@@ -834,6 +1114,8 @@ function buildHomePage(){
     (()=>{ const b=el('button', { class:'hero-cta', type:'button', text:'Start Learning →' }); b.addEventListener('click',()=>openLesson('fs-intro')); return b; })()
   );
   page.append(hero);
+  const certSection = el('div', { id:'certSection' });
+  page.append(certSection);
   const content = el('div', { class:'home-content' });
   content.append(el('div', { class:'section-heading' }, 'Learning Modules'));
   const grid = el('div', { class:'module-grid' });
@@ -905,6 +1187,8 @@ function buildPracticePage(){
     ['⚡','LBO Returns','Model entry, leverage, EBITDA growth, exit, taxes and CapEx. See MOIC and CAGR update instantly.','m-purple','lbo'],
     ['🛡','Credit Ratios','Input EBITDA, debt, and interest to get leverage, coverage, and DSCR with an implied rating — the ratios lenders check on every loan.','m-teal','credit'],
     ['◫','Football Field','Set your valuation ranges from each method and see where any offer stands relative to all methodologies simultaneously.','m-amber','football'],
+    ['📊','Comps','Enter peer EV/EBITDA multiples and target financials to get an implied value — watch the median resist an outlier peer that would swing an average.','m-teal','comps'],
+    ['🤝','Accretion / Dilution','Set the deal size and cash/stock/debt mix, then see whether pro forma EPS rises or falls versus the acquirer standalone.','m-purple','merger'],
   ];
   cards.forEach(([icon,name,desc,cls,calcType]) => {
     const card = el('button', { type:'button', class:`module-card ${cls}` },
@@ -919,7 +1203,94 @@ function buildPracticePage(){
     grid.append(card);
   });
   page.append(grid);
+
+  const recallIntro = el('div', { style:'padding:8px 40px 0;max-width:820px;' });
+  recallIntro.append(el('div', { class:'section-heading' }, '🧠 Recall Drills'));
+  recallIntro.append(el('p', { style:'font-size:13.5px;color:var(--ink3);line-height:1.75;margin-bottom:16px;', text:'Multiple choice tests recognition — recall drills test whether you can actually produce the answer, the way a real interview does. Terms you miss come back around more often.' }));
+  page.append(recallIntro);
+  const recallGrid = el('div', { style:'padding:0 40px 40px;' });
+  const recallCard = el('button', { type:'button', class:'module-card m-red', style:'max-width:280px;' },
+    el('div', { class:'module-icon', 'aria-hidden':'true' }, '🧠'),
+    el('div', { class:'module-name', text:'Start a Drill Session' }),
+    el('div', { class:'module-desc', text:`${GLOSSARY.length} terms, weighted toward what you've missed before.` }));
+  recallCard.addEventListener('click', () => showPage('recall'));
+  recallGrid.append(recallCard);
+  page.append(recallGrid);
   return page;
+}
+
+/* ---------------- RECALL DRILLS ---------------- */
+function buildRecallPage(){
+  const page = el('div', { class:'page', id:'page-recall' });
+  const header = el('div', { class:'lesson-header', style:'padding-bottom:16px;' },
+    el('div', { class:'lesson-breadcrumb' },
+      (()=>{ const b=el('button',{type:'button',text:'Home'}); b.addEventListener('click',()=>showPage('home')); return b; })(),
+      ' / ', (()=>{ const b=el('button',{type:'button',text:'Practice'}); b.addEventListener('click',()=>showPage('practice')); return b; })(),
+      ' / ', el('span',{text:'Recall Drills'})),
+    el('h1', { class:'lesson-title' }, '🧠 Recall Drills'),
+    el('div', { class:'lesson-subtitle' }, 'Say the definition out loud (or in your head) before you reveal it. Be honest when you self-rate — the whole point is finding what you don\'t actually know yet.'));
+  page.append(header);
+  const body = el('div', { class:'lesson-body', id:'recallBody' });
+  page.append(body);
+  return page;
+}
+
+function startRecallSession(){
+  if (!STATE.recall) STATE.recall = {};
+  const weighted = [...GLOSSARY].sort((a,b) => {
+    const am = STATE.recall[a.t]?.lastMissed ? 1 : 0;
+    const bm = STATE.recall[b.t]?.lastMissed ? 1 : 0;
+    return bm - am;
+  });
+  // light shuffle within same-weight groups so it's not identical every time
+  for (let i = weighted.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    if (!!weighted[i] && !!weighted[j] &&
+        !!STATE.recall[weighted[i].t]?.lastMissed === !!STATE.recall[weighted[j].t]?.lastMissed) {
+      [weighted[i], weighted[j]] = [weighted[j], weighted[i]];
+    }
+  }
+  renderRecallCard(weighted, 0, { correct:0, missed:0 });
+}
+
+function renderRecallCard(queue, idx, tally){
+  const body = byId('recallBody');
+  body.innerHTML = '';
+  if (idx >= queue.length) {
+    body.append(el('div', { class:'concept-block', style:'text-align:center;' },
+      el('div', { style:'font-size:32px;margin-bottom:10px;', 'aria-hidden':'true' }, tally.missed === 0 ? '🎉' : '👍'),
+      el('div', { class:'concept-q' }, `Session complete — ${tally.correct} of ${queue.length} on the first pass.`),
+      el('div', { class:'concept-a', style:'margin-bottom:16px;' },
+        tally.missed === 0 ? 'Clean sweep. Come back in a few days and these will have faded a little — that\'s normal, and worth re-testing.'
+        : `${tally.missed} term${tally.missed===1?'':'s'} marked as missed — they'll come up first next time you start a session.`),
+      (() => { const b = el('button', { type:'button', class:'lesson-nav-btn primary', text:'↺ Run Another Session' }); b.addEventListener('click', startRecallSession); return b; })()
+    ));
+    track('recall_session_complete', { total: queue.length, correct: tally.correct });
+    return;
+  }
+  const item = queue[idx];
+  const progress = el('div', { style:'font-size:11px;color:var(--ink4);font-weight:600;margin-bottom:10px;', text:`Card ${idx+1} of ${queue.length}` });
+  const card = el('div', { class:'quiz-block' });
+  card.append(el('div', { style:'font-family:var(--display);font-size:20px;font-weight:800;color:var(--ink);margin-bottom:16px;text-align:center;padding:20px 0;', text:item.t }));
+  const revealBtn = el('button', { type:'button', class:'lesson-nav-btn primary', style:'display:block;margin:0 auto;', text:'Reveal Definition' });
+  const answerWrap = el('div', { style:'display:none;margin-top:16px;' });
+  answerWrap.append(el('div', { style:'font-size:13.5px;color:var(--ink2);line-height:1.75;padding:14px 16px;background:var(--canvas);border-radius:var(--r);margin-bottom:14px;', text:item.d }));
+  const rateRow = el('div', { style:'display:flex;gap:10px;justify-content:center;' });
+  const missBtn = el('button', { type:'button', class:'lesson-nav-btn', text:'😕 Missed It' });
+  const gotBtn = el('button', { type:'button', class:'lesson-nav-btn primary', text:'✅ Got It' });
+  rateRow.append(missBtn, gotBtn);
+  answerWrap.append(rateRow);
+  revealBtn.addEventListener('click', () => { revealBtn.style.display='none'; answerWrap.style.display='block'; });
+  function rate(correct){
+    STATE.recall[item.t] = { lastMissed: !correct };
+    saveState();
+    track('recall_answer', { term:item.t, correct });
+    renderRecallCard(queue, idx+1, { correct: tally.correct + (correct?1:0), missed: tally.missed + (correct?0:1) });
+  }
+  missBtn.addEventListener('click', () => rate(false));
+  gotBtn.addEventListener('click', () => rate(true));
+  card.append(revealBtn, answerWrap);
+  body.append(progress, card);
 }
 
 /* ---------------- DEAL ROOM ---------------- */
@@ -1022,6 +1393,7 @@ function init(){
   mainArea.append(buildHomePage());
   mainArea.append(buildLearnIndexPage());
   mainArea.append(buildPracticePage());
+  mainArea.append(buildRecallPage());
   mainArea.append(buildDealRoomPage());
   DEALS.forEach(d => mainArea.append(buildDealDetailPage(d)));
   mainArea.append(buildGlossaryPage());

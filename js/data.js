@@ -6,6 +6,7 @@ const MODULES = [
   { id:'val',   name:'Valuation Models',     icon:'🎯', color:'teal',   desc:'DCF, Comps, and Precedent Transactions — how to value any company, with live calculators to practice on every concept.' },
   { id:'deals', name:'Deals & Transactions', icon:'⚡', color:'purple', desc:'LBO modelling, merger analysis, credit assessment — the deal-execution toolkit used by PE firms and investment banks.' },
   { id:'adv',   name:'Advanced Analysis',    icon:'🔍', color:'amber',  desc:'Football field charts, red flag detection, and understanding how bankers, PE investors, and credit officers think differently.' },
+  { id:'recruit', name:'Recruiting & Fit',  icon:'🗣️', color:'red',   desc:'The half of breaking in that isn\'t a formula — your story, your network, and the resume that gets you in the room in the first place.' },
 ];
 
 /* ---------- QUIZ ANSWER FORMAT ----------
@@ -208,6 +209,7 @@ const LESSONS = [
 {
   id:'comps', module:'val', type:'lesson', title:'Comparable Company Analysis',
   subtitle:'Module 2 · Lesson 3 of 4 · 10 min read', minutes:10,
+  calc:'comps',
   blocks:[
     { type:'concept', label:'Core Concept', q:'What is "Comps" and why is it usually the first valuation a banker runs?',
       a:"Comparable Company Analysis values a business by looking at what similar, publicly traded companies are worth right now, expressed as a multiple (like EV/EBITDA), and applying that multiple to your target's own numbers. It's fast, it's grounded in real market prices today, and it requires no assumptions about the distant future — which is exactly what a DCF can't offer." },
@@ -293,6 +295,7 @@ const LESSONS = [
 {
   id:'merger', module:'deals', type:'lesson', title:'Merger Model — M&A',
   subtitle:'Module 3 · Lesson 2 of 3 · 11 min read', minutes:11,
+  calc:'merger',
   blocks:[
     { type:'concept', label:'Core Concept', q:'When one company buys another, how do you tell if the deal actually helps the buyer\'s shareholders?',
       a:"A merger model combines the two companies' financials and asks one central question: does the combined company's earnings per share (EPS) go <strong>up</strong> (accretive) or <strong>down</strong> (dilutive) versus the acquirer's EPS before the deal? Boards are intensely focused on this number — but it is not the same thing as \"does this deal create value.\"" },
@@ -413,6 +416,94 @@ const LESSONS = [
     { q:'A merger is accretive to EPS. Does that guarantee the deal creates real value for shareholders?', opts:['Yes, always','No — accretion can result purely from a valuation-multiple mismatch between acquirer and target, not real operational benefit','Only in all-cash deals','Only if the target is larger than the acquirer'], correct:1 },
     { q:'On a football field chart, an offer price sits inside the overlap zone of DCF, Comps, and Precedent Transactions. What does this suggest?', opts:['The offer is fraudulent','The offer is well-supported across independent valuation methods — the most defensible position for a fairness opinion','The chart is invalid','Nothing meaningful'], correct:1 },
     { q:'Which single financial-statement relationship is most repeated as a fraud and red-flag indicator throughout this course?', opts:['Revenue growing while headcount grows','Operating cash flow diverging significantly and persistently from reported net income','Marketing spend rising','Inventory turning over quickly'], correct:1 },
+  ]
+},
+
+/* ============ MODULE 5 — RECRUITING & FIT ============ */
+{
+  id:'story', module:'recruit', type:'lesson', title:'Your Story & Behavioral Fit',
+  subtitle:'Module 5 · Lesson 1 of 3 · 9 min read', minutes:9,
+  blocks:[
+    { type:'concept', label:'Core Concept', q:'Why does "walk me through your resume" decide more first-round outcomes than any technical question?',
+      a:"Most first-round interviews spend their opening minutes almost entirely on fit — your story, your \"why banking,\" your \"why us.\" It's not a formality before the real interview starts; for a lot of interviewers, it <em>is</em> the interview. A strong technical answer rarely saves a rambling, generic story. A strong story often buys real slack on a shaky technical answer, because the interviewer is trying to answer one question above all others: <strong>would I want to sit next to this person for 80 hours a week?</strong>" },
+    { type:'analogy', text:"Think of it like a movie trailer, not a biography. Nobody wants your life story in chronological order — they want two minutes that make a coherent case: here's where I started, here's the thread that connects what I've done, here's why it leads directly to this seat. Random unconnected facts, however impressive individually, don't add up to a pitch." },
+    { type:'concept', label:'Building the Narrative', q:'Five steps from scattered facts to a coherent pitch.', steps:[
+        { t:'Find your throughline', d:'Look back at what you\'ve actually done — classes, clubs, jobs, projects — and find the honest thread connecting them. It doesn\'t have to be finance from day one; it has to be true.' },
+        { t:'Structure it: experience → skill → direction', d:'Not a timeline. A case. "Here\'s what I did, here\'s what it taught me I\'m good at and like doing, here\'s why that points at this specific seat."' },
+        { t:'Keep it to 90 seconds', d:'Interviewers ask "walk me through your resume" expecting a pitch, not a recitation. If you\'re still talking at three minutes, you\'ve lost them.' },
+        { t:'Answer "why this bank/fund" specifically', d:'"I want to work in finance" answers nothing — every candidate wants that. Name something real: the group\'s deal history, a specific person you spoke with, the culture you\'ve actually heard about from alumni.' },
+        { t:'Prepare for the follow-up, not just the opener', d:'A good interviewer will push on whatever you said. If your story mentions a deal or project, be ready to go two levels deeper on it — that\'s often where the real evaluation happens.' },
+      ] },
+    { type:'keyterms', items:[
+        { n:'Fit', d:'Shorthand for whether you\'d be pleasant, reliable, and low-drama to work alongside under real pressure. Evaluated constantly, rarely stated explicitly.' },
+        { n:'Throughline', d:'The honest, single thread connecting your experiences into one coherent case — the backbone of a good "walk me through your resume" answer.' },
+        { n:'"Why This Seat"', d:'The specific-to-this-firm version of "why finance." Generic answers here are one of the most common reasons a strong candidate doesn\'t advance.' },
+      ] },
+    { type:'warn', label:'"I\'ve always been passionate about finance" is a red flag, not an opener', text:'Interviewers on a busy recruiting season hear some version of this dozens of times a week. It signals a story that was written to sound good rather than to be true, and experienced interviewers can tell the difference almost immediately. A specific, slightly less polished true story consistently beats a smooth generic one.' },
+    { type:'realworld', label:'The 15-Minute Rule', body:'It\'s common practice at large banks for a first-round interview to spend the first 10–15 minutes almost entirely on background and fit before a single technical question is asked — and for interviewers to privately decide within that window whether they\'re rooting for a candidate or not. The technical questions that follow are frequently scored more generously for candidates the interviewer is already rooting for. The fit portion isn\'t a warm-up; it\'s often the highest-leverage part of the entire interview.' },
+  ],
+  quiz:[
+    { q:'Why does the "walk me through your resume" question carry so much weight in finance interviews?', opts:['It\'s a legal requirement','It\'s often where interviewers form their overall impression of the candidate before any technical question is asked','It tests memorization ability','It doesn\'t actually matter much'], correct:1 },
+    { q:'What is the biggest problem with the answer "I\'ve always been passionate about finance"?', opts:['It\'s too short','It\'s generic — interviewers hear a version of it constantly and it signals a rehearsed, not a true, story','It\'s factually incorrect','It\'s too long'], correct:1 },
+    { q:'A good "why this bank" answer should be:', opts:['As broad as possible so it applies to any firm','Specific to that firm — something real about the group, people, or culture, not just "I want to work in finance"','Focused entirely on compensation','Left out of the interview entirely'], correct:1 },
+  ]
+},
+
+{
+  id:'networking', module:'recruit', type:'lesson', title:'Networking & Cold Outreach',
+  subtitle:'Module 5 · Lesson 2 of 3 · 10 min read', minutes:10,
+  blocks:[
+    { type:'concept', label:'Core Concept', q:'Why does networking matter more in finance recruiting than in most other industries?',
+      a:"Finance recruiting runs heavily on referrals and informal signal, not just the online application. A recruiter or analyst who's met you, remembers a good conversation, and is willing to put your resume in front of the right person is worth more than a cold application sitting in a queue of thousands. This isn't unique to finance, but the effect is unusually strong here — many analyst offers can be traced back to some human touchpoint earlier in the process, not the online form alone." },
+    { type:'analogy', text:"Networking well is planting seeds, not making sales calls. You're not trying to extract a job offer from a 20-minute call — you're trying to become a real, remembered person to someone who might mention your name in a room you're not in. That only works if the conversation is genuinely useful and pleasant for the other person too, not a thinly disguised pitch." },
+    { type:'concept', label:'Doing It Well', q:'Five steps from a cold list to a warm referral.', steps:[
+        { t:'Build a real target list', d:'Start with alumni from your school, past interns from your target firms, or second-degree LinkedIn connections. A warm-ish starting point beats a fully cold one.' },
+        { t:'Write a short, specific cold email', d:'Three to five sentences. Who you are, one specific reason you\'re reaching out to *them* (not a template), and one easy, low-commitment ask — a 15-minute call, not "can you help me get a job."' },
+        { t:'Run the call as a real conversation', d:'Ask about their path, what they actually work on day to day, what they wish they\'d known earlier. Listen more than you pitch. Save one or two smart questions for the end.' },
+        { t:'Follow up like a person, not a bot', d:'A short thank-you note within a day or two. No "just checking in" messages every week — that reads as pressure, not interest.' },
+        { t:'Let the referral happen naturally', d:'If the conversation went well, most people will offer to pass your resume along or connect you further without being asked. Asking too directly, too early, undercuts the relationship you just built.' },
+      ] },
+    { type:'keyterms', items:[
+        { n:'Informational Interview', d:'A short conversation meant to learn about someone\'s role and path — not a disguised job interview. Treated as one, it usually backfires.' },
+        { n:'Warm Intro', d:'Being introduced to someone through a mutual connection rather than reaching out cold. Consistently gets a faster, more generous response.' },
+        { n:'Alumni Network', d:'Often the highest-yield starting point for outreach — shared school affiliation is a low-friction reason for someone to say yes to a call.' },
+      ] },
+    { type:'warn', label:'The two fastest ways to get ignored', text:'Sending the same templated message to 200 people (it reads as one, and people can tell), and asking directly for a job or referral in the very first message. Both signal that the person on the other end is a means to an end, not someone worth an actual conversation — and most people can feel that instantly.' },
+    { type:'realworld', label:'Why "Just Applying Online" Underperforms', body:'At large banks, a single analyst posting can draw many thousands of online applications for a handful of seats — a volume no team can meaningfully differentiate on resume alone. A referral or a remembered conversation moves a resume out of that pile and in front of an actual person. This is precisely why career services and recruiting coaches at target schools push networking so hard: it\'s not etiquette, it\'s the most direct lever a candidate actually controls.' },
+  ],
+  quiz:[
+    { q:'What is the main purpose of an informational interview?', opts:['To directly ask for a job offer','To learn about someone\'s role and path in a genuine conversation — not a disguised job interview','To negotiate salary','To submit a resume formally'], correct:1 },
+    { q:'Why do templated, mass-sent cold emails tend to perform poorly?', opts:['They\'re against the law','They read as generic and impersonal, and people can usually tell', 'They are too short', 'Email is not used in recruiting'], correct:1 },
+    { q:'Why does a referral typically outperform a cold online application?', opts:['It skips required application steps','It moves a resume in front of an actual person rather than sitting in a queue of thousands of undifferentiated applications','It guarantees an offer','It is required by every firm'], correct:1 },
+  ]
+},
+
+{
+  id:'resume', module:'recruit', type:'lesson', title:'Resume for Finance',
+  subtitle:'Module 5 · Lesson 3 of 3 · 8 min read', minutes:8,
+  blocks:[
+    { type:'concept', label:'Core Concept', q:'Why does resume format matter as much as the substance behind it?',
+      a:"During high-volume recruiting seasons, an analyst doing first-pass resume screens might genuinely spend well under a minute per resume. In that window, format does the sorting before content gets a fair read: one page, clean structure, and a strong first bullet under each role are what actually get a resume a second, slower look." },
+    { type:'analogy', text:"Treat it like a one-page ad, not a life story. An ad doesn't try to tell you everything about the product — it leads with the single strongest, most relevant claim and gets out of the way. A resume that tries to include everything you've ever done ends up highlighting nothing." },
+    { type:'concept', label:'What Actually Gets Read', q:'Five rules that separate a screened-in resume from a skipped one.', steps:[
+        { t:'One page. No exceptions', d:'A finance resume is never two pages, regardless of experience level. Cut, don\'t shrink the font to fit.' },
+        { t:'Every bullet: action verb + what you did + a number', d:'"Responsible for financial analysis" says nothing. "Built a 3-statement model used to evaluate a $40M acquisition target" says everything. If a bullet has no number, it\'s usually a sign the bullet is too vague, not that the work wasn\'t quantifiable.' },
+        { t:'Lead with your strongest, most relevant line', d:'Under each experience, the first bullet is the one that gets read most carefully. Don\'t bury the best one third.' },
+        { t:'Show GPA and test scores if they\'re strong', d:'If your GPA is competitive for your target firms, show it. Leaving it off when it\'s strong reads as a gap; when it\'s not competitive, leaving it off is normal and expected.' },
+        { t:'Cut the filler sections', d:'No "Objective" paragraph, no photo, no unrelated hobbies padding the page. Every line should be doing work — if it doesn\'t support the case for this specific role, it\'s taking up space that could hold a stronger bullet.' },
+      ] },
+    { type:'keyterms', items:[
+        { n:'Quantified Bullet', d:'A resume line with a specific number in it — dollars, percentage, headcount, time saved. The single most common gap between a weak resume and a strong one.' },
+        { n:'ATS (Applicant Tracking System)', d:'Software many firms use to scan resumes for keywords before a human sees them. Standard section headers and a clean, simple format parse correctly; heavy graphics and unusual layouts often don\'t.' },
+        { n:'Reverse Chronological', d:'The standard finance resume format — most recent experience first. Deviating from it (by theme, by category) reads as unconventional in a field that reads dozens of resumes a day and expects a familiar shape.' },
+      ] },
+    { type:'warn', label:'An unquantified bullet is a skipped bullet', text:'"Assisted with market research" and "performed due diligence on potential investments" could describe anything from a genuinely substantial project down to almost nothing. Without a number or a concrete outcome attached, a fast reader has no way to tell the difference — and in a 20-second screen, it gets treated as the weaker version by default.' },
+    { type:'realworld', label:'The 20-Second Screen', body:'It\'s widely reported that large banks and funds, during peak recruiting weeks, receive resume volumes that make anything beyond a rapid first-pass scan impractical for the team doing initial screens. A resume that requires the reader to hunt for the point — dense paragraphs, no clear bolded numbers, inconsistent formatting — is disproportionately likely to be set aside in favor of one that makes its strongest claim obvious at a glance. This is exactly why format-as-triage is treated as a real, not cosmetic, part of recruiting prep.' },
+  ],
+  quiz:[
+    { q:'Which resume bullet is stronger, and why?', opts:['"Responsible for financial analysis and reporting" — it sounds more professional','"Built a 3-statement model used to evaluate a $40M acquisition target" — it\'s specific and quantified','Both are equally strong','Neither matters since resumes aren\'t read closely'], correct:1 },
+    { q:'How long should a finance resume be, regardless of experience level?', opts:['Exactly one page','Two pages to show more depth','As long as needed','Three pages for senior candidates'], correct:0 },
+    { q:'Why do most finance resumes use reverse chronological order rather than a thematic/skills-based format?', opts:['It\'s legally required','It\'s the familiar, expected shape for a field that screens many resumes quickly — deviating from it reads as unconventional','Thematic formats are always better but banned','There is no real convention'], correct:1 },
   ]
 },
 

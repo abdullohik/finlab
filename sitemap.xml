@@ -35,4 +35,9 @@
   <url><loc>https://abdullohik.github.io/finlab/#/deal-atlas</loc><priority>0.5</priority></url>
   <url><loc>https://abdullohik.github.io/finlab/#/deal-vantage</loc><priority>0.5</priority></url>
   <url><loc>https://abdullohik.github.io/finlab/#/deal-northwind</loc><priority>0.5</priority></url>
+
+  <!-- Real server-rendered pages (not hash fragments) — the actual crawlable content -->
+  <url><loc>https://abdullohik.github.io/finlab/guides/</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/guides/what-is-a-dcf.html</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://abdullohik.github.io/finlab/guides/lbo-interview-questions.html</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
 </urlset>

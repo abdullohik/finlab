@@ -5,10 +5,15 @@ Finance education for students breaking into investment banking, private equity,
 The same analytical frameworks used by analysts at banks, PE firms, and credit funds — taught from first principles, with real examples and live calculators you're encouraged to break on purpose.
 
 ## What's Inside
-- 13-lesson learning path across 4 modules (Financial Statements → Valuation → Deals & Transactions → Advanced Analysis), plus a module quiz and a final assessment
-- 4 live calculators: DCF (with an honest "undefined" state when WACC ≤ terminal growth), LBO (real cash-tax/CapEx schedule, not a magic constant), Credit Ratios, and a Football Field valuation-range builder
+- 16-lesson learning path across 5 modules (Financial Statements → Valuation → Deals & Transactions → Advanced Analysis → Recruiting & Fit), plus 2 module quizzes and a final assessment
+- 6 live calculators: DCF (with an honest "undefined" state when WACC ≤ terminal growth), LBO (real cash-tax/CapEx schedule, not a magic constant), Comps, Accretion/Dilution, Credit Ratios, and a Football Field valuation-range builder
+- Recall Drills — flashcard-style practice over the glossary that tests whether you can actually produce an answer, not just recognize one from four multiple-choice options; missed terms resurface first next session
 - 3 guided Deal Room case studies (sell-side M&A, PE buyout/credit, corporate M&A) linking back to the relevant lessons and calculators
+- A downloadable completion certificate (client-side canvas → PNG, no backend) once every lesson and quiz is done
+- Module 5 covers the non-technical half of breaking in — story/behavioral fit, networking and cold outreach, and resume — not just DCF/LBO mechanics
 - 31-term searchable finance glossary
+- Two standalone, crawlable guide articles (`/guides/`) outside the app shell, for anyone who lands from search rather than the homepage
+- A one-click "Found a mistake? Report it" link (pre-filled GitHub issue, contextual to whatever page you're on) — no backend needed
 - XP, streak, and quiz progress persisted locally in the browser (`localStorage`) — refreshing the page doesn't wipe progress
 - Self-hosted fonts (no third-party font-CDN requests), keyboard-navigable UI with a real WCAG-AA-checked color palette, and a responsive layout down to phone widths
 - Every page has a real, shareable URL (`#/dcf`, `#/deal-atlas`, ...) that survives refresh and works with the browser back/forward buttons

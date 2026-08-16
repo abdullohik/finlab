@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="10 real LBO interview questions with plain-English answers — leverage, the three value creation levers, IRR vs MOIC, and the paper LBO walkthrough.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; script-src 'self'; base-uri 'self'; form-action 'none';">
+<title>10 LBO Interview Questions (With Answers) — FinLab</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+<meta property="og:title" content="10 LBO Interview Questions (With Answers)">
+<meta property="og:description" content="Real LBO interview questions — leverage, value creation levers, IRR vs MOIC, and how to walk through a paper LBO — answered plainly.">
+<meta property="og:type" content="article">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  body{display:block;}
+  .article-wrap{max-width:760px;margin:0 auto;padding:0 24px 80px;}
+  .article-header{padding:56px 24px 32px;text-align:center;background:linear-gradient(135deg,#0969da 0%,#0550ae 50%,#0a6f66 100%);color:white;}
+  .article-header h1{font-family:var(--display);font-size:32px;font-weight:800;letter-spacing:-.03em;max-width:640px;margin:0 auto 12px;line-height:1.2;}
+  .article-header p{color:rgba(255,255,255,.92);font-size:15px;max-width:560px;margin:0 auto;}
+  .logo-row{padding:16px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;}
+  .logo-row a{font-family:var(--display);font-size:18px;font-weight:800;color:var(--blue);text-decoration:none;letter-spacing:-.03em;}
+  .qa{background:var(--surface);border:1px solid var(--line-ui);border-radius:var(--r2);padding:22px 24px;margin:20px 0;box-shadow:var(--shadow-sm);}
+  .qa h2{font-family:var(--display);font-size:16px;font-weight:700;color:var(--ink);margin-bottom:10px;letter-spacing:-.02em;}
+  .qa p{font-size:14.5px;color:var(--ink2);line-height:1.8;margin:0;}
+  .qa p+p{margin-top:10px;}
+  .qnum{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--blue);color:white;font-size:11px;font-weight:700;margin-right:8px;}
+  .cta-box{background:var(--surface);border:1.5px solid var(--line-ui);border-radius:var(--r2);padding:24px;margin:40px 0;text-align:center;box-shadow:var(--shadow-sm);}
+  .cta-box p{margin-bottom:16px;font-size:15px;color:var(--ink2);line-height:1.8;}
+  .cta-box a.btn{display:inline-block;background:var(--blue);color:white;font-weight:700;font-size:14px;padding:10px 22px;border-radius:8px;text-decoration:none;}
+  .intro{font-size:15px;color:var(--ink2);line-height:1.85;margin:32px 0;}
+  .guide-footer{padding:32px 24px;text-align:center;font-size:12px;color:var(--ink4);border-top:1px solid var(--line);}
+  .guide-footer a{color:var(--blue);}
+</style>
+</head>
+<body>
+<div class="logo-row"><a href="../index.html">FinLab</a></div>
+<header class="article-header">
+  <h1>10 LBO Interview Questions (With Answers)</h1>
+  <p>The questions that actually come up for private equity and leveraged finance interviews — answered the way you'd want a friend to explain them.</p>
+</header>
+<div class="article-wrap">
+<p class="intro">These are the questions that separate candidates who've memorized a definition from candidates who actually understand how a leveraged buyout works. Each answer below is deliberately plain-English first — the technical precision matters, but only after the intuition is solid.</p>
+
+<div class="qa"><h2><span class="qnum">1</span>What is an LBO, in one sentence?</h2>
+<p>A private equity firm buys a company using mostly borrowed money — typically 60–70% debt, 30–40% the firm's own equity — and the company's own future cash flows pay down that debt over a 4–7 year hold.</p></div>
+
+<div class="qa"><h2><span class="qnum">2</span>Why does leverage improve equity returns?</h2>
+<p>Because it shrinks the amount of your own money at risk while the business outcome stays the same. Buy a $100 business with $100 of your own cash, sell it for $120, and you've made a 20% return. Buy the same business with $40 of your own cash and $60 borrowed, sell for $120, pay back the $60 — your $40 became $60, a 50% return. Same business, same exit price, very different equity return, purely because less of it was your own money.</p></div>
+
+<div class="qa"><h2><span class="qnum">3</span>What are the three value creation levers in an LBO?</h2>
+<p><strong>EBITDA growth</strong> (real operational improvement — revenue growth, cost cuts, bolt-on acquisitions), <strong>debt paydown</strong> (every dollar of debt repaid from the business's own cash flow becomes equity value, with zero operational improvement required), and <strong>multiple expansion</strong> (selling at a higher EV/EBITDA multiple than you paid). Interviewers want to hear that these aren't equally respectable: EBITDA growth is the real one, debt paydown is financial mechanics, and multiple expansion should never be assumed in a base case — it's market-dependent upside, not a plan.</p></div>
+
+<div class="qa"><h2><span class="qnum">4</span>What's the difference between IRR and MOIC?</h2>
+<p><strong>MOIC</strong> (Multiple on Invested Capital) is simple: exit equity divided by entry equity. A 3x MOIC means you tripled the money — full stop, no time dimension. <strong>IRR</strong> (Internal Rate of Return) is the annualized version — it cares how long it took. A 3x MOIC over 5 years is roughly a 25% IRR; the same 3x over 7 years is closer to 17%. PE firms usually target both a MOIC around 2.5–3.5x and an IRR around 20–25%, and a deal that's strong on one but weak on the other still gets scrutinized.</p></div>
+
+<div class="qa"><h2><span class="qnum">5</span>Walk me through a basic paper LBO.</h2>
+<p>Start with Entry EBITDA and an entry multiple to get Entry Enterprise Value. Split that between debt (say 60%) and the sponsor's equity check (40%). Grow EBITDA over the hold period, and use a simplified cash flow (roughly EBITDA minus interest minus tax minus CapEx) to pay down debt each year. At exit, apply an exit multiple to the grown EBITDA to get Exit Enterprise Value, subtract remaining debt to get Exit Equity, then divide by the entry equity to get MOIC. Doing this cleanly out loud, with round numbers, is exactly what's being tested — not precision, but whether the mechanics are actually understood.</p></div>
+
+<div class="qa"><h2><span class="qnum">6</span>What happens to an LBO if EBITDA falls in a downturn?</h2>
+<p>This is where leverage cuts the other way. If EBITDA falls 30%, the debt doesn't shrink with it — the company still owes every dollar. Equity value can get wiped out far faster than the underlying business actually deteriorated, because the debt sits ahead of equity in the capital structure no matter what. This is exactly why lenders stress-test every LBO against a severe downside case before agreeing to underwrite the debt package.</p></div>
+
+<div class="qa"><h2><span class="qnum">7</span>Why do lenders care so much about downside scenarios specifically?</h2>
+<p>Because a lender's risk is asymmetric — at best they get their interest and principal back on schedule, with no upside if the deal goes great. Their entire exposure is to the downside case, so that's what actually gets underwritten against, not the sponsor's optimistic base case.</p></div>
+
+<div class="qa"><h2><span class="qnum">8</span>What's a reasonable entry multiple range, and why does it matter?</h2>
+<p>Typical LBO entry multiples run 8–14x EV/EBITDA depending on the sector and market conditions. It matters because a conservative model holds the exit multiple equal to (or below) the entry multiple — assuming you'll sell for more than you paid, on a relative basis, is exactly the "multiple expansion" lever that shouldn't be the base case.</p></div>
+
+<div class="qa"><h2><span class="qnum">9</span>What's the difference between a strategic buyer and a financial buyer's LBO?</h2>
+<p>A strategic buyer (another operating company) can justify paying more because of synergies — cost savings or revenue benefits only available because they already operate a similar business. A financial buyer (a PE firm running an LBO) has no synergies to lean on, so they're typically more price-disciplined and returns-focused — the whole model has to work on the business's standalone numbers.</p></div>
+
+<div class="qa"><h2><span class="qnum">10</span>Can you name a real example where leverage amplified a great outcome?</h2>
+<p>Blackstone's 2007 acquisition of Hilton Hotels is the standard example. They bought right before the financial crisis, and Hilton's EBITDA fell roughly 40% in 2008–2009 — by most measures, a disaster entry point. Blackstone renegotiated the debt, brought in new management, invested in Hilton's loyalty program, and roughly doubled the hotel count globally. By exit in 2018, EBITDA had more than doubled and the deal returned about 3.0x MOIC — one of the largest PE profits ever at the time. The lesson interviewers want you to draw from it: the best returns came from real operational improvement, not financial engineering.</p></div>
+
+<div class="cta-box">
+  <p>Reading the answers is step one. FinLab's LBO lesson has a live calculator with a real cash-tax and CapEx schedule (not a made-up shortcut) — move leverage from 40% to 70% and watch what actually happens to the return.</p>
+  <a class="btn" href="../index.html#/lbo">Try the LBO Calculator →</a>
+</div>
+</div>
+<footer class="guide-footer">
+  Part of <a href="../index.html">FinLab</a> — free finance lessons and live calculators for students breaking into investment banking, private equity, and credit. Not affiliated with or endorsed by any bank or fund.
+</footer>
+</body>
+</html>

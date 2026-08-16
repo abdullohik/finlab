@@ -77,6 +77,8 @@ a{color:inherit;}
 .progress-label{font-size:11px;color:var(--ink3);margin-bottom:4px;display:flex;justify-content:space-between;}
 .progress-bar{height:6px;background:var(--line2);border-radius:3px;overflow:hidden;}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--teal));border-radius:3px;transition:width .4s;}
+.feedback-link{display:block;margin-top:14px;font-size:11.5px;color:var(--ink3);text-decoration:none;}
+.feedback-link:hover{color:var(--blue);text-decoration:underline;}
 
 /* MAIN */
 .main{flex:1;overflow-y:auto;background:var(--canvas);}
@@ -97,6 +99,13 @@ a{color:inherit;}
 
 .disclaimer-bar{background:var(--canvas2);border-bottom:1px solid var(--line);padding:8px 40px;font-size:11.5px;color:var(--ink4);line-height:1.6;}
 
+/* CERTIFICATE CARD */
+.cert-card{margin:0 40px;margin-top:-28px;position:relative;z-index:2;background:var(--surface);border:1px solid var(--line-ui);border-radius:var(--r2);padding:20px 24px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.cert-card-title{font-family:var(--display);font-size:15px;font-weight:700;color:var(--ink);}
+.cert-card-sub{font-size:12.5px;color:var(--ink3);margin-top:2px;max-width:520px;line-height:1.6;}
+.cert-card-actions{display:flex;gap:10px;align-items:center;margin-left:auto;flex-wrap:wrap;}
+.cert-name-input{padding:9px 12px;border:1.5px solid var(--line-ui);border-radius:var(--r);font:inherit;font-size:13px;min-width:180px;}
+
 /* HOME CONTENT */
 .home-content{padding:32px 40px;}
 .section-heading{font-family:var(--display);font-size:18px;font-weight:700;color:var(--ink);margin-bottom:16px;letter-spacing:-.02em;}
@@ -107,6 +116,7 @@ a{color:inherit;}
 .module-card.m-teal::before{background:var(--teal);}
 .module-card.m-purple::before{background:var(--purple);}
 .module-card.m-amber::before{background:var(--amber);}
+.module-card.m-red::before{background:var(--red);}
 .module-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--blue);}
 .module-icon{font-size:24px;margin-bottom:10px;}
 .module-name{font-family:var(--display);font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px;}
