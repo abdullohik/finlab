@@ -412,6 +412,7 @@ function showPageInternal(id){
   if (navBtn) navBtn.setAttribute('aria-current','page');
   byId('mainArea').scrollTop = 0;
   closeMobileSidebar();
+  document.body.classList.add('no-sidebar');
   if (id === 'glossary') renderGlossaryList('');
   if (id === 'recall') startRecallSession();
   updateFeedbackLink(id);
@@ -435,6 +436,7 @@ function openLessonInternal(id){
   byId('mainArea').scrollTop = 0;
   highlightSidebar(id);
   closeMobileSidebar();
+  document.body.classList.remove('no-sidebar');
   if (lesson.calc === 'dcf') dcfCalc(id);
   if (lesson.calc === 'lbo') lboCalc(id);
   if (lesson.calc === 'credit') creditCalc(id);
@@ -1117,7 +1119,30 @@ function buildHomePage(){
   const certSection = el('div', { id:'certSection' });
   page.append(certSection);
   const content = el('div', { class:'home-content' });
-  content.append(el('div', { class:'section-heading' }, 'Learning Modules'));
+
+  // "How it works" comes before the curriculum grid on purpose — a first-time
+  // visitor should understand what kind of platform this is and why it's
+  // built this way before being handed the full 5-module syllabus. The
+  // syllabus itself lives one click away on the Curriculum page.
+  content.append(el('div', { class:'section-heading' }, 'How FinLab Works'));
+  const how = el('div', { class:'how-grid' });
+  [
+    ['📖','Concept First','Every lesson starts with the plain-English idea before any formula. You understand why before you learn how.'],
+    ['💡','Real Analogies','Every abstract concept is anchored to something you already understand — a mortgage, a used car, a landlord.'],
+    ['🔧','Live Calculators','Move sliders, watch values change. You don\'t understand DCF until you\'ve broken it by setting terminal growth above WACC.'],
+    ['🌍','Real Examples','Every lesson cites a real company, deal, or failure — Luckin Coffee, Hilton, Enron, Wirecard — the concepts come alive.'],
+  ].forEach(([icon,title,desc]) => how.append(el('div', { class:'how-card' },
+    el('div', { class:'how-icon', 'aria-hidden':'true' }, icon),
+    el('div', { class:'how-title', text:title },),
+    el('div', { class:'how-desc', text:desc }))));
+  content.append(how);
+
+  const modHeadRow = el('div', { style:'display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;' },
+    el('div', { class:'section-heading', style:'margin-bottom:0;' }, 'The Curriculum'));
+  const seeAllLink = el('button', { type:'button', style:'background:none;border:none;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--blue);' }, 'See full breakdown →');
+  seeAllLink.addEventListener('click', () => showPage('learn'));
+  modHeadRow.append(seeAllLink);
+  content.append(modHeadRow);
   const grid = el('div', { class:'module-grid' });
   MODULES.forEach(mod => {
     const modLessons = LESSONS.filter(l=>l.module===mod.id);
@@ -1134,18 +1159,6 @@ function buildHomePage(){
     grid.append(card);
   });
   content.append(grid);
-  content.append(el('div', { class:'section-heading' }, 'How FinLab Works'));
-  const how = el('div', { class:'how-grid' });
-  [
-    ['📖','Concept First','Every lesson starts with the plain-English idea before any formula. You understand why before you learn how.'],
-    ['💡','Real Analogies','Every abstract concept is anchored to something you already understand — a mortgage, a used car, a landlord.'],
-    ['🔧','Live Calculators','Move sliders, watch values change. You don\'t understand DCF until you\'ve broken it by setting terminal growth above WACC.'],
-    ['🌍','Real Examples','Every lesson cites a real company, deal, or failure — Luckin Coffee, Hilton, Enron, Wirecard — the concepts come alive.'],
-  ].forEach(([icon,title,desc]) => how.append(el('div', { class:'how-card' },
-    el('div', { class:'how-icon', 'aria-hidden':'true' }, icon),
-    el('div', { class:'how-title', text:title },),
-    el('div', { class:'how-desc', text:desc }))));
-  content.append(how);
   page.append(content);
   return page;
 }
@@ -1155,21 +1168,33 @@ function statBlock(val,label){
 
 function buildLearnIndexPage(){
   const page = el('div', { class:'page', id:'page-learn' });
-  const wrap = el('div', { style:'padding:32px 40px;' });
-  wrap.append(el('div', { class:'section-heading' }, 'All Modules'));
-  const grid = el('div', { class:'module-grid' });
-  MODULES.forEach(mod => {
+  const wrap = el('div', { style:'padding:32px 40px;max-width:760px;' });
+  wrap.append(el('div', { class:'section-heading' }, 'The Full Curriculum'));
+  wrap.append(el('p', { style:'font-size:13.5px;color:var(--ink3);line-height:1.75;margin-bottom:24px;', text:'Every module, every lesson, in order. Expand a module to see exactly what\'s inside before you start it.' }));
+  MODULES.forEach((mod, mi) => {
     const modLessons = LESSONS.filter(l=>l.module===mod.id);
     const mins = modLessons.reduce((s,l)=>s+l.minutes,0);
-    const card = el('button', { type:'button', class:`module-card m-${mod.color}` },
-      el('div', { class:'module-icon', 'aria-hidden':'true' }, mod.icon),
-      el('div', { class:'module-name', text:mod.name }),
-      el('div', { class:'module-desc', text:mod.desc }),
-      el('div', { class:'module-footer' }, el('span', { class:'module-lessons' }, `${modLessons.length} lessons · ~${mins} min`)));
-    card.addEventListener('click', () => openLesson(modLessons[0].id));
-    grid.append(card);
+    const details = el('details', mi===0 ? { class:'syllabus-module', open:'' } : { class:'syllabus-module' });
+    const summary = el('summary', { class:`syllabus-summary m-${mod.color}` },
+      el('span', { class:'module-icon', 'aria-hidden':'true', style:'margin-bottom:0;' }, mod.icon),
+      el('span', { style:'flex:1;' },
+        el('div', { class:'module-name', text:mod.name }),
+        el('div', { class:'module-desc', style:'margin-bottom:0;', text:mod.desc })),
+      el('span', { style:'font-size:11px;color:var(--ink4);font-weight:600;white-space:nowrap;' }, `${modLessons.length} · ~${mins} min`)
+    );
+    details.append(summary);
+    const list = el('div', { class:'syllabus-list' });
+    modLessons.forEach(l => {
+      const row = el('button', { type:'button', class:'syllabus-row' },
+        el('span', { class:`path-tag ${l.type==='quiz'?'tag-quiz':'tag-lesson'}` }, l.type==='quiz'?'Quiz':'Lesson'),
+        el('span', { class:'syllabus-row-title', text:l.title }),
+        el('span', { class:'syllabus-row-min' }, l.minutes+' min'));
+      row.addEventListener('click', () => openLesson(l.id));
+      list.append(row);
+    });
+    details.append(list);
+    wrap.append(details);
   });
-  wrap.append(grid);
   page.append(wrap);
   return page;
 }

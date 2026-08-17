@@ -49,6 +49,13 @@ a{color:inherit;}
 /* LAYOUT */
 .workspace{display:flex;flex:1;overflow:hidden;height:calc(100vh - 52px);position:relative;}
 .sidebar-scrim{display:none;}
+/* Sidebar is contextual: it's in-course navigation, so it only shows up once
+   you're actually inside a lesson — not while browsing/orienting on Home,
+   Curriculum, Practice, Deal Room, or Glossary. Keeps the first-visit
+   experience readable instead of dumping the entire 18-item syllabus and the
+   full app chrome on someone before they've decided to start. */
+body.no-sidebar .sidebar{display:none;}
+body.no-sidebar .menu-toggle{visibility:hidden;}
 
 /* SIDEBAR */
 .sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;}
@@ -130,6 +137,25 @@ a{color:inherit;}
 .how-icon{font-size:22px;margin-bottom:8px;}
 .how-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:5px;}
 .how-desc{font-size:12px;color:var(--ink3);line-height:1.6;}
+
+/* CURRICULUM / SYLLABUS */
+.syllabus-module{border:1px solid var(--line-ui);border-radius:var(--r2);margin-bottom:12px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow-sm);}
+.syllabus-summary{display:flex;align-items:center;gap:14px;padding:16px 40px 16px 16px;cursor:pointer;list-style:none;position:relative;border-left:4px solid transparent;}
+.syllabus-summary::-webkit-details-marker{display:none;}
+.syllabus-summary::after{content:'▾';position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--ink4);transition:transform .15s;font-size:12px;}
+details[open]>.syllabus-summary::after{transform:translateY(-50%) rotate(180deg);}
+.syllabus-summary:hover{background:var(--canvas);}
+.syllabus-summary.m-blue{border-left-color:var(--blue);}
+.syllabus-summary.m-teal{border-left-color:var(--teal);}
+.syllabus-summary.m-purple{border-left-color:var(--purple);}
+.syllabus-summary.m-amber{border-left-color:var(--amber);}
+.syllabus-summary.m-red{border-left-color:var(--red);}
+.syllabus-list{border-top:1px solid var(--line2);}
+.syllabus-row{display:flex;align-items:center;gap:12px;width:100%;padding:11px 16px 11px 24px;background:none;border:none;border-bottom:1px solid var(--line2);cursor:pointer;text-align:left;font:inherit;}
+.syllabus-row:last-child{border-bottom:none;}
+.syllabus-row:hover{background:var(--canvas);}
+.syllabus-row-title{flex:1;font-size:13px;color:var(--ink2);}
+.syllabus-row-min{font-size:11px;color:var(--ink4);font-family:var(--mono);}
 
 /* LESSON */
 .lesson-header{background:var(--surface);border-bottom:1px solid var(--line);padding:20px 40px 0;}
