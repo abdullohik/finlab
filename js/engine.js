@@ -276,7 +276,7 @@ function applyCompletionState(){
   const heroCta = byId('heroCta');
   if (heroCta) {
     const r = resumeTarget();
-    heroCta.textContent = r.started ? `Continue → ${r.title}` : 'Start Learning →';
+    heroCta.textContent = r.complete ? '🎓 Get your certificate' : r.started ? `Continue → ${r.title}` : 'Start Learning →';
   }
   renderCertSection();
 }
@@ -295,7 +295,7 @@ function renderCertSection(){
   const card = el('div', { class:'cert-card' },
     el('div', { style:'font-size:28px;', 'aria-hidden':'true' }, '🎓'),
     el('div', { class:'cert-card-title' }, "You've completed the FinLab curriculum!"),
-    el('div', { class:'cert-card-sub' }, `${NAV_ORDER.length} lessons, ${STATE.xp} XP. Download a certificate to share — enter your name as you'd like it to appear.`)
+    el('div', { class:'cert-card-sub' }, `${LESSONS.filter(l=>l.type==='lesson').length} lessons and ${LESSONS.filter(l=>l.type==='quiz').length} quizzes, ${STATE.xp} XP. Download a certificate to share — enter your name as you'd like it to appear.`)
   );
   const nameInput = el('input', { type:'text', class:'cert-name-input', placeholder:'Your name', value: STATE.studentName || '', 'aria-label':'Your name for the certificate' });
   const dlBtn = el('button', { type:'button', class:'hero-cta', style:'margin-top:0;color:white;background:var(--blue-dk);', text:'⬇ Download Certificate' });
@@ -372,7 +372,7 @@ function downloadCertificate(name){
 
   ctx.fillStyle = '#24292f';
   ctx.font = "400 19px Inter, sans-serif";
-  wrapText(ctx, `has completed the FinLab curriculum — ${NAV_ORDER.length} lessons across Financial Statements, Valuation, Deals & Transactions, Advanced Analysis, and Recruiting & Fit.`, cx, 460, 920, 28);
+  wrapText(ctx, `has completed the FinLab curriculum — ${LESSONS.filter(l=>l.type==='lesson').length} lessons across ${MODULES.map(m=>m.name).join(', ')}.`, cx, 460, 920, 28);
 
   ctx.fillStyle = '#57606a';
   ctx.font = "600 15px JetBrains Mono, monospace";
@@ -1137,8 +1137,9 @@ function mergerCalc(lessonId){
 function resumeTarget(){
   const done = new Set(STATE.completed || []);
   const started = done.size > 0;
+  const complete = NAV_ORDER.length > 0 && done.size === NAV_ORDER.length;
   const nextId = NAV_ORDER.find(id => !done.has(id)) || NAV_ORDER[NAV_ORDER.length-1];
-  return { id: nextId, title: (LESSON_BY_ID[nextId]||{}).title || 'Continue', started };
+  return { id: nextId, title: (LESSON_BY_ID[nextId]||{}).title || 'Continue', started, complete };
 }
 
 function buildHomePage(){
@@ -1147,11 +1148,17 @@ function buildHomePage(){
   const calcCount = new Set(LESSONS.filter(l=>l.calc).map(l=>l.calc)).size;
 
   // Returning users should resume, not restart. resumeTarget() picks the first
-  // incomplete item in NAV_ORDER, so the CTA reflects actual progress.
+  // incomplete item in NAV_ORDER, so the CTA reflects actual progress. Once
+  // everything is done it stops offering "Continue" (there's nothing left to
+  // continue to) and points at the certificate instead.
   const resume = resumeTarget();
   const startBtn = el('button', { class:'hero-cta', type:'button', id:'heroCta' },
-    resume.started ? `Continue → ${resume.title}` : 'Start Learning →');
-  startBtn.addEventListener('click',()=>openLesson(resumeTarget().id));
+    resume.complete ? '🎓 Get your certificate' : resume.started ? `Continue → ${resume.title}` : 'Start Learning →');
+  startBtn.addEventListener('click', () => {
+    const r = resumeTarget();
+    if (r.complete) { const cert = byId('certSection'); if (cert) cert.scrollIntoView({ behavior:'smooth', block:'start' }); }
+    else openLesson(r.id);
+  });
   const browseBtn = el('button', { class:'hero-cta-secondary', type:'button' }, 'Browse the curriculum');
   browseBtn.addEventListener('click',()=>showPage('learn'));
 
