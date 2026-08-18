@@ -18,8 +18,9 @@ The same analytical frameworks used by analysts at banks, PE firms, and credit f
 - Two standalone, crawlable guide articles (`/guides/`) outside the app shell, for anyone who lands from search rather than the homepage
 - A one-click "Found a mistake? Report it" link (pre-filled GitHub issue, contextual to whatever page you're on) — no backend needed
 - XP, streak, and quiz progress persisted locally in the browser (`localStorage`) — refreshing the page doesn't wipe progress
-- **Back up / restore progress**: since there are no accounts, progress can be exported as a portable code and restored on another device or browser. Restoring merges rather than overwrites, so it never deletes work done locally
-- The home CTA resumes at your first unfinished lesson rather than always restarting at lesson one
+- **Optional cross-device sync, no accounts**: a device generates a random code (e.g. `7K3P-LM9Q`) and, once turned on, syncs progress to a small backend in the background — no repeated copy/paste. A second device links to that code once, either by tapping a link (`?sync=CODE`) or typing the code, and after that both devices stay in sync automatically. Off by default; the manual export/import code (below) still works with zero backend, e.g. on a static-only deployment
+- **Back up / restore progress** (no server, works offline): progress can also be exported as a portable text code and restored on another device or browser by pasting it in. Restoring merges rather than overwrites, so it never deletes work done locally
+- The home CTA resumes at your first unfinished lesson rather than always restarting at lesson one, and switches to "Get your certificate" once everything is done
 - Self-hosted fonts (no third-party font-CDN requests), keyboard-navigable UI with a real WCAG-AA-checked color palette, and a responsive layout down to phone widths
 - Every page has a real, shareable URL (`#/dcf`, `#/deal-atlas`, ...) that survives refresh and works with the browser back/forward buttons
 
@@ -28,13 +29,12 @@ Static site, no build step: `index.html` (shell) + `css/style.css` + `js/data.js
 
 Navigation is hash-based (`location.hash` + a `hashchange` listener) — `js/engine.js`'s `renderRoute(id)` is the single dispatcher: lesson ids render a lesson page, everything else (`home`, `dealroom`, `deal-atlas`, ...) renders whatever page element matches `#page-<id>`. Adding a new top-level page or Deal Room case is automatically linkable without touching the router.
 
-## Analytics
-There's no third-party analytics script (keeps the CSP locked to `'self'` and nothing about a student's usage leaves their browser). Every meaningful interaction — page views, lesson views/completions, quiz answers, calculator opens — already flows through one function, `track(event, props)` in `js/engine.js`. To wire in a real backend later:
-1. Pick a static-site-friendly provider (Plausible, GoatCounter, Fathom, or your own endpoint).
-2. Add its snippet/fetch call inside `track()`.
-3. Add its origin to the CSP `connect-src`/`script-src` in `index.html`.
+The app still works as a pure static site (e.g. GitHub Pages) with zero backend — every `fetch('/api/...')` call in the sync feature fails silently and falls back to local-only behavior. `server.js` is an *optional* thin layer on top: a small Express server that serves the exact same static files and adds two JSON endpoints (`GET`/`POST /api/sync/:code`) backed by Postgres, for deployments that want cross-device sync turned on. `package.json` exists only for that optional server (`npm start` → `node server.js`); GitHub Pages ignores it entirely.
 
-Until then, `track()` mirrors every event to `console.debug` and keeps the last 200 events in `sessionStorage` — open devtools and run `FinLabDebug.events()` in the console to inspect your own session while testing.
+## Analytics & data
+There's no third-party analytics script, and the CSP stays locked to `'self'` — nothing about a student's usage is ever sent to a third party. Every meaningful interaction — page views, lesson views/completions, quiz answers, calculator opens — flows through one function, `track(event, props)` in `js/engine.js`, which mirrors to `console.debug` and keeps the last 200 events in `sessionStorage` (`FinLabDebug.events()` in devtools).
+
+The one exception is the opt-in cross-device **sync** feature: turning it on sends lesson-completion/XP/quiz-answer state to `server.js`, keyed by a random per-device code — no accounts, no PII, and off by default. See `server.js` for exactly what's stored (nothing beyond that state).
 
 ## Live Demo
 👉 https://abdullohik.github.io/finlab

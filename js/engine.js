@@ -4,6 +4,14 @@
 
 /* ---------------- STATE + PERSISTENCE ---------------- */
 const STORE_KEY = 'finlab_state_v1';
+// Declared here (not down in the sync section below) because saveState() calls
+// into schedulePush()/isSyncEnabled() immediately at script load (see the
+// `saveState();` call a few lines down) — those consts must already be past
+// their temporal dead zone by then, not just hoisted-but-uninitialized.
+const SYNC_CODE_KEY = 'finlab_sync_code_v1';
+const SYNC_ENABLED_KEY = 'finlab_sync_enabled_v1';
+const SYNC_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I — easy to read aloud or off a screen
+let pushTimer = null; // also needed before saveState()'s first call — same TDZ reason as above
 // Grouped by MODULES order (not raw array order) so prev/next navigation always
 // matches the sidebar's visual grouping, regardless of where a lesson was
 // inserted into the LESSONS array in data.js.
@@ -31,7 +39,10 @@ function loadState(){
   return s;
 }
 const STATE = loadState();
-function saveState(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(STATE)); } catch(e){ /* private-browsing/quota — progress just won't persist this session */ } }
+function saveState(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(STATE)); } catch(e){ /* private-browsing/quota — progress just won't persist this session */ }
+  schedulePush(); // no-op if the user hasn't opted into cross-device sync
+}
 saveState();
 
 function addXP(n){ STATE.xp += n; saveState(); byId('xpCount').textContent = STATE.xp; }
@@ -1647,12 +1658,122 @@ function renderGlossaryList(filter){
     el('div', { class:'glossary-def', text:g.d }))));
 }
 
+/* ---------------- CROSS-DEVICE SYNC ----------------
+   No accounts, no passwords: on first visit each device generates a random
+   code (e.g. "7K3P-LM9Q") and, once sync is turned on, quietly keeps that
+   code's progress in sync with the server in the background — no repeated
+   copy/paste. A NEW device is linked to an EXISTING code exactly once, either
+   by opening a link containing ?sync=CODE (the "send yourself a link" flow —
+   tap once, done) or by typing the code in manually. After that one linking
+   step, the code is remembered in this browser's localStorage and sync is
+   fully automatic.
+
+   Opt-in, not silent: FinLab's whole design elsewhere keeps everything local
+   (see the analytics section of the README) so turning this on is a real
+   change — the state (lesson completions, XP, quiz answers) leaves the
+   browser. SYNC_ENABLED_KEY gates it off until the user explicitly turns it
+   on from the sync panel.
+
+   The server only ever sees what's needed to sync (see server.js) — no
+   emails, no names, nothing else about the visitor. */
+function genSyncCode(){
+  const part = () => Array.from({length:4}, () => SYNC_ALPHABET[Math.floor(Math.random()*SYNC_ALPHABET.length)]).join('');
+  return `${part()}-${part()}`;
+}
+function getSyncCode(){
+  let code = localStorage.getItem(SYNC_CODE_KEY);
+  if (!code) { code = genSyncCode(); try { localStorage.setItem(SYNC_CODE_KEY, code); } catch(e){} }
+  return code;
+}
+function isSyncEnabled(){ return localStorage.getItem(SYNC_ENABLED_KEY) === '1'; }
+function setSyncEnabled(on){ try { localStorage.setItem(SYNC_ENABLED_KEY, on ? '1' : '0'); } catch(e){} }
+
+function syncUrlFor(code){
+  return `${location.origin}${location.pathname}?sync=${encodeURIComponent(code)}#/home`;
+}
+
+function schedulePush(){
+  if (!isSyncEnabled()) return;
+  clearTimeout(pushTimer);
+  // Debounced — completing a lesson fires several saveState() calls in quick
+  // succession (XP, completed list, cert re-render); no need to push each one.
+  pushTimer = setTimeout(pushProgress, 1500);
+}
+async function pushProgress(){
+  if (!isSyncEnabled()) return;
+  try {
+    await fetch(`/api/sync/${encodeURIComponent(getSyncCode())}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state: {
+        xp: STATE.xp, completed: STATE.completed, quizAnswers: STATE.quizAnswers,
+        streak: STATE.streak, recall: STATE.recall || {},
+      }})
+    });
+  } catch(e) { /* offline, or no backend on this deployment (e.g. GitHub Pages) — local save already succeeded */ }
+}
+// Merges server state into STATE using the same union/max logic as the
+// manual code import below, so pulling never deletes local progress.
+function mergeServerState(data){
+  const validIds = new Set(NAV_ORDER);
+  const incoming = (data.completed||[]).filter(id => validIds.has(id));
+  const before = STATE.completed.length;
+  STATE.completed = [...new Set([...(STATE.completed||[]), ...incoming])];
+  STATE.xp = Math.max(Number(STATE.xp)||0, Number(data.xp)||0);
+  STATE.streak = Math.max(Number(STATE.streak)||1, Number(data.streak)||1);
+  if (data.quizAnswers && typeof data.quizAnswers === 'object') STATE.quizAnswers = Object.assign({}, data.quizAnswers, STATE.quizAnswers);
+  if (data.recall && typeof data.recall === 'object') STATE.recall = Object.assign({}, data.recall, STATE.recall||{});
+  return STATE.completed.length - before;
+}
+async function pullProgress(code, { silent } = {}){
+  try {
+    const res = await fetch(`/api/sync/${encodeURIComponent(code)}`);
+    if (res.status === 404) return { ok:true, found:false };
+    if (!res.ok) return { ok:false };
+    const data = await res.json();
+    const added = mergeServerState(data.state);
+    saveState();
+    applyCompletionState();
+    if (added > 0 && !silent) track('sync_pull_merged', { added });
+    return { ok:true, found:true, added };
+  } catch(e) { return { ok:false }; }
+}
+function linkDeviceToCode(code){
+  code = code.trim().toUpperCase();
+  try { localStorage.setItem(SYNC_CODE_KEY, code); } catch(e){}
+  setSyncEnabled(true);
+  return pullProgress(code);
+}
+// Runs once at boot: adopt ?sync=CODE from a tapped link, or silently resume
+// syncing if this device already opted in on a previous visit.
+async function initSync(){
+  const params = new URLSearchParams(location.search);
+  const linkCode = params.get('sync');
+  if (linkCode && CODE_LOOKS_VALID(linkCode)) {
+    const r = await linkDeviceToCode(linkCode);
+    params.delete('sync');
+    const clean = location.pathname + (params.toString() ? '?'+params.toString() : '') + location.hash;
+    history.replaceState(null, '', clean);
+    track('sync_device_linked', { via:'link' });
+    if (r.ok) toast(r.found ? `Device linked — pulled in progress from your other device.` : `Device linked. This is now your sync code.`);
+    return;
+  }
+  if (isSyncEnabled()) pullProgress(getSyncCode(), { silent:true });
+}
+function CODE_LOOKS_VALID(c){ return /^[A-Z2-9]{4,6}-[A-Z2-9]{4,6}$/i.test((c||'').trim()); }
+
+// Small transient toast for background sync events — deliberately not a modal,
+// since linking a device is a nice-to-know, not something that should block.
+function toast(msg){
+  const t = el('div', { style:'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:white;padding:12px 20px;border-radius:var(--r2);font-size:13px;font-weight:600;box-shadow:var(--shadow);z-index:600;max-width:90vw;text-align:center;' }, msg);
+  document.body.append(t);
+  setTimeout(() => { t.style.transition='opacity .3s'; t.style.opacity='0'; setTimeout(()=>t.remove(), 300); }, 3500);
+}
+
 /* ---------------- BACKUP / RESTORE ----------------
-   There's no backend and no accounts, so progress lives in this browser's
-   localStorage only — clearing site data or switching device loses it. Rather
-   than pretend otherwise, this lets a student carry progress deliberately:
-   copy a code out, paste it in elsewhere. Import is validated and merged, never
-   trusted blindly, since the pasted text is arbitrary user input. */
+   Manual fallback alongside sync above — works with zero backend (pure
+   copy/paste of a text code), so it still works on a static-only deployment
+   like GitHub Pages where /api doesn't exist. Import is validated and merged,
+   never trusted blindly, since the pasted text is arbitrary user input. */
 function exportProgress(){
   return btoa(unescape(encodeURIComponent(JSON.stringify({
     v:1, xp:STATE.xp, completed:STATE.completed, quizAnswers:STATE.quizAnswers,
@@ -1684,32 +1805,105 @@ function importProgress(code){
 
 function openBackupModal(){
   const scrim = el('div', { class:'modal-scrim' });
-  const modal = el('div', { class:'modal', role:'dialog', 'aria-modal':'true', 'aria-label':'Back up or restore progress' });
-  const pct = Math.round(STATE.completed.length / NAV_ORDER.length * 100);
-  modal.append(el('div', { class:'modal-title' }, 'Back up / restore progress'));
+  const modal = el('div', { class:'modal', role:'dialog', 'aria-modal':'true', 'aria-label':'Sync progress across devices' });
+  const pct = NAV_ORDER.length ? Math.round(STATE.completed.length / NAV_ORDER.length * 100) : 0;
+  modal.append(el('div', { class:'modal-title' }, 'Sync progress across devices'));
   modal.append(el('div', { class:'modal-sub' },
-    `FinLab has no accounts — your progress (${STATE.completed.length} of ${NAV_ORDER.length} items, ${pct}%, ${STATE.xp} XP) is stored in this browser only. Clearing site data, using private browsing, or switching to another device will lose it. Copy the code below to carry your progress somewhere else.`));
+    `Your progress right now: ${STATE.completed.length} of ${NAV_ORDER.length} items (${pct}%), ${STATE.xp} XP.`));
 
   const status = el('div', { class:'modal-status', hidden:'' });
   const showStatus = (ok, msg) => { status.className = 'modal-status ' + (ok?'ok':'err'); status.textContent = msg; status.removeAttribute('hidden'); };
 
-  const exp = el('div', { class:'modal-section' });
+  /* ---- Sync section ---- */
+  const syncSection = el('div', { class:'modal-section', style:'border-top:none;padding-top:0;margin-top:0;' });
+  const renderSyncSection = () => {
+    syncSection.innerHTML = '';
+    const on = isSyncEnabled();
+    syncSection.append(el('div', { class:'modal-section-title' }, 'Automatic sync'));
+    if (!on) {
+      syncSection.append(el('div', { style:'font-size:12.5px;color:var(--ink3);line-height:1.7;margin-bottom:12px;' },
+        "No accounts, no passwords — turn this on and FinLab remembers your progress on a server under a random code, and quietly keeps every device you link in sync. This is the only feature in FinLab where anything leaves your browser; leave it off to keep everything fully local."));
+      const enableBtn = el('button', { type:'button', class:'lesson-nav-btn primary' }, '🔄 Turn on sync');
+      enableBtn.addEventListener('click', async () => {
+        setSyncEnabled(true);
+        enableBtn.disabled = true; enableBtn.textContent = 'Turning on…';
+        await pushProgress();
+        renderSyncSection();
+        showStatus(true, `Sync is on. Your code is ${getSyncCode()} — link another device with the button below.`);
+        track('sync_enabled', {});
+      });
+      syncSection.append(enableBtn);
+    } else {
+      const code = getSyncCode();
+      syncSection.append(el('div', { style:'font-size:12.5px;color:var(--ink3);line-height:1.7;margin-bottom:10px;' },
+        'This device syncs automatically — no need to come back here unless you\'re linking a new device.'));
+      syncSection.append(el('div', { class:'sync-code-display' }, code));
+      const actions = el('div', { class:'modal-actions', style:'margin-top:12px;' });
+      const copyLinkBtn = el('button', { type:'button', class:'lesson-nav-btn primary' }, '🔗 Copy link for another device');
+      copyLinkBtn.addEventListener('click', () => {
+        const url = syncUrlFor(code);
+        navigator.clipboard ? navigator.clipboard.writeText(url).then(
+          () => showStatus(true, 'Link copied. Send it to yourself (Messages, email, AirDrop) and open it on the other device — that\'s the whole setup, once.'),
+          () => showStatus(false, 'Copy failed. Your code is ' + code + ' — enter it manually on the other device instead.')
+        ) : showStatus(false, 'Your code is ' + code + ' — enter it manually on the other device.');
+      });
+      const refreshBtn = el('button', { type:'button', class:'lesson-nav-btn' }, '↻ Pull latest now');
+      refreshBtn.addEventListener('click', async () => {
+        refreshBtn.disabled = true; refreshBtn.textContent = 'Pulling…';
+        const r = await pullProgress(code);
+        refreshBtn.disabled = false; refreshBtn.textContent = '↻ Pull latest now';
+        showStatus(!!r.ok, r.ok ? (r.added ? `Pulled in ${r.added} newly-completed item${r.added===1?'':'s'} from another device.` : 'Already up to date.') : 'Couldn\'t reach the sync server — check your connection.');
+      });
+      actions.append(copyLinkBtn, refreshBtn);
+      syncSection.append(actions);
+      const disableBtn = el('button', { type:'button', style:'background:none;border:none;color:var(--ink4);font-size:11.5px;cursor:pointer;text-decoration:underline;margin-top:10px;padding:0;' }, 'Turn off sync on this device');
+      disableBtn.addEventListener('click', () => { setSyncEnabled(false); renderSyncSection(); showStatus(true, 'Sync turned off for this device. Local progress is untouched.'); track('sync_disabled', {}); });
+      syncSection.append(disableBtn);
+    }
+    // Manual link-by-code — works even if the "copy link" flow isn't convenient
+    // (e.g. typing the code by hand while looking at the other device's screen).
+    const linkRow = el('div', { style:'margin-top:16px;padding-top:14px;border-top:1px solid var(--line2);' });
+    linkRow.append(el('div', { style:'font-size:11px;font-weight:700;color:var(--ink4);margin-bottom:8px;' }, 'Have a code from another device?'));
+    const linkInput = el('input', { type:'text', class:'modal-code', style:'min-height:auto;padding:10px 12px;', placeholder:'e.g. 7K3P-LM9Q', 'aria-label':'Sync code from another device' });
+    const linkBtn = el('button', { type:'button', class:'lesson-nav-btn', style:'margin-top:8px;' }, 'Link this device');
+    linkBtn.addEventListener('click', async () => {
+      if (!CODE_LOOKS_VALID(linkInput.value)) return showStatus(false, 'That doesn\'t look like a sync code — it should look like 7K3P-LM9Q.');
+      linkBtn.disabled = true; linkBtn.textContent = 'Linking…';
+      const r = await linkDeviceToCode(linkInput.value);
+      linkBtn.disabled = false; linkBtn.textContent = 'Link this device';
+      showStatus(!!r.ok, r.ok ? 'Linked and synced.' : 'Couldn\'t reach the sync server — check your connection and try again.');
+      if (r.ok) renderSyncSection();
+    });
+    linkRow.append(linkInput, linkBtn);
+    syncSection.append(linkRow);
+  };
+  renderSyncSection();
+  modal.append(syncSection);
+
+  /* ---- Manual export/import fallback — no server involved ---- */
+  const manualDetails = el('details', { class:'modal-section' });
+  manualDetails.append(el('summary', { style:'cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink4);' }, 'Advanced: manual code (no server, works offline)'));
+  const manualBody = el('div', { style:'margin-top:12px;' });
+  manualBody.append(el('div', { style:'font-size:12px;color:var(--ink3);line-height:1.6;margin-bottom:10px;' },
+    'A snapshot you copy and paste yourself — nothing is sent anywhere. Useful if you\'d rather not use automatic sync at all.'));
+
+  const exp = el('div', {});
   exp.append(el('div', { class:'modal-section-title' }, 'Your progress code'));
-  const code = el('textarea', { class:'modal-code', readonly:'', 'aria-label':'Your progress code' });
-  code.value = exportProgress();
-  exp.append(code);
-  const copyBtn = el('button', { type:'button', class:'lesson-nav-btn primary', style:'margin-top:10px;' }, '📋 Copy code');
+  const codeArea = el('textarea', { class:'modal-code', readonly:'', 'aria-label':'Your progress code' });
+  codeArea.value = exportProgress();
+  exp.append(codeArea);
+  const copyBtn = el('button', { type:'button', class:'lesson-nav-btn', style:'margin-top:10px;' }, '📋 Copy code');
   copyBtn.addEventListener('click', () => {
-    code.select();
-    navigator.clipboard ? navigator.clipboard.writeText(code.value).then(
+    codeArea.select();
+    navigator.clipboard ? navigator.clipboard.writeText(codeArea.value).then(
       () => showStatus(true, 'Copied. Paste it somewhere you\'ll find it again — a note app, or an email to yourself.'),
       () => showStatus(false, 'Copy failed — select the text above and copy manually.')
     ) : showStatus(false, 'Select the text above and copy manually.');
   });
   exp.append(copyBtn);
-  modal.append(exp);
+  manualBody.append(exp);
 
-  const imp = el('div', { class:'modal-section' });
+  const imp = el('div', { style:'margin-top:16px;' });
   imp.append(el('div', { class:'modal-section-title' }, 'Restore from a code'));
   const input = el('textarea', { class:'modal-code', placeholder:'Paste a progress code here...', 'aria-label':'Paste a progress code to restore' });
   imp.append(input);
@@ -1718,12 +1912,13 @@ function openBackupModal(){
     if (!input.value.trim()) return showStatus(false, 'Paste a code first.');
     const r = importProgress(input.value);
     showStatus(r.ok, r.msg);
-    if (r.ok) code.value = exportProgress();
+    if (r.ok) codeArea.value = exportProgress();
   });
   imp.append(impBtn);
-  imp.append(el('div', { style:'font-size:11.5px;color:var(--ink4);line-height:1.6;margin-top:10px;' },
-    'Restoring merges with whatever progress already exists in this browser — it never deletes work done here.'));
-  modal.append(imp);
+  manualBody.append(imp);
+  manualDetails.append(manualBody);
+  modal.append(manualDetails);
+
   modal.append(status);
 
   const closeBtn = el('button', { type:'button', class:'lesson-nav-btn modal-close' }, 'Close');
@@ -1766,6 +1961,8 @@ function init(){
   const initial = parseHash();
   if (!location.hash) history.replaceState(null, '', '#/home');
   renderRoute(initial);
+
+  initSync(); // fire-and-forget: merges in server progress and refreshes the UI when it lands
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
