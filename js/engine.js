@@ -1231,7 +1231,7 @@ function buildHomePage(){
       el('div', { class:'module-name', text:mod.name }),
       el('div', { class:'module-desc', text:mod.desc }),
       el('div', { class:'module-footer' },
-        el('span', { class:'module-lessons' }, `${modLessons.length} lessons · ~${mins} min`),
+        el('span', { class:'module-lessons' }, `${modLessons.length} item${modLessons.length===1?'':'s'} · ~${mins} min`),
         el('span', { style:`font-size:11px;color:var(--${mod.color});font-weight:600` }, 'Start →'))
     );
     card.addEventListener('click', () => openLesson(modLessons[0].id));

@@ -8,6 +8,7 @@ const MODULES = [
   { id:'deals', name:'Deals & Transactions', icon:'⚡', color:'purple', desc:'LBO modelling, merger analysis, credit assessment — the deal-execution toolkit used by PE firms and investment banks.' },
   { id:'adv',   name:'Advanced Analysis',    icon:'🔍', color:'amber',  desc:'Football field charts, red flag detection, and understanding how bankers, PE investors, and credit officers think differently.' },
   { id:'recruit', name:'Recruiting & Fit',  icon:'🗣️', color:'red',   desc:'The half of breaking in that isn\'t a formula — your story, your network, and the resume that gets you in the room in the first place.' },
+  { id:'final',   name:'Final Assessment',  icon:'🏁', color:'gold',  desc:'One comprehensive exam pulling together every module — statements, Excel mechanics, valuation, deals, credit, and judgment. The capstone of the course.' },
 ];
 
 /* ---------- QUIZ ANSWER FORMAT ----------
@@ -340,6 +341,19 @@ const LESSONS = [
   ]
 },
 
+{
+  id:'excel-quiz', module:'excel', type:'quiz', title:'Excel & Modeling Quiz',
+  subtitle:'Module 2 · Capstone Quiz · 6 min', minutes:6,
+  intro:'Covers the whole module: shortcuts, the colour convention, build order, and how professionals handle circularity and debugging. Written at the level a modelling-test grader actually checks for — not just definitions.',
+  quiz:[
+    { q:'You press F2 on a cell. What does it do, and why is it the most-used auditing key in Excel?', opts:['Deletes the cell contents','Edits the cell and highlights every cell its formula references — the fastest way to see what feeds a number','Inserts a new row above','Recalculates the entire workbook'], correct:1 },
+    { q:'A reviewer opens your model and sees a black-font number sitting in a row that is otherwise all formulas. What should they conclude?', opts:['Nothing — colour is only cosmetic','Someone likely typed over a formula — this is exactly what Ctrl + ` is used to hunt for', 'It must be a link from another tab','It is definitely an input and safe to edit'], correct:1 },
+    { q:'Why must you build to EBIT and stop, rather than finishing the Income Statement top to bottom on the first pass?', opts:['EBIT is always the most important line','Interest expense depends on the debt schedule, which depends on cash flow, which depends on Net Income — you cannot finish without circling back','Excel cannot calculate below EBIT until the workbook is saved','Tax rates are only known after the Balance Sheet is built'], correct:1 },
+    { q:'Receivables rise by $15 and payables rise by $9 in the same period, with no other changes. What is the net effect on cash from working capital?', opts:['+$24 — both are current items so they add','−$15 + $9 = −$6, a net use of cash','+$15 − $9 = +$6, a net source of cash','No effect until both are collected or paid'], correct:1 },
+    { q:'A circuit breaker cell in an iterative-calculation model is used to:', opts:['Speed up recalculation permanently','Force interest to zero on demand, so a model full of propagated errors can be cleared and recalculated clean before switching back on','Automatically fix broken formulas','Disable all macros in the workbook'], correct:1 },
+  ]
+},
+
 /* ============ MODULE 3 — VALUATION MODELS ============ */
 {
   id:'val-intro', module:'val', type:'lesson', title:'What Is Valuation?',
@@ -512,7 +526,21 @@ const LESSONS = [
   ]
 },
 
-/* ============ MODULE 3 — DEALS & TRANSACTIONS ============ */
+{
+  id:'val-quiz', module:'val', type:'quiz', title:'Valuation Models Quiz',
+  subtitle:'Module 3 · Capstone Quiz · 6 min', minutes:6,
+  intro:'DCF, WACC, Comps, and Precedent Transactions together — the way a real valuation always uses more than one method and has to reconcile them when they disagree.',
+  quiz:[
+    { q:'A DCF assumes terminal growth of 3% and WACC of 2.5%. What happens?', opts:['Terminal value is unusually high but still valid','The Gordon Growth formula is undefined — WACC must exceed terminal growth','Terminal value becomes exactly zero','Nothing — Excel will just show a very large number'], correct:1 },
+    { q:'You raise WACC from 9% to 10% in a DCF. What happens to Enterprise Value, and roughly by how much would you expect it to move?', opts:['Rises slightly, under 1%','Falls, often by 10–20%, since one point of WACC has an outsized effect on discounted future cash flows','Stays exactly the same','Rises by a large amount'], correct:1 },
+    { q:'Why is beta unlevered before comparing a set of public peers, then relevered at the target\'s own capital structure?', opts:['To convert it to a percentage','Because an observed beta mixes business risk with that peer\'s own leverage — stripping out capital structure isolates the underlying business risk before reapplying the target\'s own', 'Unlevering is not a real step, only relevering matters','Beta does not need adjustment across peers'], correct:1 },
+    { q:'A DCF says $2.0B, trading Comps say $1.4B, and Precedent Transactions say $1.9B. What is the most defensible read?', opts:['Always trust the DCF, it is theoretically purest','Comps likely runs lower because it carries no control premium; DCF and Precedent are more aligned — the gap is explainable, not a sign either method is broken','Average all three and stop there','Comps must be wrong and should be discarded'], correct:1 },
+    { q:'Which of these uses actual control transactions rather than current public trading levels?', opts:['Comparable Company Analysis','Precedent Transactions','The DCF terminal value','CAPM'], correct:1 },
+    { q:'Why do bankers present a DCF as a sensitivity table across a WACC and terminal-growth range instead of a single output number?', opts:['To make the deck longer','Because both inputs are judgement calls that move the answer by double-digit percentages — a single point implies false precision','Because Excel requires a table format','To hide the model from the client'], correct:1 },
+  ]
+},
+
+/* ============ MODULE 4 — DEALS & TRANSACTIONS ============ */
 {
   id:'lbo', module:'deals', type:'lesson', title:'The Leveraged Buyout (LBO)',
   minutes:14,
@@ -605,7 +633,20 @@ const LESSONS = [
   ]
 },
 
-/* ============ MODULE 4 — ADVANCED ANALYSIS ============ */
+{
+  id:'deals-quiz', module:'deals', type:'quiz', title:'Deals & Transactions Quiz',
+  subtitle:'Module 4 · Capstone Quiz · 6 min', minutes:6,
+  intro:'LBO mechanics, merger accretion/dilution, and credit underwriting — the three lenses this module built, and the judgment calls that separate a defensible deal recommendation from a spreadsheet exercise.',
+  quiz:[
+    { q:'An LBO base case assumes 3x of multiple expansion (8x entry, 11x exit) to hit its target IRR. How should this be underwritten?', opts:['Favorably — multiple expansion is the most reliable lever available','Cautiously — multiple expansion is market-dependent and should never be the base case; it is upside, not a plan','It has no effect on IRR','This guarantees the deal succeeds'], correct:1 },
+    { q:'A merger is accretive to EPS in year one. Does that alone prove it creates real value?', opts:['Yes, always','No — accretion can come purely from a valuation-multiple mismatch between acquirer and target rather than real operating benefit','Only in an all-stock deal','Only if the target is unprofitable'], correct:1 },
+    { q:'Why does a lender care more about a company\'s downside case than its upside potential?', opts:['Lenders get a fixed return at best and bear real loss risk on default — the risk is asymmetric','Lenders always lose money if a company grows','Lenders are legally barred from considering upside','There is no real reason'], correct:0 },
+    { q:'In the LBO calculator, raising the D&A assumption (holding EBITDA fixed) improves returns slightly. Why?', opts:['Depreciation is added to revenue','D&A is deducted before computing cash taxes, so more D&A means a larger tax shield even though it never leaves as cash','D&A directly repays debt','It has no real effect — the calculator has a bug'], correct:1 },
+    { q:'What is the correct order of priority when underwriting a leveraged loan?', opts:['Upside potential first, downside case second','Leverage and coverage ratios, covenant headroom, then a stress case — all before considering any upside','Only the interest rate matters','Whatever the sponsor\'s own model shows'], correct:1 },
+  ]
+},
+
+/* ============ MODULE 5 — ADVANCED ANALYSIS ============ */
 {
   id:'football', module:'adv', type:'lesson', title:'Football Field Chart',
   minutes:8,
@@ -655,22 +696,18 @@ const LESSONS = [
 },
 
 {
-  id:'final-quiz', module:'adv', type:'quiz', title:'Final Assessment',
-  subtitle:'Final Assessment · All modules · 20 min', minutes:20,
-  intro:'This pulls together everything across all four modules — statements, valuation, deals, and the judgment calls that separate a good analyst from a great one. It\'s written at the level of a real first-round finance interview.',
+  id:'adv-quiz', module:'adv', type:'quiz', title:'Advanced Analysis Quiz',
+  subtitle:'Module 5 · Capstone Quiz · 5 min', minutes:5,
+  intro:'Football field charts and red-flag detection together — reading a valuation range and reading a set of financials with the same skeptical eye.',
   quiz:[
-    { q:'A company reports rising Net Income but falling Free Cash Flow for three straight years, driven by heavy growth CapEx. Is this automatically a red flag?', opts:['Yes, always','Not automatically — heavy reinvestment can be a legitimate reason; it depends on whether that CapEx is generating a return', 'It only matters for public companies','FCF is irrelevant to this question'], correct:1 },
-    { q:'Which valuation method requires no assumptions about the distant future, but is only as reliable as the peer set chosen?', opts:['DCF','Comparable Company Analysis','Precedent Transactions','LBO'], correct:1 },
-    { q:'In a DCF, what happens mathematically if the terminal growth rate is set higher than WACC?', opts:['Terminal value becomes very large but valid','The Gordon Growth formula becomes undefined — the model breaks','Nothing changes','Terminal value becomes exactly zero, which is fine'], correct:1 },
-    { q:'A PE firm underwrites an LBO assuming 3x multiple expansion (buying at 8x, selling at 11x) to hit its target IRR. How should a credit committee view this?', opts:['Favorably — multiple expansion is the most reliable return lever','Cautiously — multiple expansion is market-dependent and should never be the base case for underwriting debt','It\'s irrelevant to the credit decision','This guarantees the deal will succeed'], correct:1 },
-    { q:'Why does a lender care more about a company\'s downside scenario than its upside potential?', opts:['Lenders get a fixed return at best (interest and principal) but bear real loss risk if the company defaults — the risk is asymmetric','Lenders always lose money on upside','Lenders are legally required to ignore upside','There is no real reason'], correct:0 },
-    { q:'A merger is accretive to EPS. Does that guarantee the deal creates real value for shareholders?', opts:['Yes, always','No — accretion can result purely from a valuation-multiple mismatch between acquirer and target, not real operational benefit','Only in all-cash deals','Only if the target is larger than the acquirer'], correct:1 },
     { q:'On a football field chart, an offer price sits inside the overlap zone of DCF, Comps, and Precedent Transactions. What does this suggest?', opts:['The offer is fraudulent','The offer is well-supported across independent valuation methods — the most defensible position for a fairness opinion','The chart is invalid','Nothing meaningful'], correct:1 },
     { q:'Which single financial-statement relationship is most repeated as a fraud and red-flag indicator throughout this course?', opts:['Revenue growing while headcount grows','Operating cash flow diverging significantly and persistently from reported net income','Marketing spend rising','Inventory turning over quickly'], correct:1 },
+    { q:'A company shows two or three items from the red-flag checklist at once. What is the correct response?', opts:['Assume fraud and stop analysis immediately','Treat each flag alone as meaningless and ignore all of them','Investigate further — the accumulation of flags, and how management responds when asked, matters more than any single flag','Only trust the company\'s own press releases'], correct:2 },
+    { q:'A DCF shows $2.0B, Comps shows $1.4B, and the offer on the table is $1.65B. Where does the offer sit relative to the football field, and what does that suggest?', opts:['Above every method — the offer is clearly excessive','Between the two — a defensible number, though closer to the Comps floor than the DCF ceiling','Below every method — the offer is clearly too low','Football fields cannot be used to judge a single offer'], correct:1 },
   ]
 },
 
-/* ============ MODULE 5 — RECRUITING & FIT ============ */
+/* ============ MODULE 6 — RECRUITING & FIT ============ */
 {
   id:'story', module:'recruit', type:'lesson', title:'Your Story & Behavioral Fit',
   minutes:9,
@@ -755,6 +792,39 @@ const LESSONS = [
     { q:'Which resume bullet is stronger, and why?', opts:['"Responsible for financial analysis and reporting" — it sounds more professional','"Built a 3-statement model used to evaluate a $40M acquisition target" — it\'s specific and quantified','Both are equally strong','Neither matters since resumes aren\'t read closely'], correct:1 },
     { q:'How long should a finance resume be, regardless of experience level?', opts:['Exactly one page','Two pages to show more depth','As long as needed','Three pages for senior candidates'], correct:0 },
     { q:'Why do most finance resumes use reverse chronological order rather than a thematic/skills-based format?', opts:['It\'s legally required','It\'s the familiar, expected shape for a field that screens many resumes quickly — deviating from it reads as unconventional','Thematic formats are always better but banned','There is no real convention'], correct:1 },
+  ]
+},
+
+{
+  id:'recruit-quiz', module:'recruit', type:'quiz', title:'Recruiting & Fit Quiz',
+  subtitle:'Module 6 · Capstone Quiz · 5 min', minutes:5,
+  intro:'Story, outreach, and resume together — the non-technical half of recruiting, tested the way an actual first round would test it.',
+  quiz:[
+    { q:'An interviewer asks "walk me through your resume." What are they actually listening for?', opts:['A complete chronological list of every job and class','A coherent throughline — experience, skill, direction — that makes a case for this specific seat, in under about 90 seconds','The candidate\'s GPA restated out loud','Nothing — it\'s just an icebreaker with no real signal'], correct:1 },
+    { q:'What is the primary goal of a cold outreach message to an alum you\'ve never met?', opts:['Ask directly for a job or referral','Ask for a short amount of their time, with a specific, genuine reason you\'re reaching out to them in particular','Send a generic mass template to as many people as possible','Attach your resume and wait'], correct:1 },
+    { q:'Which resume bullet is stronger?', opts:['"Responsible for financial analysis and reporting"','"Built a 3-statement model used to evaluate a $40M acquisition target"','Both are equally strong','Neither — bullets are rarely read closely'], correct:1 },
+    { q:'A candidate has a strong technical answer but a rambling, unfocused "walk me through your resume." A weaker technical answer paired with a sharp, specific story often does better in a real first round. Why?', opts:['Interviewers do not actually care about technical ability','A strong story rarely saves a shaky technical answer, but it often buys real slack — because fit is frequently judged first and weighted heavily','Technical questions are scored automatically and cannot be influenced','This is a myth with no basis in how interviews work'], correct:1 },
+  ]
+},
+
+/* ============ FINAL ASSESSMENT — spans every module above ============ */
+{
+  id:'final-quiz', module:'final', type:'quiz', title:'Final Assessment',
+  subtitle:'Final Assessment · All 6 modules · 25 min', minutes:25,
+  intro:'Every module, one exam: statements, Excel mechanics, valuation, deals, credit, red flags, and fit. Written at the level of a real first-round finance interview — the kind of judgment-testing question set that decides who gets a callback.',
+  quiz:[
+    { q:'Depreciation rises by $10 at a 25% tax rate. What happens to cash?', opts:['Falls $10','Falls $7.50','Rises $2.50 — the tax shield is real cash even though the expense is not','No change'], correct:2 },
+    { q:'Your three-statement model does not balance in year 3 only. What is the fastest way to localize the error?', opts:['Rebuild the entire model from scratch','Check whether the imbalance amount matches a specific line item like D&A or CapEx, since year 3 is where the break first appears','Change the tax rate until it balances','Add a plug line to force the check to zero'], correct:1 },
+    { q:'Why does an LBO model exhibit circularity?', opts:['Because revenue projections reference themselves','Because interest expense depends on the debt balance, which depends on cash available to repay it, which depends on Net Income, which depends on interest expense','Because Excel recalculates too slowly','Because of a formatting error'], correct:1 },
+    { q:'WACC rises from 9% to 10%. What happens to a DCF valuation, and why does this matter so much in practice?', opts:['It falls, often by double digits, because future cash flows are discounted more heavily — which is why WACC is one of the most contested assumptions in any valuation','It rises slightly','No effect — WACC only affects the terminal year','It falls by exactly 1%, matching the WACC change'], correct:0 },
+    { q:'A DCF shows $2.0B, trading Comps show $1.4B. What is the most defensible explanation for the gap?', opts:['One of the two methods must simply be wrong','Comps reflect no control premium and are anchored to today\'s market sentiment, while a DCF is a longer-run intrinsic estimate — divergence is normal and should be explained, not resolved by picking one','Always trust the DCF, since it is more complex','Average the two and stop investigating'], correct:1 },
+    { q:'A PE sponsor\'s base case assumes 3x of multiple expansion to hit its target IRR. How should a credit committee react?', opts:['Approve enthusiastically — multiple expansion is the most reliable lever','Push back — multiple expansion is market-dependent and should never be underwritten as the base case', 'Ignore it, since it does not affect debt repayment','Require even more leverage to compensate'], correct:1 },
+    { q:'Why is a lender\'s risk described as asymmetric relative to an equity holder\'s?', opts:['Lenders earn more on average than equity holders','Lenders have capped upside (interest and principal) but real downside on default — the risk/reward is lopsided','Lenders never actually take on risk','There is no meaningful difference'], correct:1 },
+    { q:'A merger is accretive to EPS in year one. Does that alone prove the deal creates real shareholder value?', opts:['Yes, always','No — accretion can come purely from a valuation-multiple mismatch between acquirer and target rather than genuine operating benefit','Only in all-cash deals','Only when the target is larger than the acquirer'], correct:1 },
+    { q:'What is generally the single most repeated red flag across real accounting frauds covered in this course (Luckin, Wirecard, GE)?', opts:['Rising stock price','Operating cash flow diverging persistently and significantly from reported net income or profit','Hiring too quickly','Opening new offices'], correct:1 },
+    { q:'An interviewer opens with "walk me through your resume." What are they actually evaluating?', opts:['Whether you can recite your resume verbatim','A coherent throughline that makes a case for this specific seat, delivered in about 90 seconds — often the most heavily weighted moment of the interview','Nothing of substance — it is pure small talk','Your GPA specifically'], correct:1 },
+    { q:'Blue font, black font, green font, red font. In standard modelling convention, what does each represent?', opts:['Random styling with no meaning','Blue = hardcoded input, black = same-sheet formula, green = link from another tab, red = external workbook link','All four represent different currencies','Blue = error, black = correct, green = pending, red = approved'], correct:1 },
+    { q:'Pulling it together: a company\'s Net Income is rising, but its accounts receivable are growing even faster than revenue, its auditor recently changed, and its "adjusted EBITDA" excludes an expense that recurs every quarter. What should an analyst conclude?', opts:['Nothing — each item is explainable in isolation and should be dismissed individually','Individually any one item might be innocent, but the combination is exactly the pattern this course repeatedly flags — it warrants real diligence before trusting the reported numbers','Immediately assume fraud and stop all further analysis','Only the receivables issue matters; the rest is noise'], correct:1 },
   ]
 },
 
