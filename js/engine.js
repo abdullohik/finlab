@@ -269,6 +269,15 @@ function applyCompletionState(){
   byId('progressFill').style.width = pct + '%';
   byId('xpCount').textContent = STATE.xp;
   byId('streakCount').textContent = STATE.streak;
+  // Keep the home CTA pointed at the next unfinished item — the home page is
+  // built once at init, so without this it would still say "Start Learning"
+  // after the user has completed half the curriculum.
+  // (its click handler calls resumeTarget() fresh, so only the label needs updating)
+  const heroCta = byId('heroCta');
+  if (heroCta) {
+    const r = resumeTarget();
+    heroCta.textContent = r.started ? `Continue → ${r.title}` : 'Start Learning →';
+  }
   renderCertSection();
 }
 
@@ -507,6 +516,20 @@ function closeMobileSidebar(){
 }
 
 /* ---------------- PAGE BUILDERS ---------------- */
+/* Derives "Module 2 · Lesson 3 of 4 · 10 min read" from position rather than
+   storing it on each lesson — otherwise inserting one lesson means hand-editing
+   the "of N" on every sibling, and every module number after it. A lesson may
+   still set `subtitle` explicitly to override (quizzes do: "Capstone Quiz"). */
+function lessonSubtitle(lesson){
+  if (lesson.subtitle) return lesson.subtitle;
+  const modIdx = MODULES.findIndex(m => m.id === lesson.module);
+  const siblings = LESSONS.filter(l => l.module === lesson.module && l.type === 'lesson');
+  const pos = siblings.findIndex(l => l.id === lesson.id);
+  const unit = lesson.type === 'quiz' ? 'Quiz' : `Lesson ${pos+1} of ${siblings.length}`;
+  const dur = lesson.type === 'quiz' ? `${lesson.minutes} min` : `${lesson.minutes} min read`;
+  return `Module ${modIdx+1} · ${unit} · ${dur}`;
+}
+
 function buildLessonPage(lesson){
   const page = el('div', { class:'page', id:'page-'+lesson.id });
   const header = el('div', { class:'lesson-header' });
@@ -518,7 +541,7 @@ function buildLessonPage(lesson){
   if (lesson.type === 'lesson') crumb.append(' / ', el('span', { text:lesson.title }));
   header.append(crumb);
   header.append(el('h1', { class:'lesson-title', text:lesson.title }));
-  header.append(el('div', { class:'lesson-subtitle', text:lesson.subtitle }));
+  header.append(el('div', { class:'lesson-subtitle', text:lessonSubtitle(lesson) }));
 
   const tabs = el('div', { class:'lesson-tabs', role:'tablist' });
   const tabDefs = [{ id:'learn', label:'📖 Learn' }];
@@ -664,9 +687,10 @@ function buildCalcInputs(calcType, body, lessonId){
     left.append(el('div', { style:'font-size:11px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 10px;', text:'Cash Conversion Assumptions' }));
     [
       ['lb_tax','Cash Tax Rate (%)',10,35,25,1],
+      ['lb_da','D&A (% of EBITDA)',0,40,10,1],
       ['lb_capex','CapEx + Δ Working Capital (% of EBITDA)',5,35,15,1],
     ].forEach(([key,label,min,max,val,step]) => left.append(sliderRow(p(key),label,min,max,val,step,()=>lboCalc(lessonId))));
-    left.append(el('p', { style:'font-size:11px;color:var(--ink4);line-height:1.6;margin-top:8px;', text:'Simplified model: assumes D&A roughly offsets maintenance CapEx for cash-tax purposes (a common teaching approximation). Excess cash after debt is fully repaid accumulates on the balance sheet rather than disappearing.' }));
+    left.append(el('p', { style:'font-size:11px;color:var(--ink4);line-height:1.6;margin-top:8px;', text:'Taxes are computed on EBIT minus interest (EBIT = EBITDA − D&A), so D&A shields cash taxes the way it does in a real model — raise the D&A slider and watch returns improve. Cash flow still deducts full CapEx + working capital separately. Excess cash after debt is fully repaid accumulates on the balance sheet rather than disappearing.' }));
     cols.append(left);
 
     const right = el('div');
@@ -901,7 +925,7 @@ function lboCalc(lessonId){
   if (!g('lb_eb')) return;
   const eb=+g('lb_eb').value, em=+g('lb_em').value, lev=+g('lb_lev').value/100;
   const rate=+g('lb_rate').value/100, grow=+g('lb_grow').value/100, xm=+g('lb_xm').value, yrs=+g('lb_yrs').value;
-  const taxRate=+g('lb_tax').value/100, capexPct=+g('lb_capex').value/100;
+  const taxRate=+g('lb_tax').value/100, capexPct=+g('lb_capex').value/100, daPct=+g('lb_da').value/100;
   byId(p('lb_eb')+'V').textContent='$'+eb+'M';
   byId(p('lb_em')+'V').textContent=em+'x';
   byId(p('lb_lev')+'V').textContent=Math.round(lev*100)+'%';
@@ -910,6 +934,7 @@ function lboCalc(lessonId){
   byId(p('lb_xm')+'V').textContent=xm+'x';
   byId(p('lb_yrs')+'V').textContent=yrs+' yrs';
   byId(p('lb_tax')+'V').textContent=Math.round(taxRate*100)+'%';
+  byId(p('lb_da')+'V').textContent=Math.round(daPct*100)+'%';
   byId(p('lb_capex')+'V').textContent=Math.round(capexPct*100)+'%';
 
   const entEV=eb*em, debt=entEV*lev, equity=entEV-debt;
@@ -917,7 +942,11 @@ function lboCalc(lessonId){
   for(let y=1;y<=yrs;y++){
     const ebitdaY=eb*Math.pow(1+grow,y);
     const interest=debtBal*rate;
-    const taxableIncome=Math.max(0, ebitdaY-interest);
+    // Taxes are levied on EBIT less interest, not on EBITDA — D&A is a real
+    // deduction (the depreciation tax shield). Deducting it here is what makes
+    // the LBO's cash taxes match how a proper debt schedule computes them.
+    const da=ebitdaY*daPct;
+    const taxableIncome=Math.max(0, ebitdaY-da-interest);
     const tax=taxableIncome*taxRate;
     const capexNwc=ebitdaY*capexPct;
     const fcf=ebitdaY-interest-tax-capexNwc;
@@ -1102,19 +1131,61 @@ function mergerCalc(lessonId){
 }
 
 /* ---------------- HOME / LEARN / PRACTICE PAGES ---------------- */
+/* First unfinished item in curriculum order — what "Continue" should open.
+   Falls back to the last lesson once everything is complete, so the CTA never
+   points at nothing. */
+function resumeTarget(){
+  const done = new Set(STATE.completed || []);
+  const started = done.size > 0;
+  const nextId = NAV_ORDER.find(id => !done.has(id)) || NAV_ORDER[NAV_ORDER.length-1];
+  return { id: nextId, title: (LESSON_BY_ID[nextId]||{}).title || 'Continue', started };
+}
+
 function buildHomePage(){
   const page = el('div', { class:'page active', id:'page-home' });
   const lessonCount = LESSONS.filter(l=>l.type==='lesson').length;
   const calcCount = new Set(LESSONS.filter(l=>l.calc).map(l=>l.calc)).size;
-  const hero = el('div', { class:'home-hero' },
+
+  // Returning users should resume, not restart. resumeTarget() picks the first
+  // incomplete item in NAV_ORDER, so the CTA reflects actual progress.
+  const resume = resumeTarget();
+  const startBtn = el('button', { class:'hero-cta', type:'button', id:'heroCta' },
+    resume.started ? `Continue → ${resume.title}` : 'Start Learning →');
+  startBtn.addEventListener('click',()=>openLesson(resumeTarget().id));
+  const browseBtn = el('button', { class:'hero-cta-secondary', type:'button' }, 'Browse the curriculum');
+  browseBtn.addEventListener('click',()=>showPage('learn'));
+
+  const heroText = el('div', { class:'hero-text' },
     el('div', { class:'hero-eyebrow' }, 'For Students Breaking Into Finance'),
     el('h1', { class:'hero-title' }, 'Finance education built', el('br'), 'for people getting started.'),
     el('p', { class:'hero-sub' }, "The same analytical frameworks used by analysts at banks, PE firms, and credit funds — taught from first principles, with real examples and live models you can break on purpose."),
+    el('div', { class:'hero-actions' }, startBtn, browseBtn),
     el('div', { class:'hero-stats' },
       statBlock(lessonCount,'Lessons'), statBlock(calcCount,'Live Calculators'),
-      statBlock(DEALS.length,'Deal Case Studies'), statBlock(GLOSSARY.length,'Glossary Terms')),
-    (()=>{ const b=el('button', { class:'hero-cta', type:'button', text:'Start Learning →' }); b.addEventListener('click',()=>openLesson('fs-intro')); return b; })()
+      statBlock(DEALS.length,'Deal Case Studies'), statBlock(GLOSSARY.length,'Glossary Terms'))
   );
+
+  // Pure-CSS "product preview" card — no image assets, keeps the CSP locked to 'self'.
+  const heroVisual = el('div', { class:'hero-visual' },
+    el('div', { class:'hero-mock' },
+      el('div', { class:'hero-mock-bar' },
+        el('span', { class:'hero-mock-dot' }), el('span', { class:'hero-mock-dot' }), el('span', { class:'hero-mock-dot' })),
+      el('div', { class:'hero-mock-body' },
+        el('div', { class:'hero-mock-title' }, 'DCF Model'),
+        el('div', { class:'hero-mock-sub' }, 'Adjust the inputs, watch the value move'),
+        el('div', { class:'hero-mock-row' }, el('span', { class:'hero-mock-lbl' }, 'WACC'), el('div', { class:'hero-mock-track' }, el('div', { class:'hero-mock-fill', style:'width:62%' }))),
+        el('div', { class:'hero-mock-row' }, el('span', { class:'hero-mock-lbl' }, 'Terminal g'), el('div', { class:'hero-mock-track' }, el('div', { class:'hero-mock-fill', style:'width:28%' }))),
+        el('div', { class:'hero-mock-row' }, el('span', { class:'hero-mock-lbl' }, 'EBITDA margin'), el('div', { class:'hero-mock-track' }, el('div', { class:'hero-mock-fill', style:'width:74%' }))),
+        el('div', { class:'hero-mock-outs' },
+          el('div', { class:'hero-mock-out' }, el('div', { class:'hero-mock-out-lbl' }, 'Enterprise Value'), el('div', { class:'hero-mock-out-val' }, '$4.8B')),
+          el('div', { class:'hero-mock-out' }, el('div', { class:'hero-mock-out-lbl' }, 'Implied Upside'), el('div', { class:'hero-mock-out-val', style:'color:var(--green)' }, '+18%')))
+      )
+    ),
+    el('div', { class:'hero-float-card hero-float-1' }, el('span', { class:'hero-float-emoji', 'aria-hidden':'true' }, '✓'), 'LBO returns solved'),
+    el('div', { class:'hero-float-card hero-float-2' }, el('span', { class:'hero-float-emoji', 'aria-hidden':'true' }, '🔥'), `${lessonCount} lessons · ${MODULES.length} modules`)
+  );
+
+  const hero = el('div', { class:'home-hero' }, el('div', { class:'hero-inner' }, heroText, heroVisual));
   page.append(hero);
   const certSection = el('div', { id:'certSection' });
   page.append(certSection);
@@ -1124,7 +1195,10 @@ function buildHomePage(){
   // visitor should understand what kind of platform this is and why it's
   // built this way before being handed the full 5-module syllabus. The
   // syllabus itself lives one click away on the Curriculum page.
-  content.append(el('div', { class:'section-heading' }, 'How FinLab Works'));
+  const howBlock = el('div', { class:'section-block' });
+  howBlock.append(el('div', { class:'section-eyebrow' }, 'The Approach'));
+  howBlock.append(el('div', { class:'section-heading' }, 'How FinLab works'));
+  howBlock.append(el('p', { class:'section-sub' }, "Built the way this material is actually taught well — concept before formula, always anchored to something real."));
   const how = el('div', { class:'how-grid' });
   [
     ['📖','Concept First','Every lesson starts with the plain-English idea before any formula. You understand why before you learn how.'],
@@ -1132,23 +1206,28 @@ function buildHomePage(){
     ['🔧','Live Calculators','Move sliders, watch values change. You don\'t understand DCF until you\'ve broken it by setting terminal growth above WACC.'],
     ['🌍','Real Examples','Every lesson cites a real company, deal, or failure — Luckin Coffee, Hilton, Enron, Wirecard — the concepts come alive.'],
   ].forEach(([icon,title,desc]) => how.append(el('div', { class:'how-card' },
-    el('div', { class:'how-icon', 'aria-hidden':'true' }, icon),
+    el('div', { class:'how-icon-badge', 'aria-hidden':'true' }, icon),
     el('div', { class:'how-title', text:title },),
     el('div', { class:'how-desc', text:desc }))));
-  content.append(how);
+  howBlock.append(how);
+  content.append(howBlock);
 
-  const modHeadRow = el('div', { style:'display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;' },
-    el('div', { class:'section-heading', style:'margin-bottom:0;' }, 'The Curriculum'));
-  const seeAllLink = el('button', { type:'button', style:'background:none;border:none;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--blue);' }, 'See full breakdown →');
+  const curricBlock = el('div', { class:'section-block' });
+  const modHeadRow = el('div', { style:'display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:8px;' },
+    el('div', {},
+      el('div', { class:'section-eyebrow' }, 'The Syllabus'),
+      el('div', { class:'section-heading', style:'margin-bottom:8px;' }, 'The curriculum'),
+      el('p', { class:'section-sub', style:'margin-bottom:0;' }, `${MODULES.length} modules, ${lessonCount} lessons, in the order they build on each other.`)));
+  const seeAllLink = el('button', { type:'button', style:'background:none;border:none;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--blue);white-space:nowrap;' }, 'See full breakdown →');
   seeAllLink.addEventListener('click', () => showPage('learn'));
   modHeadRow.append(seeAllLink);
-  content.append(modHeadRow);
-  const grid = el('div', { class:'module-grid' });
+  curricBlock.append(modHeadRow);
+  const grid = el('div', { class:'module-grid', style:'margin-top:24px;' });
   MODULES.forEach(mod => {
     const modLessons = LESSONS.filter(l=>l.module===mod.id);
     const mins = modLessons.reduce((s,l)=>s+l.minutes,0);
     const card = el('button', { type:'button', class:`module-card m-${mod.color}` },
-      el('div', { class:'module-icon', 'aria-hidden':'true' }, mod.icon),
+      el('div', { class:'module-icon-badge', 'aria-hidden':'true' }, mod.icon),
       el('div', { class:'module-name', text:mod.name }),
       el('div', { class:'module-desc', text:mod.desc }),
       el('div', { class:'module-footer' },
@@ -1158,12 +1237,61 @@ function buildHomePage(){
     card.addEventListener('click', () => openLesson(modLessons[0].id));
     grid.append(card);
   });
-  content.append(grid);
+  curricBlock.append(grid);
+  content.append(curricBlock);
   page.append(content);
+  page.append(buildSiteFooter());
   return page;
 }
 function statBlock(val,label){
   return el('div', {}, el('div', { class:'hero-stat-val', text:String(val) }), el('div', { class:'hero-stat-lbl', text:label }));
+}
+function buildSiteFooter(){
+  const footer = el('footer', { class:'site-footer' });
+  const inner = el('div', { class:'footer-inner' });
+  const top = el('div', { class:'footer-top' });
+
+  const brandCol = el('div', {},
+    el('div', { class:'footer-brand' }, 'FinLab', el('span', { class:'logo-badge', style:'background:rgba(255,255,255,.12);color:white;' }, 'BETA')),
+    el('div', { class:'footer-tagline' }, "Finance education for students breaking into investment banking, private equity, and credit — built from first principles, free to use."));
+  top.append(brandCol);
+
+  const navCol = (title, items) => {
+    const col = el('div', {});
+    col.append(el('div', { class:'footer-col-title' }, title));
+    const list = el('div', { class:'footer-links' });
+    items.forEach(([label, action]) => {
+      const btn = el('button', { type:'button' }, label);
+      btn.addEventListener('click', action);
+      list.append(btn);
+    });
+    col.append(list);
+    return col;
+  };
+  top.append(navCol('Platform', [
+    ['Curriculum', () => showPage('learn')],
+    ['Practice Calculators', () => showPage('practice')],
+    ['Deal Room', () => showPage('dealroom')],
+    ['Glossary', () => showPage('glossary')],
+  ]));
+  top.append(navCol('Resources', [
+    ['Recall Drills', () => showPage('recall')],
+    ['Free Guides', () => { location.href = 'guides/'; }],
+  ]));
+
+  const aboutCol = el('div', {});
+  aboutCol.append(el('div', { class:'footer-col-title' }, 'About'));
+  const aboutLinks = el('div', { class:'footer-links' });
+  aboutLinks.append(el('a', { href:'https://github.com/abdullohik/finlab/issues/new', target:'_blank', rel:'noopener noreferrer' }, 'Report a mistake'));
+  aboutCol.append(aboutLinks);
+  top.append(aboutCol);
+
+  inner.append(top);
+  inner.append(el('div', { class:'footer-bottom' },
+    el('span', {}, `© ${new Date().getFullYear()} FinLab. Independent educational project — not affiliated with or endorsed by any bank, fund, or institution named in its lessons. Not investment advice.`),
+    el('span', {}, 'Built by Abdulloh Khabibullaev')));
+  footer.append(inner);
+  return footer;
 }
 
 function buildLearnIndexPage(){
@@ -1199,48 +1327,70 @@ function buildLearnIndexPage(){
   return page;
 }
 
+/* Shared header used by Practice / Deal Room / Glossary so they read as one
+   system with Home rather than three different one-off layouts. */
+function pageIntro(eyebrow, title, sub, stats){
+  const wrap = el('div', { class:'page-intro' });
+  wrap.append(el('div', { class:'section-eyebrow' }, eyebrow));
+  wrap.append(el('div', { class:'section-heading' }, title));
+  wrap.append(el('p', { class:'section-sub', style:'margin-bottom:0;' }, sub));
+  if (stats && stats.length) {
+    const row = el('div', { class:'page-stat-row' });
+    stats.forEach(([val,lbl]) => row.append(el('div', { class:'page-stat' },
+      el('div', { class:'page-stat-val', text:String(val) }), el('div', { class:'page-stat-lbl', text:lbl }))));
+    wrap.append(row);
+  }
+  return wrap;
+}
+
 function buildPracticePage(){
   const page = el('div', { class:'page', id:'page-practice' });
-  const intro = el('div', { style:'padding:28px 40px;max-width:820px;' });
-  intro.append(el('div', { class:'section-heading' }, '🔧 Practice Calculators'));
-  intro.append(el('p', { style:'font-size:13.5px;color:var(--ink3);line-height:1.75;margin-bottom:24px;', text:'All live models in one place. Use these to explore freely, test edge cases, or rehearse for an interview. The best way to understand a model is to break it.' }));
-  page.append(intro);
-  const grid = el('div', { style:'padding:0 40px 40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;' });
-  const calcLessons = { dcf:'dcf', lbo:'lbo', credit:'credit', football:'football' };
+  const wrap = el('div', { class:'page-wrap' });
+  wrap.append(pageIntro('Live Models', 'Practice Calculators',
+    "All six live models in one place. Use these to explore freely, test edge cases, or rehearse for an interview — the best way to understand a model is to break it.",
+    [[6,'Calculators'], [DEALS.length,'Deal Room cases built on them'], [GLOSSARY.length,'Glossary terms']]));
+
+  const grid = el('div', { class:'module-grid', style:'margin-bottom:56px;' });
   const cards = [
-    ['∫','DCF Model','Adjust WACC, growth, and margins. Watch EV change live. Try setting terminal growth above WACC to see the formula break — on purpose.','m-blue','dcf'],
-    ['⚡','LBO Returns','Model entry, leverage, EBITDA growth, exit, taxes and CapEx. See MOIC and CAGR update instantly.','m-purple','lbo'],
-    ['🛡','Credit Ratios','Input EBITDA, debt, and interest to get leverage, coverage, and DSCR with an implied rating — the ratios lenders check on every loan.','m-teal','credit'],
-    ['◫','Football Field','Set your valuation ranges from each method and see where any offer stands relative to all methodologies simultaneously.','m-amber','football'],
-    ['📊','Comps','Enter peer EV/EBITDA multiples and target financials to get an implied value — watch the median resist an outlier peer that would swing an average.','m-teal','comps'],
-    ['🤝','Accretion / Dilution','Set the deal size and cash/stock/debt mix, then see whether pro forma EPS rises or falls versus the acquirer standalone.','m-purple','merger'],
+    ['∫','DCF Model','Adjust WACC, growth, and margins. Watch EV change live. Try setting terminal growth above WACC to see the formula break — on purpose.','m-blue','dcf',['dcf','dcf-calc']],
+    ['⚡','LBO Returns','Model entry, leverage, EBITDA growth, exit, taxes and CapEx. See MOIC and CAGR update instantly.','m-purple','lbo',['lbo','lbo-calc']],
+    ['🛡','Credit Ratios','Input EBITDA, debt, and interest to get leverage, coverage, and DSCR with an implied rating — the ratios lenders check on every loan.','m-teal','credit',['credit']],
+    ['◫','Football Field','Set your valuation ranges from each method and see where any offer stands relative to all methodologies simultaneously.','m-amber','football',['football']],
+    ['📊','Comps','Enter peer EV/EBITDA multiples and target financials to get an implied value — watch the median resist an outlier peer that would swing an average.','m-teal','comps',['comps']],
+    ['🤝','Accretion / Dilution','Set the deal size and cash/stock/debt mix, then see whether pro forma EPS rises or falls versus the acquirer standalone.','m-purple','merger',['merger']],
   ];
-  cards.forEach(([icon,name,desc,cls,calcType]) => {
+  cards.forEach(([icon,name,desc,cls,calcType,linkIds]) => {
+    const usedIn = DEALS.filter(d => d.links.some(l => linkIds.includes(l)));
     const card = el('button', { type:'button', class:`module-card ${cls}` },
-      el('div', { class:'module-icon', 'aria-hidden':'true' }, icon),
+      el('div', { class:'module-icon-badge', 'aria-hidden':'true' }, icon),
       el('div', { class:'module-name', text:name }),
-      el('div', { class:'module-desc', text:desc }));
+      el('div', { class:'module-desc', text:desc }),
+      el('div', { class:'module-footer' },
+        el('span', { class:'module-lessons' }, usedIn.length ? `Used in: ${usedIn.map(d=>d.name.split(' — ')[0]).join(', ')}` : 'Standalone practice'),
+        el('span', { style:`font-size:11px;color:var(--${cls.slice(2)});font-weight:600` }, 'Open →'))
+    );
     card.addEventListener('click', () => {
       const targetLesson = LESSONS.find(l=>l.calc===calcType);
       openLesson(targetLesson.id);
       setTimeout(()=>switchTab(targetLesson.id,'calc'), 60);
+      track('practice_calc_open', { calc:calcType });
     });
     grid.append(card);
   });
-  page.append(grid);
+  wrap.append(grid);
 
-  const recallIntro = el('div', { style:'padding:8px 40px 0;max-width:820px;' });
-  recallIntro.append(el('div', { class:'section-heading' }, '🧠 Recall Drills'));
-  recallIntro.append(el('p', { style:'font-size:13.5px;color:var(--ink3);line-height:1.75;margin-bottom:16px;', text:'Multiple choice tests recognition — recall drills test whether you can actually produce the answer, the way a real interview does. Terms you miss come back around more often.' }));
-  page.append(recallIntro);
-  const recallGrid = el('div', { style:'padding:0 40px 40px;' });
+  wrap.append(pageIntro('Active Recall', 'Recall Drills',
+    "Multiple choice tests recognition — recall drills test whether you can actually produce the answer, the way a real interview does. Terms you miss come back around more often."));
+  const recallGrid = el('div', { class:'module-grid' });
   const recallCard = el('button', { type:'button', class:'module-card m-red', style:'max-width:280px;' },
-    el('div', { class:'module-icon', 'aria-hidden':'true' }, '🧠'),
+    el('div', { class:'module-icon-badge', 'aria-hidden':'true' }, '🧠'),
     el('div', { class:'module-name', text:'Start a Drill Session' }),
     el('div', { class:'module-desc', text:`${GLOSSARY.length} terms, weighted toward what you've missed before.` }));
   recallCard.addEventListener('click', () => showPage('recall'));
   recallGrid.append(recallCard);
-  page.append(recallGrid);
+  wrap.append(recallGrid);
+  page.append(wrap);
+  page.append(buildSiteFooter());
   return page;
 }
 
@@ -1321,14 +1471,17 @@ function renderRecallCard(queue, idx, tally){
 /* ---------------- DEAL ROOM ---------------- */
 function buildDealRoomPage(){
   const page = el('div', { class:'page', id:'page-dealroom' });
-  const header = el('div', { class:'lesson-header', style:'padding-bottom:16px;' },
-    el('h1', { class:'lesson-title', style:'color:var(--amber);' }, '💼 Deal Room'),
-    el('div', { class:'lesson-subtitle' }, 'Apply everything you\'ve learned to real company briefs — exactly like a first-year analyst would. These are guided case studies, not auto-graded models: work through the brief, then use the linked calculators and lessons to build your own numbers.'));
-  page.append(header);
+  const wrap = el('div', { class:'page-wrap' });
+  const levels = DEALS.reduce((s,d)=>{ s[d.difficulty]=(s[d.difficulty]||0)+1; return s; }, {});
+  wrap.append(pageIntro('Case Studies', 'Deal Room',
+    "Apply everything you've learned to real company briefs — exactly like a first-year analyst would. These are guided case studies, not auto-graded models: work through the brief, then use the linked calculators and lessons to build your own numbers.",
+    [[DEALS.length,'Cases'], [`${levels[1]||0} / ${levels[2]||0} / ${levels[3]||0}`,'Beginner / Intermediate / Advanced'], [new Set(DEALS.flatMap(d=>d.pills)).size,'Distinct models used']]));
+  const icons = { sellside:'💼', buyside:'🤝', lbo:'⚡', credit:'🛡' };
   const grid = el('div', { class:'deal-grid' });
   DEALS.forEach(d => {
-    const card = el('button', { type:'button', class:'deal-card' },
+    const card = el('button', { type:'button', class:`deal-card dc-${d.tag}` },
       el('div', { class:'deal-card-top' },
+        el('div', { class:'deal-card-icon', 'aria-hidden':'true' }, icons[d.tag] || '📁'),
         el('div', { class:`deal-tag tag-${d.tag}` }, d.tagLabel),
         el('div', { class:'deal-name', text:d.name }),
         el('div', { class:'deal-desc', text:d.desc })),
@@ -1338,8 +1491,50 @@ function buildDealRoomPage(){
     card.addEventListener('click', () => openLesson('deal-'+d.id));
     grid.append(card);
   });
-  page.append(grid);
+  wrap.append(grid);
+  page.append(wrap);
+  page.append(buildSiteFooter());
   return page;
+}
+
+/* Worked solution, deliberately collapsed behind a click. The whole value of a
+   case is attempting it first — so this never renders open, and the button text
+   says plainly what revealing it costs. */
+function buildDealSolution(d){
+  const s = d.solution;
+  const wrap = el('div', { class:'solution-wrap' });
+  const panel = el('div', { class:'solution-panel', hidden:'' });
+  const btn = el('button', { type:'button', class:'solution-toggle' },
+    el('span', { 'aria-hidden':'true' }, '🔓'),
+    el('span', {}, 'Reveal the worked solution'));
+  btn.setAttribute('aria-expanded', 'false');
+  wrap.append(el('div', { class:'solution-gate' },
+    el('div', { class:'solution-gate-title' }, 'Have you actually attempted it?'),
+    el('div', { class:'solution-gate-sub' }, "Build your own numbers first — even rough ones. Reading a solution you haven't attempted feels like learning and isn't. There's no single right answer here, so compare your reasoning to this, not just your figures."),
+    btn));
+
+  panel.append(el('div', { class:'solution-headline' }, s.headline));
+  if (s.range) panel.append(el('div', { class:'solution-range' },
+    el('span', { class:'solution-range-lbl' }, 'Reference range'), el('span', {}, s.range)));
+  const list = el('div', { class:'steps-list', style:'margin-top:16px;' });
+  s.steps.forEach((step,i) => list.append(el('div', { class:'step-item' },
+    el('div', { class:'step-num', 'aria-hidden':'true' }, String(i+1)),
+    el('div', { class:'step-text', html:`<strong>${step.t}</strong> — ${step.d}` }))));
+  panel.append(list);
+  panel.append(el('div', { class:'solution-verdict' },
+    el('div', { class:'solution-verdict-lbl' }, 'The recommendation'),
+    el('div', { html:s.verdict })));
+  if (s.pitfall) panel.append(el('div', { class:'warn-block', style:'margin-top:14px;' },
+    el('div', { class:'warn-label' }, '⚠ Most common mistake'),
+    el('div', { html:s.pitfall })));
+  wrap.append(panel);
+
+  btn.addEventListener('click', () => {
+    const open = !panel.hasAttribute('hidden');
+    if (open) { panel.setAttribute('hidden',''); btn.setAttribute('aria-expanded','false'); btn.lastChild.textContent = 'Reveal the worked solution'; }
+    else { panel.removeAttribute('hidden'); btn.setAttribute('aria-expanded','true'); btn.lastChild.textContent = 'Hide the worked solution'; track('deal_solution_reveal', { deal:d.id }); }
+  });
+  return wrap;
 }
 
 function buildDealDetailPage(d){
@@ -1378,6 +1573,7 @@ function buildDealDetailPage(d){
     linkWrap.append(btn);
   });
   body.append(linkWrap);
+  if (d.solution) body.append(buildDealSolution(d));
   page.append(body);
   const nav = el('div', { class:'lesson-nav' });
   const backBtn = el('button', { type:'button', class:'lesson-nav-btn', text:'← Deal Room' });
@@ -1388,27 +1584,152 @@ function buildDealDetailPage(d){
 }
 
 /* ---------------- GLOSSARY ---------------- */
+const GLOSSARY_CATS = ['Statements','Valuation','Deals','Credit','Careers'];
+let glossaryActiveCat = 'All';
 function buildGlossaryPage(){
   const page = el('div', { class:'page', id:'page-glossary' });
-  const wrap = el('div', { style:'padding:32px 40px;' });
-  wrap.append(el('div', { class:'section-heading' }, 'Finance Glossary'));
-  wrap.append(el('p', { style:'font-size:13.5px;color:var(--ink3);line-height:1.75;margin-bottom:24px;', text:`Every term you'll encounter — defined plainly, not academically. ${GLOSSARY.length} terms.` }));
-  const search = el('input', { type:'text', placeholder:'Search terms...', 'aria-label':'Search glossary terms', style:'width:100%;max-width:400px;padding:10px 14px;border:1.5px solid var(--line-ui);border-radius:var(--r);font-size:14px;font-family:var(--sans);color:var(--ink2);outline:none;margin-bottom:20px;display:block;' });
+  const wrap = el('div', { class:'page-wrap' });
+  const byCat = GLOSSARY_CATS.map(c => GLOSSARY.filter(g=>g.cat===c).length);
+  wrap.append(pageIntro('Reference', 'Finance Glossary',
+    "Every term you'll encounter — defined plainly, not academically.",
+    [[GLOSSARY.length,'Terms'], [GLOSSARY_CATS.length,'Categories'], [Math.max(...byCat),'Largest category']]));
+
+  const search = el('input', { type:'text', class:'glossary-search', placeholder:'Search terms or definitions...', 'aria-label':'Search glossary terms' });
   search.addEventListener('input', () => renderGlossaryList(search.value));
   wrap.append(search);
-  wrap.append(el('div', { id:'glossary-list' }));
+
+  const chipRow = el('div', { class:'glossary-chips' });
+  const allCats = ['All', ...GLOSSARY_CATS];
+  allCats.forEach(cat => {
+    const chip = el('button', { type:'button', class:'glossary-chip'+(cat==='All'?' active':''), text: cat==='All' ? `All (${GLOSSARY.length})` : `${cat} (${GLOSSARY.filter(g=>g.cat===cat).length})` });
+    chip.addEventListener('click', () => {
+      glossaryActiveCat = cat;
+      chipRow.querySelectorAll('.glossary-chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      renderGlossaryList(search.value);
+      track('glossary_filter', { cat });
+    });
+    chipRow.append(chip);
+  });
+  wrap.append(chipRow);
+
+  wrap.append(el('div', { id:'glossary-count', class:'glossary-count' }));
+  wrap.append(el('div', { id:'glossary-list', class:'glossary-grid' }));
   page.append(wrap);
+  page.append(buildSiteFooter());
   return page;
 }
+// Populates #glossary-list / #glossary-count by id — must only run once the page
+// is attached to the document (init() calls this once right after appending;
+// search/chip handlers call it again on every change).
 function renderGlossaryList(filter){
-  const f = filter.toLowerCase().trim();
-  const items = GLOSSARY.filter(g => !f || g.t.toLowerCase().includes(f) || g.d.toLowerCase().includes(f));
   const list = byId('glossary-list');
+  const count = byId('glossary-count');
+  if (!list) return;
+  const f = filter.toLowerCase().trim();
+  const items = GLOSSARY.filter(g =>
+    (glossaryActiveCat === 'All' || g.cat === glossaryActiveCat) &&
+    (!f || g.t.toLowerCase().includes(f) || g.d.toLowerCase().includes(f)));
+  if (count) count.textContent = `Showing ${items.length} of ${GLOSSARY.length} terms`;
   list.innerHTML = '';
-  if (!items.length) { list.append(el('div', { style:'color:var(--ink4);font-size:13px;padding:16px 0;', text:'No terms match.' })); return; }
-  items.forEach(g => list.append(el('div', { style:'border-bottom:1px solid var(--line2);padding:14px 0;' },
-    el('div', { style:'font-family:var(--mono);font-size:12px;font-weight:700;color:var(--blue);margin-bottom:5px;', text:g.t }),
-    el('div', { style:'font-size:13px;color:var(--ink3);line-height:1.75;', text:g.d }))));
+  if (!items.length) { list.append(el('div', { class:'glossary-empty', text:'No terms match — try a different search or category.' })); return; }
+  items.forEach(g => list.append(el('div', { class:'glossary-card' },
+    el('div', { class:'glossary-card-head' },
+      el('div', { class:'glossary-term', text:g.t }),
+      el('span', { class:`glossary-cat-pill gc-${(g.cat||'').toLowerCase()}` }, g.cat)),
+    el('div', { class:'glossary-def', text:g.d }))));
+}
+
+/* ---------------- BACKUP / RESTORE ----------------
+   There's no backend and no accounts, so progress lives in this browser's
+   localStorage only — clearing site data or switching device loses it. Rather
+   than pretend otherwise, this lets a student carry progress deliberately:
+   copy a code out, paste it in elsewhere. Import is validated and merged, never
+   trusted blindly, since the pasted text is arbitrary user input. */
+function exportProgress(){
+  return btoa(unescape(encodeURIComponent(JSON.stringify({
+    v:1, xp:STATE.xp, completed:STATE.completed, quizAnswers:STATE.quizAnswers,
+    streak:STATE.streak, lastVisit:STATE.lastVisit, recall:STATE.recall||{}
+  }))));
+}
+function importProgress(code){
+  let data;
+  try { data = JSON.parse(decodeURIComponent(escape(atob(code.trim())))); }
+  catch(e){ return { ok:false, msg:"That code couldn't be read. Make sure you copied the whole thing, with no line breaks missing." }; }
+  if (!data || typeof data !== 'object' || !Array.isArray(data.completed)) {
+    return { ok:false, msg:'That code is valid text but not a FinLab progress code.' };
+  }
+  const validIds = new Set(NAV_ORDER);
+  const incoming = data.completed.filter(id => validIds.has(id));
+  // Merge rather than overwrite — restoring on a device that already has
+  // progress should never silently delete work done there.
+  const merged = [...new Set([...(STATE.completed||[]), ...incoming])];
+  STATE.completed = merged;
+  STATE.xp = Math.max(Number(STATE.xp)||0, Number(data.xp)||0);
+  STATE.streak = Math.max(Number(STATE.streak)||1, Number(data.streak)||1);
+  if (data.quizAnswers && typeof data.quizAnswers === 'object') STATE.quizAnswers = Object.assign({}, data.quizAnswers, STATE.quizAnswers);
+  if (data.recall && typeof data.recall === 'object') STATE.recall = Object.assign({}, data.recall, STATE.recall||{});
+  saveState();
+  applyCompletionState();
+  track('progress_imported', { restored: incoming.length });
+  return { ok:true, msg:`Restored — ${merged.length} of ${NAV_ORDER.length} items now marked complete, ${STATE.xp} XP.` };
+}
+
+function openBackupModal(){
+  const scrim = el('div', { class:'modal-scrim' });
+  const modal = el('div', { class:'modal', role:'dialog', 'aria-modal':'true', 'aria-label':'Back up or restore progress' });
+  const pct = Math.round(STATE.completed.length / NAV_ORDER.length * 100);
+  modal.append(el('div', { class:'modal-title' }, 'Back up / restore progress'));
+  modal.append(el('div', { class:'modal-sub' },
+    `FinLab has no accounts — your progress (${STATE.completed.length} of ${NAV_ORDER.length} items, ${pct}%, ${STATE.xp} XP) is stored in this browser only. Clearing site data, using private browsing, or switching to another device will lose it. Copy the code below to carry your progress somewhere else.`));
+
+  const status = el('div', { class:'modal-status', hidden:'' });
+  const showStatus = (ok, msg) => { status.className = 'modal-status ' + (ok?'ok':'err'); status.textContent = msg; status.removeAttribute('hidden'); };
+
+  const exp = el('div', { class:'modal-section' });
+  exp.append(el('div', { class:'modal-section-title' }, 'Your progress code'));
+  const code = el('textarea', { class:'modal-code', readonly:'', 'aria-label':'Your progress code' });
+  code.value = exportProgress();
+  exp.append(code);
+  const copyBtn = el('button', { type:'button', class:'lesson-nav-btn primary', style:'margin-top:10px;' }, '📋 Copy code');
+  copyBtn.addEventListener('click', () => {
+    code.select();
+    navigator.clipboard ? navigator.clipboard.writeText(code.value).then(
+      () => showStatus(true, 'Copied. Paste it somewhere you\'ll find it again — a note app, or an email to yourself.'),
+      () => showStatus(false, 'Copy failed — select the text above and copy manually.')
+    ) : showStatus(false, 'Select the text above and copy manually.');
+  });
+  exp.append(copyBtn);
+  modal.append(exp);
+
+  const imp = el('div', { class:'modal-section' });
+  imp.append(el('div', { class:'modal-section-title' }, 'Restore from a code'));
+  const input = el('textarea', { class:'modal-code', placeholder:'Paste a progress code here...', 'aria-label':'Paste a progress code to restore' });
+  imp.append(input);
+  const impBtn = el('button', { type:'button', class:'lesson-nav-btn', style:'margin-top:10px;' }, '↥ Restore progress');
+  impBtn.addEventListener('click', () => {
+    if (!input.value.trim()) return showStatus(false, 'Paste a code first.');
+    const r = importProgress(input.value);
+    showStatus(r.ok, r.msg);
+    if (r.ok) code.value = exportProgress();
+  });
+  imp.append(impBtn);
+  imp.append(el('div', { style:'font-size:11.5px;color:var(--ink4);line-height:1.6;margin-top:10px;' },
+    'Restoring merges with whatever progress already exists in this browser — it never deletes work done here.'));
+  modal.append(imp);
+  modal.append(status);
+
+  const closeBtn = el('button', { type:'button', class:'lesson-nav-btn modal-close' }, 'Close');
+  const close = () => { scrim.remove(); document.removeEventListener('keydown', onKey); };
+  function onKey(e){ if (e.key === 'Escape') close(); }
+  closeBtn.addEventListener('click', close);
+  scrim.addEventListener('click', e => { if (e.target === scrim) close(); });
+  document.addEventListener('keydown', onKey);
+  modal.append(closeBtn);
+  scrim.append(modal);
+  document.body.append(scrim);
+  closeBtn.focus();
+  track('backup_modal_open', {});
 }
 
 /* ---------------- INIT ---------------- */
@@ -1422,6 +1743,7 @@ function init(){
   mainArea.append(buildDealRoomPage());
   DEALS.forEach(d => mainArea.append(buildDealDetailPage(d)));
   mainArea.append(buildGlossaryPage());
+  renderGlossaryList('');
   LESSONS.forEach(l => mainArea.append(buildLessonPage(l)));
   applyCompletionState();
 
@@ -1431,6 +1753,7 @@ function init(){
     byId('sidebar').classList.contains('open') ? closeMobileSidebar() : openMobileSidebar();
   });
   byId('sidebarScrim').addEventListener('click', closeMobileSidebar);
+  byId('backupLink').addEventListener('click', openBackupModal);
 
   window.addEventListener('hashchange', () => renderRoute(parseHash()));
   const initial = parseHash();

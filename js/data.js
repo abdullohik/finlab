@@ -3,6 +3,7 @@
 
 const MODULES = [
   { id:'fs',    name:'Financial Statements', icon:'📊', color:'blue',   desc:'Learn to read Income Statements, Balance Sheets, and Cash Flow Statements the way analysts actually do. Everything starts here.' },
+  { id:'excel', name:'Excel & Modeling',     icon:'📐', color:'green',  desc:'The mechanics nobody teaches you: shortcuts, formatting conventions, and how to actually build and audit a working three-statement model in Excel.' },
   { id:'val',   name:'Valuation Models',     icon:'🎯', color:'teal',   desc:'DCF, Comps, and Precedent Transactions — how to value any company, with live calculators to practice on every concept.' },
   { id:'deals', name:'Deals & Transactions', icon:'⚡', color:'purple', desc:'LBO modelling, merger analysis, credit assessment — the deal-execution toolkit used by PE firms and investment banks.' },
   { id:'adv',   name:'Advanced Analysis',    icon:'🔍', color:'amber',  desc:'Football field charts, red flag detection, and understanding how bankers, PE investors, and credit officers think differently.' },
@@ -18,7 +19,7 @@ const LESSONS = [
 /* ============ MODULE 1 — FINANCIAL STATEMENTS ============ */
 {
   id:'fs-intro', module:'fs', type:'lesson', title:'What Are Financial Statements?',
-  subtitle:'Module 1 · Lesson 1 of 5 · 8 min read', minutes:8,
+  minutes:8,
   blocks:[
     { type:'concept', label:'The Big Picture', q:'What is a financial statement, and why does every banker read one first?',
       a:"A financial statement is a company's official record of its financial activity — how much it earned, what it owns, what it owes, and how much cash moved in and out. Every public company publishes these every quarter and year. <strong>Analysts, bankers, and investors use these three documents to make every major financial decision.</strong><br><br>When a bank evaluates whether to lend to a company, they read its financial statements. When a PE firm considers buying a business, they read its financial statements. When you value a company in a DCF, every input comes from financial statements. Everything in finance starts here." },
@@ -43,7 +44,7 @@ const LESSONS = [
 
 {
   id:'income-stmt', module:'fs', type:'lesson', title:'The Income Statement',
-  subtitle:'Module 1 · Lesson 2 of 5 · 10 min read', minutes:10,
+  minutes:10,
   blocks:[
     { type:'concept', label:'Core Concept', q:'What question does the Income Statement answer, and why does it read top to bottom like a waterfall?',
       a:"The Income Statement answers one question: <strong>did the business make money this period, and where did it go?</strong> It starts with everything the company sold (Revenue) and subtracts costs in a specific order, so each stopping point tells you something different about the business." },
@@ -73,7 +74,7 @@ const LESSONS = [
 
 {
   id:'balance-sheet', module:'fs', type:'lesson', title:'The Balance Sheet',
-  subtitle:'Module 1 · Lesson 3 of 5 · 10 min read', minutes:10,
+  minutes:10,
   blocks:[
     { type:'concept', label:'Core Concept', q:'What does the Balance Sheet capture that the Income Statement can\'t?',
       a:"The Balance Sheet is a <strong>snapshot at one exact moment</strong> — not a period. It answers: what does the company own (Assets), what does it owe (Liabilities), and what's left over for shareholders (Equity)? The defining feature is that it must always balance: <strong>Assets = Liabilities + Equity</strong>. Every single asset was paid for either by borrowing (a liability) or by the owners' own money (equity) — there's no third option." },
@@ -101,7 +102,7 @@ const LESSONS = [
 
 {
   id:'cashflow', module:'fs', type:'lesson', title:'Cash Flow Statement',
-  subtitle:'Module 1 · Lesson 4 of 5 · 10 min read', minutes:10,
+  minutes:10,
   blocks:[
     { type:'concept', label:'Core Concept', q:'Why does the Cash Flow Statement exist when we already have Net Income?',
       a:"Net Income includes non-cash items (depreciation, changes in receivables and payables) that don't reflect actual money moving. The Cash Flow Statement strips all of that out and shows <strong>real cash</strong> — split into three buckets that each tell a different story about how the business is funded and where money is going." },
@@ -125,6 +126,56 @@ const LESSONS = [
 },
 
 {
+  id:'three-statement-link', module:'fs', type:'lesson', title:'How the Three Statements Link',
+  minutes:14,
+  blocks:[
+    { type:'concept', label:'Why This Lesson Exists', q:'This is the single most-asked technical question in finance interviews.',
+      a:"\"Walk me through how the three statements are connected.\" If you interview for investment banking, private equity, or credit, <strong>you will be asked this — and its follow-up, the depreciation walkthrough — more than any other technical question.</strong><br><br>It's asked so often because it can't be faked. Someone who has actually built a model answers it in thirty seconds. Someone who memorized definitions gets lost by the second step. The three statements aren't three documents — they're <strong>one system with three views</strong>, and every model you ever build depends on them tying out." },
+    { type:'analogy', text:"Think of a company like a car on a road trip. The Income Statement is the trip odometer — distance covered this leg. The Balance Sheet is a photo of the car right now: fuel in the tank, dents on the body, how much is still owed on the loan. The Cash Flow Statement is the fuel gauge log — exactly how much fuel went in and out, and why. You can't understand the trip from any one of them alone, and all three describe the same car." },
+    { type:'concept', label:'The Three Links', q:'Three connection points hold the entire system together.', steps:[
+        { t:'Net Income → Retained Earnings', d:'Net Income from the bottom of the Income Statement flows into Retained Earnings inside the Equity section of the Balance Sheet (less any dividends paid). This is how a profitable company builds book equity over time.' },
+        { t:'Net Income → Top of the Cash Flow Statement', d:'The Cash Flow Statement <em>starts</em> with Net Income, then adds back non-cash charges (D&A, stock comp) and adjusts for working-capital movements to arrive at real cash from operations.' },
+        { t:'Ending Cash → Balance Sheet Cash', d:'The final line of the Cash Flow Statement — the net change in cash — must exactly equal the change in the Cash line on the Balance Sheet. If it doesn\'t, your model is broken.' },
+      ] },
+    { type:'insight', text:'Everything else is a consequence of those three links. D&A reduces the asset side of the Balance Sheet while being added back on the Cash Flow Statement. CapEx leaves through Investing and lands as an asset. Debt raised appears in Financing and as a liability. Once you internalize the three anchors, every other line follows logically instead of needing to be memorized.' },
+    { type:'concept', label:'The Classic Interview Question', q:'"Depreciation increases by $10. Walk me through all three statements." (Assume a 25% tax rate.)', steps:[
+        { t:'Income Statement first', d:'D&A rises $10, so pre-tax income falls $10. At a 25% tax rate, taxes fall $2.50. <strong>Net Income falls $7.50.</strong> Always start here — the other two statements depend on this number.' },
+        { t:'Cash Flow Statement second', d:'Start with Net Income, now down $7.50. Add back the $10 of depreciation, because it is a non-cash charge. Net effect: <strong>cash from operations rises $2.50.</strong> No other section changes, so ending cash is up $2.50.' },
+        { t:'Balance Sheet third — assets', d:'Cash is up $2.50. Net PP&E is down $10 (the asset was depreciated). <strong>Total assets fall $7.50.</strong>' },
+        { t:'Balance Sheet third — liabilities & equity', d:'Retained Earnings falls by the $7.50 drop in Net Income. <strong>Total liabilities and equity fall $7.50.</strong>' },
+        { t:'Confirm it balances', d:'Assets −$7.50 = Liabilities & Equity −$7.50. <strong>It balances.</strong> Always say this out loud in an interview — finishing with the check is what separates a complete answer from a partial one.' },
+      ] },
+    { type:'formula', html:`<span class="cm">// The depreciation walkthrough, in one view (25% tax rate):</span>
+
+<span class="fc">INCOME STATEMENT</span>   D&A <span class="fo">+</span><span class="fv">10</span>  →  Pre-tax <span class="fo">−</span><span class="fv">10</span>  →  Tax <span class="fo">−</span><span class="fv">2.50</span>  →  <span class="fc">Net Income</span> <span class="fo">−</span><span class="fv">7.50</span>
+
+<span class="fc">CASH FLOW</span>          Net Income <span class="fo">−</span><span class="fv">7.50</span>  <span class="fo">+</span> D&A add-back <span class="fv">10</span>  =  <span class="fc">Cash</span> <span class="fo">+</span><span class="fv">2.50</span>
+
+<span class="fc">BALANCE SHEET</span>      Cash <span class="fo">+</span><span class="fv">2.50</span>, PP&E <span class="fo">−</span><span class="fv">10</span>      =  Assets <span class="fo">−</span><span class="fv">7.50</span>
+                   Retained Earnings <span class="fo">−</span><span class="fv">7.50</span>   =  L&E    <span class="fo">−</span><span class="fv">7.50</span>
+
+<span class="cm">// Assets = Liabilities + Equity. Balances. ✓</span>
+<span class="cm">// Note the counterintuitive result: MORE depreciation means MORE cash,</span>
+<span class="cm">// because depreciation is tax-deductible but never actually paid out.</span>` },
+    { type:'warn', label:'The trap in this question', text:'Most candidates freeze at "how can more depreciation <em>increase</em> cash?" It increases cash because depreciation is <strong>tax-deductible but non-cash</strong> — you get the tax saving without writing a cheque. That $2.50 is called the <strong>depreciation tax shield</strong>, and it is exactly why capital-intensive businesses and heavily-levered LBOs care so much about D&A. If you can explain the tax shield unprompted, you have visibly answered better than most candidates.' },
+    { type:'concept', label:'Practice These Variants', q:'The same three-step logic, different starting line. Try each before reading on.', keyterms:[
+        { n:'$10 of CapEx', d:'IS: no change (CapEx is not an expense). CF: −$10 in Investing, so cash falls $10. BS: cash −$10, PP&E +$10. Assets net to zero. Balances with no equity change.' },
+        { n:'$10 inventory purchase (on credit)', d:'IS: no change yet — inventory hits the IS only when sold. CF: no cash impact (it was on credit). BS: inventory +$10, accounts payable +$10. Balances.' },
+        { n:'$10 of accrued but unpaid wages', d:'IS: expense +$10, so Net Income −$7.50 at 25% tax. CF: NI −$7.50, add back +$10 increase in accrued liabilities, cash +$2.50. BS: cash +$2.50, accrued liabilities +$10, retained earnings −$7.50. Balances.' },
+        { n:'$100 of debt raised', d:'IS: no immediate change (interest starts next period). CF: +$100 in Financing. BS: cash +$100, debt +$100. Balances. Equity untouched — this is why debt raises never flow through the Income Statement.' },
+      ] },
+    { type:'realworld', label:'Why Models Break In Practice', body:'On a live deal, the most common reason a junior analyst\'s model "doesn\'t balance" is a broken link, not a maths error — a hardcoded number typed over a formula, a cash-flow line that isn\'t feeding the balance-sheet cash, or a working-capital sign flipped the wrong way. Senior bankers debug this by checking the three links in order: does Net Income tie? Does ending cash tie? Does Retained Earnings roll forward? Nearly every imbalance is found in one of those three places, which is why interviewers care that you know them cold.' },
+  ],
+  quiz:[
+    { q:'Depreciation increases by $10 and the tax rate is 25%. What happens to Net Income?', opts:['Falls $10','Falls $7.50','Rises $2.50','No change — depreciation is non-cash'], correct:1 },
+    { q:'In that same scenario, what happens to total cash?', opts:['Falls $10','Falls $7.50','Rises $2.50','No change'], correct:2 },
+    { q:'Why does an increase in depreciation increase cash?', opts:['Because depreciation is a cash inflow from operations','Because it is tax-deductible but never actually paid — the tax saving is real cash, the expense is not','Because it increases the value of PP&E on the Balance Sheet','It doesn\'t — cash always falls when expenses rise'], correct:1 },
+    { q:'A company spends $10 on CapEx. What is the effect on total assets?', opts:['Assets fall $10','Assets rise $10','No net change — cash falls $10 and PP&E rises $10','Assets rise $7.50 after tax'], correct:2 },
+    { q:'Your model doesn\'t balance. Which three links should you check first?', opts:['Revenue growth, margins, and the tax rate','Net Income into Retained Earnings, Net Income into the Cash Flow Statement, and ending cash into Balance Sheet cash','The DCF, the comps, and the precedents','Interest expense, the debt schedule, and the exit multiple'], correct:1 },
+  ]
+},
+
+{
   id:'fs-quiz', module:'fs', type:'quiz', title:'Statements Quiz',
   subtitle:'Module 1 · Capstone Quiz · 5 min', minutes:5,
   intro:'You\'ve now covered all three financial statements — and how they connect. This quiz mixes concepts across the Income Statement, Balance Sheet, and Cash Flow Statement, the way a real interview question would.',
@@ -137,10 +188,162 @@ const LESSONS = [
   ]
 },
 
-/* ============ MODULE 2 — VALUATION MODELS ============ */
+/* ============ MODULE 2 — EXCEL & MODELING ============ */
+{
+  id:'excel-setup', module:'excel', type:'lesson', title:'Excel for Finance — The Setup',
+  minutes:12,
+  blocks:[
+    { type:'concept', label:'Why This Module Exists', q:'Understanding a DCF and being able to build one are different skills.',
+      a:"Everything up to this point has taught you what the numbers <em>mean</em>. This module teaches you to <strong>produce</strong> them — in Excel, the way it's actually done on a desk.<br><br>This matters more than students expect. In a first-year analyst role you will spend the majority of your day in Excel. In a modelling test — standard in private equity recruiting and increasingly common in banking — you get a blank workbook, a set of financials, and 60 to 90 minutes. Nobody asks you to define WACC. They ask you to <strong>build the thing and make it balance.</strong>" },
+    { type:'warn', label:'You cannot learn this by reading', text:'This module is written to be done <strong>with Excel open</strong>, not read on a train. Every section is a set of actions. Reading about keyboard shortcuts and never using them produces exactly zero speed improvement — the entire benefit comes from the muscle memory. Open a blank workbook before you continue.' },
+    { type:'concept', label:'Rule One', q:'The mouse is the enemy.', a:"Speed in Excel is almost entirely about <strong>never touching the mouse</strong>. A banker navigating by keyboard is roughly three to five times faster than one clicking around, and in a timed modelling test that difference decides whether you finish.<br><br>Excel's menus are all reachable through the <strong>Alt key</strong>: press Alt and the ribbon displays a letter for every command. Alt then H then O then I autofits a column width. You don't memorize these as trivia — you learn the ten you use constantly and the rest come with time." },
+    { type:'concept', label:'The Shortcuts That Actually Matter', q:'Learn these ten first. They cover most of what you do all day.', keyterms:[
+        { n:'F2', d:'Edit the active cell and — critically — highlight every cell its formula references. This is the single most important auditing key in Excel. Press it constantly.' },
+        { n:'Ctrl + Arrow', d:'Jump to the edge of a data block. Ctrl+Down goes to the last filled row instantly instead of scrolling. Add Shift to select along the way.' },
+        { n:'Alt + =', d:'Insert a SUM formula over the range Excel guesses above or left. Faster than typing =SUM( every time.' },
+        { n:'F4', d:'Cycle absolute/relative references while editing ($A$1 → A$1 → $A1 → A1). Essential for dragging formulas across a model without breaking them.' },
+        { n:'Ctrl + Shift + { ', d:'Select all cells a formula depends on (its precedents). Ctrl+] does the reverse — everything that depends on this cell. The fastest way to trace a broken link.' },
+        { n:'Alt + E, S, V', d:'Paste Special → Values. Strips formulas and keeps only numbers. The most-used paste in finance, by a wide margin.' },
+        { n:'Ctrl + Page Up / Down', d:'Move between worksheet tabs without the mouse. A real model has 8–15 tabs and you move constantly.' },
+        { n:'Shift + Space / Ctrl + Space', d:'Select an entire row / entire column. Follow with Ctrl and + or − to insert or delete.' },
+        { n:'F9', d:'Recalculate. Also: highlight part of a formula and press F9 to see what that fragment evaluates to, then Escape. Superb for debugging a long nested formula.' },
+        { n:'Ctrl + `', d:'Toggle formula view — shows every formula in the sheet instead of its result. The fastest way to spot a hardcoded number sitting where a formula should be.' },
+      ] },
+    { type:'concept', label:'Formatting Is Not Decoration', q:'Every bank uses the same colour convention. Break it and your model reads as amateur.', steps:[
+        { t:'Blue font = hardcoded input', d:'Any number typed by a human is blue. Growth assumptions, tax rates, entry multiples — anything someone might want to change. This is the most important convention in financial modelling.' },
+        { t:'Black font = formula', d:'Anything calculated within the same worksheet is black. If it\'s black, nobody should be typing over it.' },
+        { t:'Green font = link from another worksheet', d:'A reference pulled from a different tab in the same workbook. Lets a reviewer see instantly which numbers arrive from elsewhere.' },
+        { t:'Red font = link to an external file', d:'A reference to a different workbook entirely. Flagged in red because external links break constantly and are the most fragile thing in any model.' },
+        { t:'Consistent number formats', d:'Negatives in parentheses, not with a minus sign. Thousands separators everywhere. Multiples with an "x", percentages with a "%". One decimal place for multiples, none for large dollar figures.' },
+      ] },
+    { type:'insight', text:'The colour convention exists because models are handed between people under time pressure. A VP opening your model at 11pm needs to know in one glance which cells are safe to change. Blue means "this is an assumption, you may edit it." Black means "this is calculated, do not touch." Following this makes you look like you have done this before — ignoring it is the fastest way to look like you have not.' },
+    { type:'concept', label:'Model Structure', q:'How a real model is laid out — and why.', steps:[
+        { t:'Separate inputs from calculations from outputs', d:'Assumptions live in one clearly labelled place, ideally their own tab or a boxed section at the top. Calculations reference them. Outputs summarize. Never scatter hardcoded assumptions through the calculation sheets.' },
+        { t:'One row, one formula, dragged right', d:'Every column in a projection should contain the identical formula. If column H differs from column G, that is either a deliberate exception (flag it) or a bug (usually a bug).' },
+        { t:'Time runs left to right, consistently', d:'Historical periods, then projected. Use one row for period labels and one for whether the column is actual or forecast, and reference it — never re-type years.' },
+        { t:'No hardcoded numbers inside formulas', d:'Never write =B12*1.05. Write =B12*(1+$C$4) and put the 5% in a labelled blue input cell. A number buried inside a formula is invisible to a reviewer and impossible to sensitize.' },
+        { t:'Build a check row', d:'A row that computes Assets − Liabilities − Equity and should read zero. Make it conditionally format red when it isn\'t. This is covered fully in the model-integrity lesson.' },
+      ] },
+    { type:'warn', label:'The habit that gets analysts in trouble', text:'Typing a number over a formula to "make it work" is the most damaging thing you can do in a model. It fixes the cell you\'re looking at and silently breaks everything downstream — and because the cell now looks fine, nobody finds it until a managing director is presenting the output to a client. If a formula gives a wrong answer, <strong>find out why</strong>. Never plug it. Ctrl + ` exists specifically to hunt these down.' },
+    { type:'realworld', label:'The London Whale (2012)', body:'JPMorgan lost over $6 billion on a derivatives position in 2012. The bank\'s own internal review found that the risk model used to size the position had been operated through a spreadsheet where data was copied and pasted manually between worksheets, and it contained an error that understated volatility — one calculation divided by a sum rather than an average. The trading losses had many causes, but a manual, unaudited spreadsheet process was a documented contributor. Spreadsheet discipline is not a cosmetic concern at scale.' },
+  ],
+  quiz:[
+    { q:'In standard financial-modelling convention, what does a blue font indicate?', opts:['A formula calculated on the same sheet','A hardcoded input typed by a human','A link to another workbook','A cell containing an error'], correct:1 },
+    { q:'You want to see every cell that a formula references. What is the fastest way?', opts:['Click through each reference manually','Press F2 to edit the cell — precedents highlight in colour','Delete the formula and rebuild it','Use Paste Special'], correct:1 },
+    { q:'Why should you never write =B12*1.05 in a model?', opts:['Excel cannot multiply by decimals','The 5% assumption is invisible to a reviewer and impossible to sensitize — it belongs in a labelled input cell','It is slower to calculate','It breaks the colour convention only'], correct:1 },
+    { q:'A formula returns the wrong number. What is the correct response?', opts:['Type the right number over it so the output looks correct','Trace the precedents and find the actual cause — plugging a number silently breaks everything downstream','Delete the row','Change the tax rate until it matches'], correct:1 },
+  ]
+},
+
+{
+  id:'excel-model', module:'excel', type:'lesson', title:'Building a Three-Statement Model',
+  minutes:18,
+  blocks:[
+    { type:'concept', label:'The Goal', q:'What you are actually building, and in what order.',
+      a:"A three-statement model projects a company's Income Statement, Balance Sheet, and Cash Flow Statement forward — usually five years — with all three <strong>linked</strong>, so that changing one assumption correctly ripples through everything.<br><br>This is the foundation model in finance. A DCF is a three-statement model with a discounting section bolted on. An LBO is a three-statement model with a debt schedule and a returns calculation. A merger model is two of them combined. <strong>Learn this one and the rest are variations.</strong>" },
+    { type:'analogy', text:"Building a model is like plumbing a house. You lay the pipes in a specific order — supply first, then fixtures, then drainage — because each stage depends on the one before. Try to connect the drain before the fixture exists and you get a mess. Modellers who jump straight to the Balance Sheet before finishing revenue have made exactly that mistake, and they spend the rest of the build fighting it." },
+    { type:'concept', label:'The Build Order', q:'Nine steps, always in this sequence.', steps:[
+        { t:'Set up the shell and inputs', d:'Tabs for Assumptions, Model, and Outputs. Period headers across the top. Every assumption in blue, in one place. Do this before typing a single formula.' },
+        { t:'Input historicals', d:'Three years of actual Income Statement and Balance Sheet data, typed in as blue hardcodes. These come from the 10-K. Calculate historical margins and growth rates from them — those drive your projections.' },
+        { t:'Project revenue', d:'The most important assumption in the model. Growth rate, or price × volume if you have the detail. Everything downstream keys off this line, so it goes first.' },
+        { t:'Project the Income Statement down to EBIT', d:'COGS and OpEx usually as a percentage of revenue, referencing historical margins. Stop at EBIT — you cannot complete the statement yet, because interest expense depends on debt you haven\'t scheduled.' },
+        { t:'Build the working capital schedule', d:'Project receivables, inventory, and payables using historical ratios: days sales outstanding, days inventory, days payable. The <em>change</em> in each flows to the Cash Flow Statement.' },
+        { t:'Build the PP&E and D&A schedule', d:'Opening PP&E, plus CapEx, minus depreciation, equals closing PP&E. Depreciation flows to the Income Statement; CapEx flows to Investing on the Cash Flow Statement; closing PP&E goes to the Balance Sheet.' },
+        { t:'Build the debt schedule', d:'Opening debt, plus drawdowns, minus repayments, equals closing debt. Interest expense is calculated on the balance and flows back up to the Income Statement — completing it down to Net Income.' },
+        { t:'Complete the Cash Flow Statement', d:'Start with Net Income, add back D&A, adjust for working-capital changes to get Operating. CapEx into Investing. Debt and equity movements into Financing. The three sections sum to the net change in cash.' },
+        { t:'Complete the Balance Sheet and check', d:'Ending cash comes from the Cash Flow Statement. Retained Earnings rolls forward with Net Income less dividends. Then build the check row: Assets − Liabilities − Equity must equal zero.' },
+      ] },
+    { type:'warn', label:'Why you cannot finish the Income Statement first', text:'This is the step that confuses everyone building their first model. You cannot compute interest expense until you know the debt balance. You cannot know the closing debt balance until you know how much cash was available to repay debt. You cannot know available cash until you have Net Income — <strong>which requires interest expense.</strong> That loop is real, it is called circularity, and it is the subject of the next lesson. For now: build to EBIT, do the schedules, then come back and finish.' },
+    { type:'formula', html:`<span class="cm">// The roll-forward pattern — used for PP&E, debt, equity, and working capital.</span>
+<span class="cm">// Learn this shape once and you can build every schedule in the model.</span>
+
+<span class="fc">Closing balance</span> = <span class="fv">Opening balance</span> <span class="fo">+</span> <span class="fv">Additions</span> <span class="fo">−</span> <span class="fv">Reductions</span>
+
+<span class="cm">// PP&E:</span>       Closing = Opening <span class="fo">+</span> CapEx <span class="fo">−</span> Depreciation
+<span class="cm">// Debt:</span>       Closing = Opening <span class="fo">+</span> Drawdowns <span class="fo">−</span> Repayments
+<span class="cm">// Equity:</span>     Closing = Opening <span class="fo">+</span> Net Income <span class="fo">−</span> Dividends
+<span class="cm">// Inventory:</span>  Closing = Opening <span class="fo">+</span> Purchases <span class="fo">−</span> COGS
+
+<span class="cm">// In Excel, this period's opening ALWAYS references last period's closing:</span>
+<span class="cm">//   D10 = C15      (opening = prior column's closing)</span>
+<span class="cm">//   D15 = D10 + D11 - D12</span>
+<span class="cm">// Never re-type an opening balance. Always link it.</span>` },
+    { type:'concept', label:'Working Capital — The Part People Get Backwards', q:'Signs on the Cash Flow Statement, and why they feel wrong.',
+      a:"An <strong>increase</strong> in a current asset is a <strong>use</strong> of cash — it shows as negative on the Cash Flow Statement. Receivables going up means you made sales but haven't been paid: cash left the business, or never arrived.<br><br>An <strong>increase</strong> in a current liability is a <strong>source</strong> of cash — it shows as positive. Payables going up means you received goods and haven't paid for them yet: you are holding onto cash a supplier is effectively lending you.<br><br>Most first-time modellers flip these signs, the model doesn't balance, and they spend an hour hunting. Memorize it as: <strong>assets up, cash down. Liabilities up, cash up.</strong>" },
+    { type:'concept', label:'Sanity Checks While You Build', q:'Catch errors as you go, not at the end.', keyterms:[
+        { n:'Do margins look sane?', d:'If projected EBITDA margin drifts to 60% for a grocery retailer, an assumption is wrong. Compare every projected margin to the historicals you calculated in step 2.' },
+        { n:'Does revenue growth decay?', d:'Holding 30% growth flat for five years is almost never realistic. Growth should trend toward a sustainable rate. Reviewers look for this immediately.' },
+        { n:'Is CapEx sensible versus D&A?', d:'In a mature business, CapEx should roughly approximate D&A over time. CapEx far below D&A means the asset base is shrinking — possible, but it needs a reason.' },
+        { n:'Does cash go negative?', d:'A model that projects negative cash is telling you the company runs out of money and needs a revolver draw. That is a finding, not something to hide with a plug.' },
+        { n:'Does the check row read zero?', d:'Every period, every column. If it breaks in year 3, the error is in year 3 — the check row tells you where to look.' },
+      ] },
+    { type:'realworld', label:'What a Modelling Test Actually Looks Like', body:'A typical private-equity modelling test hands you a company\'s historical financials and 90 minutes to build a working LBO with returns. Candidates rarely fail because they don\'t know what an LBO is — they fail because they run out of time, or their balance sheet doesn\'t balance and they spend 30 minutes hunting the error. The differentiator is build discipline: consistent formulas dragged across, no hardcodes buried in calculations, and a check row built early so an imbalance is caught in the period it appears rather than at the end.' },
+  ],
+  quiz:[
+    { q:'Why can you not complete the Income Statement before building the debt schedule?', opts:['Because revenue depends on debt','Because interest expense depends on the debt balance, which depends on cash available to repay it','Because tax rates change with leverage','You can — the Income Statement is always built first, start to finish'], correct:1 },
+    { q:'Accounts receivable increases by $20. What is the effect on the Cash Flow Statement?', opts:['+$20 — receivables are an asset','−$20 — an increase in a current asset is a use of cash','No effect until the cash is collected','+$20 in Financing activities'], correct:1 },
+    { q:'What is the roll-forward pattern?', opts:['Closing = Opening + Additions − Reductions','Revenue × Margin = Profit','Assets = Liabilities + Equity','EV = Market Cap + Net Debt'], correct:0 },
+    { q:'Your model balances in years 1 and 2 but breaks in year 3. Where is the error most likely?', opts:['In the historical data','In year 3 — the check row localizes the error to the period it first appears','In the assumptions tab','In the terminal value'], correct:1 },
+    { q:'Projected EBITDA margin for a grocery retailer comes out at 55%. What should you do?', opts:['Accept it — the model calculated it','Compare to historical margins and find the broken assumption; grocery margins are low single digits','Increase revenue to compensate','Hardcode the margin to a lower number'], correct:1 },
+  ]
+},
+
+{
+  id:'excel-integrity', module:'excel', type:'lesson', title:'Model Integrity — Circularity, Checks & Debugging',
+  minutes:14,
+  blocks:[
+    { type:'concept', label:'The Circularity Problem', q:'Why your model says #REF or spins forever — and what professionals actually do about it.',
+      a:"Here is the loop, precisely:<br><br><strong>Interest expense</strong> depends on the average debt balance. The <strong>debt balance</strong> depends on how much cash was swept to repay debt. <strong>Available cash</strong> depends on Free Cash Flow. Free Cash Flow depends on Net Income. And <strong>Net Income depends on interest expense.</strong><br><br>The formula chain refers back to itself. Excel calls this a circular reference and, by default, refuses — displaying zeros or a warning. This is not a bug in your model. It is a genuine property of how the financials interconnect, and every real LBO model confronts it." },
+    { type:'concept', label:'Three Ways To Handle It', q:'Each is used in practice. Know which and why.', steps:[
+        { t:'Enable iterative calculation', d:'File → Options → Formulas → Enable iterative calculation, typically 100 iterations with maximum change 0.001. Excel solves the loop by converging numerically. It works and is widely used — but the model becomes fragile: one error anywhere can propagate zeros through everything, and the file can be slow.' },
+        { t:'Use beginning-of-period debt', d:'Calculate interest on the opening debt balance rather than the average of opening and closing. This breaks the loop entirely because the opening balance is already known from the prior period. Slightly less precise, completely stable, and common in teaching models and quick builds.' },
+        { t:'Build a circuit breaker', d:'A switch cell — an input reading 1 or 0 — wired into the interest formula so it can be forced to zero. When iteration blows up and the model fills with errors, you flip the breaker to 0, let it recalculate clean, then flip back to 1. Any model using iteration should have one.' },
+      ] },
+    { type:'formula', html:`<span class="cm">// The circular chain, stated plainly:</span>
+
+  Interest expense  <span class="fo">→</span> depends on <span class="fo">→</span>  Debt balance
+  Debt balance      <span class="fo">→</span> depends on <span class="fo">→</span>  Cash available to repay
+  Cash available    <span class="fo">→</span> depends on <span class="fo">→</span>  Net Income
+  Net Income        <span class="fo">→</span> depends on <span class="fo">→</span>  <span class="fc">Interest expense</span>  <span class="cm">← loop closes</span>
+
+<span class="cm">// Circuit breaker pattern — wire the switch into the interest line:</span>
+
+  <span class="fv">Interest</span> = <span class="fc">IF</span>(<span class="fv">$C$3</span>=1, AverageDebt * Rate, <span class="fv">0</span>)
+                    <span class="cm">↑ breaker cell: 1 = live, 0 = force off</span>
+
+<span class="cm">// Simplest fix of all — use opening debt, no circularity at any point:</span>
+  <span class="fv">Interest</span> = <span class="fv">OpeningDebt</span> * Rate` },
+    { type:'concept', label:'The Checks Every Model Needs', q:'Build these before you need them — not after something breaks.', keyterms:[
+        { n:'Balance check', d:'Assets − Liabilities − Equity, computed every period. Should read exactly zero. Conditionally format it to turn red otherwise. This is non-negotiable in any three-statement model.' },
+        { n:'Cash flow tie-out', d:'Ending cash on the Cash Flow Statement minus cash on the Balance Sheet. Also zero. Catches a different class of error than the balance check.' },
+        { n:'Debt schedule tie-out', d:'Closing debt in the schedule should equal the debt shown on the Balance Sheet. Catches repayments that were calculated but never linked through.' },
+        { n:'Sources = Uses', d:'In a transaction model, total funding sources must equal total uses. If they diverge, the deal structure itself is wrong before any returns math begins.' },
+        { n:'Aggregate check cell', d:'One master cell at the top of the model summing every individual check. It reads OK or ERROR. This is the first cell anyone reviewing your model will look at.' },
+      ] },
+    { type:'warn', label:'Never plug a check to zero', text:'When a balance check reads −$4.2M, the temptation is to add a "plug" line that forces it to zero. This is the single worst habit in financial modelling. It hides the error rather than fixing it, and the wrong number stays in the model, flowing into the valuation, into the pitch book, and in front of a client. <strong>A check that reads non-zero is doing its job.</strong> Find the cause.' },
+    { type:'concept', label:'How To Actually Find The Error', q:'A systematic order — not random clicking.', steps:[
+        { t:'Find which period breaks first', d:'If the check is zero in years 1 and 2 and breaks in year 3, the error is in year 3. This single step eliminates most of the search space immediately.' },
+        { t:'Check the size of the imbalance', d:'The amount is a clue. If it equals depreciation, look at the D&A links. If it equals CapEx, look at PP&E. If it equals exactly the dividend, look at Retained Earnings. Imbalances usually equal the item that was missed.' },
+        { t:'Toggle formula view with Ctrl + `', d:'Scan the broken column for hardcoded numbers sitting where formulas belong. Someone typing over a formula is the most common cause of a model that worked yesterday and doesn\'t today.' },
+        { t:'Trace precedents with Ctrl + Shift + {', d:'From the broken cell, walk backwards through what feeds it. Excel\'s Formula Auditing → Trace Precedents draws arrows if you prefer visual tracing.' },
+        { t:'Verify the three links', d:'Net Income into Retained Earnings. Net Income into the top of the Cash Flow Statement. Ending cash into Balance Sheet cash. The overwhelming majority of imbalances are one of these three being broken or double-counted.' },
+      ] },
+    { type:'insight', text:'Notice the last debugging step is exactly the content of the "How the Three Statements Link" lesson in Module 1. That is not a coincidence. Understanding the links is what makes debugging systematic rather than random — and it is precisely why interviewers use that question to sort candidates. Someone who knows the links cold can fix a broken model. Someone who memorized definitions cannot.' },
+    { type:'realworld', label:'Rogoff & Reinhart (2010)', body:'Two Harvard economists published a widely cited paper concluding that national debt above 90% of GDP was associated with sharply negative growth — a finding used to justify austerity policy across several countries. In 2013 a graduate student attempting to replicate the results obtained the original spreadsheet and found, among other issues, that an AVERAGE formula covered only 15 of the 20 country rows it should have included. Correcting the range materially changed the headline conclusion. A selection range off by five rows, in a spreadsheet nobody had audited, shaped public policy debate for three years.' },
+  ],
+  quiz:[
+    { q:'What causes circularity in a financial model?', opts:['Revenue growth referencing itself','Interest expense depends on the debt balance, which depends on cash available, which depends on Net Income, which depends on interest expense','Using too many worksheet tabs','Linking to an external workbook'], correct:1 },
+    { q:'Which approach eliminates circularity entirely rather than solving it numerically?', opts:['Enabling iterative calculation','Calculating interest on the opening debt balance instead of the average balance','Adding a plug line','Increasing the iteration count to 1000'], correct:1 },
+    { q:'Your balance check reads −$4.2M in year 3 only. What is the best first move?', opts:['Add a plug line to force it to zero','Focus on year 3, and check whether $4.2M matches a specific line item like depreciation or CapEx','Rebuild the model from scratch','Change the tax rate until it balances'], correct:1 },
+    { q:'What is a circuit breaker in a model with iterative calculation enabled?', opts:['A macro that rebuilds the model','A switch cell wired into the interest formula that can force it to zero, clearing propagated errors','A conditional format that highlights negatives','A second copy of the workbook kept as backup'], correct:1 },
+    { q:'A balance check reading non-zero means:', opts:['The check is broken and should be deleted','The check is working correctly and has found a real error to investigate','The model needs more iterations','The historicals were entered wrong, always'], correct:1 },
+  ]
+},
+
+/* ============ MODULE 3 — VALUATION MODELS ============ */
 {
   id:'val-intro', module:'val', type:'lesson', title:'What Is Valuation?',
-  subtitle:'Module 2 · Lesson 1 of 4 · 6 min read', minutes:6,
+  minutes:6,
   blocks:[
     { type:'concept', label:'The Big Picture', q:'"What is this company worth?" — and why there is never exactly one answer.',
       a:"Valuation is the process of putting a number on a business. Every deal — an IPO, an acquisition, a fundraise — needs one. But no method is perfectly right, so analysts always build <strong>several</strong> and present a range, not a single figure. There are two broad families of approach." },
@@ -151,7 +354,7 @@ const LESSONS = [
       ] },
     { type:'keyterms', items:[
         { n:'Valuation Range', d:'The output of a real valuation exercise — a low-to-high band from multiple methods, not one number. See it visualised in the Football Field lesson.' },
-        { n:'Control Premium', d:'The extra amount a buyer pays to gain full control of a company, above its current trading price. Typically 25–40%.' },
+        { n:'Control Premium', d:'The extra amount a buyer pays to gain full control of a company, above its current trading price. Long-run average roughly 25–40%, but highly deal-specific.' },
         { n:'Enterprise Value (EV)', d:'What the whole business is worth to all capital providers — debt and equity together. The common currency every valuation method converts into.' },
       ] },
     { type:'insight', text:'No single method is "the truth." When a bank presents a valuation, it shows a DCF range next to a Comps range next to a Precedent Transactions range, on one chart — the Football Field. Where those ranges overlap is the most defensible answer. The analyst\'s real job is explaining why they agree or disagree, not picking a favorite.' },
@@ -165,7 +368,7 @@ const LESSONS = [
 
 {
   id:'dcf', module:'val', type:'lesson', title:'Discounted Cash Flow (DCF)',
-  subtitle:'Module 2 · Lesson 2 of 4 · 12 min read', minutes:12,
+  minutes:12,
   calc:'dcf',
   blocks:[
     { type:'concept', label:'Core Concept', q:'What is a DCF and what question does it answer?',
@@ -207,8 +410,55 @@ const LESSONS = [
 },
 
 {
+  id:'wacc', module:'val', type:'lesson', title:'WACC & Cost of Capital',
+  minutes:13,
+  blocks:[
+    { type:'concept', label:'Core Concept', q:'You used WACC as a slider in the DCF. Where does that number actually come from?',
+      a:"WACC — Weighted Average Cost of Capital — is <strong>the minimum return a company must earn to satisfy everyone who funded it.</strong> A business is financed by two kinds of people: lenders, who want interest, and shareholders, who want returns. Each demands a different rate, and each supplies a different share of the money.<br><br>WACC blends the two, weighted by how much of the capital structure each represents. It is the discount rate in every DCF, and because a DCF's output moves violently with it, <strong>WACC is where most valuation arguments actually happen.</strong>" },
+    { type:'analogy', text:"You buy a $400,000 flat with a $300,000 mortgage at 5% and $100,000 of your own savings. The bank needs 5%. You wouldn't have bothered unless you expected, say, 12% on your own money — you took more risk, since the bank gets paid first if it all goes wrong. Your blended cost of capital is (75% × 5%) + (25% × 12%) = 6.75%. If the flat doesn't return at least 6.75% a year, the deal destroyed value. WACC is the same arithmetic, for a company." },
+    { type:'formula', html:`<span class="fc">WACC</span> = <span class="fv">(E/V)</span> × <span class="fc">Re</span>  <span class="fo">+</span>  <span class="fv">(D/V)</span> × <span class="fc">Rd</span> × <span class="fv">(1 − t)</span>
+
+<span class="cm">// E = market value of equity      D = market value of debt</span>
+<span class="cm">// V = E + D (total capital)       t = marginal tax rate</span>
+<span class="cm">// Re = cost of equity             Rd = cost of debt (pre-tax)</span>
+
+<span class="cm">// Cost of equity comes from CAPM:</span>
+<span class="fc">Re</span> = <span class="fv">Rf</span> <span class="fo">+</span> <span class="fv">β</span> × <span class="fv">(Rm − Rf)</span>
+
+<span class="cm">// Rf      = risk-free rate (10-year government bond yield)</span>
+<span class="cm">// β       = beta — how much the stock moves vs the market</span>
+<span class="cm">// Rm − Rf = equity risk premium (ERP), historically ~4.5–5.5%</span>` },
+    { type:'concept', label:'The Components', q:'Four inputs. Each has a standard source and a standard argument.', keyterms:[
+        { n:'Risk-free rate (Rf)', d:'The yield on a long-dated government bond in the currency of the cash flows — typically the 10-year US Treasury for USD models. The one input you can simply look up.' },
+        { n:'Equity risk premium (ERP)', d:'The extra return investors demand for holding equities over government bonds. Most banks use roughly 4.5–5.5%, drawn from long-run historical data or a published survey. It is an assumption, not a fact — reasonable people defend different numbers.' },
+        { n:'Beta (β)', d:'How volatile a stock is relative to the whole market. β = 1 moves with the market; β = 1.5 amplifies it by half again; β = 0.7 is defensive. Sourced from a data provider, or built from a peer set when valuing a private company.' },
+        { n:'Cost of debt (Rd)', d:'The rate the company actually borrows at today — not the historical coupon on old debt. For a public issuer, use the yield to maturity on its traded bonds. Otherwise infer it from its credit rating and comparable issuers.' },
+      ] },
+    { type:'concept', label:'Why Debt Is Multiplied By (1 − t)', q:'The tax shield — the reason debt is cheaper than it looks.',
+      a:"Interest is tax-deductible. Dividends are not. A company paying 8% on its debt at a 25% tax rate has an effective after-tax cost of 8% × (1 − 0.25) = <strong>6%</strong> — the government absorbs a quarter of the interest bill through a lower tax charge.<br><br>This is the same depreciation-tax-shield logic from Module 1, applied to interest. It's also the core reason leveraged buyouts work: swapping expensive equity for tax-advantaged debt lowers the blended cost of capital — right up until the leverage becomes risky enough that both lenders and shareholders start demanding more." },
+    { type:'concept', label:'Unlevering and Relevering Beta', q:'How to get a beta for a company that has no stock price — the standard private-company problem.', steps:[
+        { t:'Why you cannot just use a peer\'s beta', d:'An observed beta reflects both business risk and that specific company\'s leverage. A peer carrying far more debt has a higher beta purely because of its balance sheet, not because its operations are riskier.' },
+        { t:'Unlever each peer\'s beta', d:'Strip out the effect of each peer\'s capital structure: βu = βl ÷ [1 + (1 − t) × D/E]. This yields "asset beta" — the underlying business risk, capital structure removed.' },
+        { t:'Take the median unlevered beta', d:'Median across the peer set, not mean — one outlier peer would otherwise drag the whole estimate. This is the same median-versus-mean logic as the Comps lesson.' },
+        { t:'Relever at your target\'s capital structure', d:'βl = βu × [1 + (1 − t) × D/E], using your company\'s own target debt-to-equity ratio. Now the beta reflects your target\'s business risk at your target\'s leverage.' },
+        { t:'Feed it into CAPM', d:'Re = Rf + βl × ERP. That cost of equity goes into the WACC formula alongside the after-tax cost of debt.' },
+      ] },
+    { type:'warn', label:'WACC is the most-argued number in any valuation', text:'A one-percentage-point change in WACC can move a DCF valuation by <strong>15–25%</strong>. That makes it the easiest input to quietly manipulate: nudge WACC down half a point and the deal clears its hurdle. This is why bankers present DCF outputs as a sensitivity table across a WACC range rather than a single point, and why the first question a sceptical reviewer asks is "what WACC did you use, and why?" Be ready to defend every component — especially the ERP and the beta, which are judgement calls rather than lookups.' },
+    { type:'insight', text:'Use the DCF calculator alongside this lesson. Set WACC to 9%, note the enterprise value, then set it to 10% and note it again. The gap you see for a single percentage point is exactly why analysts fight over this input — and why a DCF is a range, never a number.' },
+    { type:'realworld', label:'The 2022 Rate Shock', body:'When the US 10-year Treasury yield rose from roughly 1.5% at the start of 2022 to around 4% by late 2023, the risk-free rate in every WACC calculation rose with it. Nothing about the underlying businesses had to change for valuations to fall sharply: a higher Rf feeds directly into cost of equity, which raises WACC, which discounts distant cash flows more heavily. Companies whose value sat furthest in the future — high-growth, low-current-profit technology names — were repriced hardest. That was cost of capital moving, not business quality.' },
+  ],
+  quiz:[
+    { q:'Why is the cost of debt multiplied by (1 − tax rate) in the WACC formula?', opts:['Because lenders pay tax on the interest they receive','Because interest is tax-deductible for the company, so the effective cost is lower than the stated rate','To adjust for inflation','Because debt is riskier than equity'], correct:1 },
+    { q:'In CAPM, what does beta measure?', opts:['The company\'s profit margin','How much the stock moves relative to the overall market','The risk-free rate','The company\'s debt-to-equity ratio directly'], correct:1 },
+    { q:'You are valuing a private company and need a beta. What is the standard approach?', opts:['Use a beta of 1.0 always','Unlever the betas of public peers, take the median, then relever at the target\'s own capital structure','Use the beta of the largest company in the industry','Private companies have no beta, so skip CAPM'], correct:1 },
+    { q:'The 10-year Treasury yield rises by 2 percentage points. All else equal, what happens to DCF valuations?', opts:['They rise — higher rates signal a stronger economy','They fall — a higher risk-free rate raises cost of equity and WACC, discounting future cash flows more heavily','No change — the risk-free rate affects only bond prices','Only companies with debt are affected'], correct:1 },
+    { q:'Why do bankers present DCF output as a sensitivity table across a WACC range?', opts:['To make the pitch book longer','Because a one-point WACC change can move the valuation 15–25%, so a single point estimate implies false precision','Because Excel requires it','To hide the assumptions from the client'], correct:1 },
+  ]
+},
+
+{
   id:'comps', module:'val', type:'lesson', title:'Comparable Company Analysis',
-  subtitle:'Module 2 · Lesson 3 of 4 · 10 min read', minutes:10,
+  minutes:10,
   calc:'comps',
   blocks:[
     { type:'concept', label:'Core Concept', q:'What is "Comps" and why is it usually the first valuation a banker runs?',
@@ -229,6 +479,7 @@ const LESSONS = [
       ] },
     { type:'warn', label:'Garbage in, garbage out', text:'The whole method rests on one judgment call: who counts as "comparable"? Include a company that\'s twice the size, in a faster-growing niche, or in a different regulatory environment, and your multiple is quietly wrong. Always be ready to defend every name on your peer list.' },
     { type:'realworld', label:'SaaS Multiple Compression (2021 → 2022)', body:'High-growth SaaS companies traded at 30–40x revenue in late 2021. By late 2022, the same companies — often growing just as fast — traded at 4–8x revenue. Nothing about their businesses collapsed; the market\'s required return went up as interest rates rose, and every peer\'s multiple compressed together. This is the core weakness of Comps: it\'s only ever as good as what the market is willing to pay today, and that changes fast.' },
+    { type:'warn', label:'Never quote a multiple from memory', text:'Any multiple range you read in a textbook, a course, or this one is a <strong>snapshot of a moment</strong>. The SaaS example above shows a sector\'s multiple falling by roughly 80% in twelve months with no change to the underlying businesses. Every range on FinLab is labelled directional for exactly this reason. In real work you pull a live peer set from a terminal or filings on the day you need it — and if an interviewer asks where a sector trades, the strong answer names a rough range <em>and</em> says what it depends on (rates, growth, cycle), rather than reciting a number that may be two years stale.' },
   ],
   quiz:[
     { q:'Why do analysts typically use the median multiple of a peer set rather than the average?', opts:['Median is always higher','Median resists distortion from one extreme outlier','Average is illegal to use in banking','They are always the same number'], correct:1 },
@@ -239,14 +490,14 @@ const LESSONS = [
 
 {
   id:'prec', module:'val', type:'lesson', title:'Precedent Transactions',
-  subtitle:'Module 2 · Lesson 4 of 4 · 9 min read', minutes:9,
+  minutes:9,
   blocks:[
     { type:'concept', label:'Core Concept', q:'How is this different from Comps, if both use multiples from other companies?',
       a:"Precedent Transactions values a company using multiples paid in <strong>actual past M&A deals</strong> for similar companies — not where similar companies currently trade, but what someone actually paid to buy one outright. That distinction matters enormously: acquiring a company means taking full control, and buyers pay extra for that." },
     { type:'analogy', text:'Comps is checking what similar houses are currently listed for. Precedent Transactions is checking what similar houses actually sold for recently — and sale prices run higher than list prices, because a buyer who wants a specific house badly enough will pay a premium to actually get it.' },
     { type:'concept', label:'Why It Runs Higher', q:'The control premium — and who pays it.', a:"A buyer acquiring 100% of a company gets full control: the right to change management, redirect cash flow, merge operations, sell assets. The current trading price only reflects a small minority stake changing hands. To convince existing shareholders to sell control, an acquirer typically pays a <strong>25–40% premium</strong> above the unaffected trading price. That premium is baked directly into every precedent transaction multiple." },
     { type:'keyterms', items:[
-        { n:'Control Premium', d:'The extra amount paid above the pre-deal trading price to acquire a controlling stake. Historically 25–40%.' },
+        { n:'Control Premium', d:'The extra amount paid above the pre-deal trading price to acquire a controlling stake. Long-run average roughly 25–40%, varying widely with sector and deal competition.' },
         { n:'Strategic Buyer', d:'A company buying a competitor or complementary business — usually pays more, because it can capture synergies (cost savings, cross-selling).' },
         { n:'Financial Buyer', d:'A PE firm buying purely for investment return — usually more price-disciplined, since there are no operational synergies to justify overpaying.' },
         { n:'Deal Multiple', d:'EV ÷ EBITDA (or Revenue) paid in a specific historical transaction — the raw data point this whole method is built from.' },
@@ -264,7 +515,7 @@ const LESSONS = [
 /* ============ MODULE 3 — DEALS & TRANSACTIONS ============ */
 {
   id:'lbo', module:'deals', type:'lesson', title:'The Leveraged Buyout (LBO)',
-  subtitle:'Module 3 · Lesson 1 of 3 · 14 min read', minutes:14,
+  minutes:14,
   calc:'lbo',
   blocks:[
     { type:'concept', label:'Core Concept', q:'What is an LBO and why does private equity use leverage?',
@@ -280,7 +531,7 @@ const LESSONS = [
         { n:'IRR', d:'Internal Rate of Return. Annualised return on equity invested. PE target: 20–25%+. Below 15% = typically a failed investment that returns money but misses the fund hurdle.' },
         { n:'MOIC', d:'Multiple on Invested Capital. Exit equity ÷ entry equity. 3x means you tripled the money. Target: 2.5–3.5x. Below 2x = considered a failure regardless of IRR.' },
         { n:'Hold Period', d:'Typically 4–7 years. A 3x MOIC over 5 years ≈ 25% IRR. Same 3x over 7 years ≈ 17% IRR. Timing matters enormously. PE funds have a ~10-year life.' },
-        { n:'Entry / Exit Multiple', d:'EV/EBITDA paid at purchase vs received at sale. Typical LBO entry: 8–14x. Conservative models hold entry = exit multiple. Multiple expansion is upside, never the base case.' },
+        { n:'Entry / Exit Multiple', d:'EV/EBITDA paid at purchase vs received at sale. Typical LBO entry has run around 8–14x in recent cycles, but this moves with credit conditions. Conservative models hold entry = exit multiple. Multiple expansion is upside, never the base case.' },
       ] },
     { type:'warn', label:'Leverage amplifies losses too', text:"If the business EBITDA falls 30% in a recession, the equity can be completely wiped out while the debt sits at full face value. The company still owes every dollar. This is exactly why banks stress-test every LBO against a severe downside scenario before approving the debt package — and why covenant structures exist." },
     { type:'realworld', label:'Blackstone / Hilton Hotels (2007–2018)', body:'Blackstone acquired Hilton for $26B in 2007 — just before the financial crisis. Hilton\'s EBITDA fell ~40% in 2008–2009. Disaster scenario. Yet Blackstone generated ~$14B profit on exit in 2018 — the largest PE profit ever at that time. How? They renegotiated the debt during the crisis, installed new management, invested heavily in Hilton\'s Honors loyalty program, and expanded from 3,000 to 5,700 hotels globally. EBITDA more than doubled. Final return: ~3.0x MOIC, ~25% IRR over 10 years. The lesson: the best LBO returns come from real operational improvement — not financial engineering.' },
@@ -294,7 +545,7 @@ const LESSONS = [
 
 {
   id:'merger', module:'deals', type:'lesson', title:'Merger Model — M&A',
-  subtitle:'Module 3 · Lesson 2 of 3 · 11 min read', minutes:11,
+  minutes:11,
   calc:'merger',
   blocks:[
     { type:'concept', label:'Core Concept', q:'When one company buys another, how do you tell if the deal actually helps the buyer\'s shareholders?',
@@ -325,7 +576,7 @@ const LESSONS = [
 
 {
   id:'credit', module:'deals', type:'lesson', title:'Credit Analysis',
-  subtitle:'Module 3 · Lesson 3 of 3 · 10 min read', minutes:10,
+  minutes:10,
   calc:'credit',
   blocks:[
     { type:'concept', label:'Core Concept', q:'Why does a lender think completely differently from an equity investor?',
@@ -357,7 +608,7 @@ const LESSONS = [
 /* ============ MODULE 4 — ADVANCED ANALYSIS ============ */
 {
   id:'football', module:'adv', type:'lesson', title:'Football Field Chart',
-  subtitle:'Module 4 · Lesson 1 of 3 · 8 min read', minutes:8,
+  minutes:8,
   calc:'football',
   blocks:[
     { type:'concept', label:'Core Concept', q:'How do you present four different valuation methods to a client without confusing them?',
@@ -380,7 +631,7 @@ const LESSONS = [
 
 {
   id:'redflag', module:'adv', type:'lesson', title:'Red Flags to Spot',
-  subtitle:'Module 4 · Lesson 2 of 3 · 12 min read', minutes:12,
+  minutes:12,
   blocks:[
     { type:'concept', label:'Core Concept', q:'What separates a good analyst from a great one?',
       a:"Anyone can plug numbers into a model. What makes an analyst valuable is noticing <strong>when the numbers don't add up</strong> — before it becomes a public scandal. Every real-world example across this course (Luckin Coffee, Enron, GE, WeWork) had warning signs visible in the financial statements, months or years before the truth came out. This lesson collects the patterns into one checklist." },
@@ -405,7 +656,7 @@ const LESSONS = [
 
 {
   id:'final-quiz', module:'adv', type:'quiz', title:'Final Assessment',
-  subtitle:'Module 4 · Capstone · 20 min', minutes:20,
+  subtitle:'Final Assessment · All modules · 20 min', minutes:20,
   intro:'This pulls together everything across all four modules — statements, valuation, deals, and the judgment calls that separate a good analyst from a great one. It\'s written at the level of a real first-round finance interview.',
   quiz:[
     { q:'A company reports rising Net Income but falling Free Cash Flow for three straight years, driven by heavy growth CapEx. Is this automatically a red flag?', opts:['Yes, always','Not automatically — heavy reinvestment can be a legitimate reason; it depends on whether that CapEx is generating a return', 'It only matters for public companies','FCF is irrelevant to this question'], correct:1 },
@@ -422,7 +673,7 @@ const LESSONS = [
 /* ============ MODULE 5 — RECRUITING & FIT ============ */
 {
   id:'story', module:'recruit', type:'lesson', title:'Your Story & Behavioral Fit',
-  subtitle:'Module 5 · Lesson 1 of 3 · 9 min read', minutes:9,
+  minutes:9,
   blocks:[
     { type:'concept', label:'Core Concept', q:'Why does "walk me through your resume" decide more first-round outcomes than any technical question?',
       a:"Most first-round interviews spend their opening minutes almost entirely on fit — your story, your \"why banking,\" your \"why us.\" It's not a formality before the real interview starts; for a lot of interviewers, it <em>is</em> the interview. A strong technical answer rarely saves a rambling, generic story. A strong story often buys real slack on a shaky technical answer, because the interviewer is trying to answer one question above all others: <strong>would I want to sit next to this person for 80 hours a week?</strong>" },
@@ -451,7 +702,7 @@ const LESSONS = [
 
 {
   id:'networking', module:'recruit', type:'lesson', title:'Networking & Cold Outreach',
-  subtitle:'Module 5 · Lesson 2 of 3 · 10 min read', minutes:10,
+  minutes:10,
   blocks:[
     { type:'concept', label:'Core Concept', q:'Why does networking matter more in finance recruiting than in most other industries?',
       a:"Finance recruiting runs heavily on referrals and informal signal, not just the online application. A recruiter or analyst who's met you, remembers a good conversation, and is willing to put your resume in front of the right person is worth more than a cold application sitting in a queue of thousands. This isn't unique to finance, but the effect is unusually strong here — many analyst offers can be traced back to some human touchpoint earlier in the process, not the online form alone." },
@@ -480,7 +731,7 @@ const LESSONS = [
 
 {
   id:'resume', module:'recruit', type:'lesson', title:'Resume for Finance',
-  subtitle:'Module 5 · Lesson 3 of 3 · 8 min read', minutes:8,
+  minutes:8,
   blocks:[
     { type:'concept', label:'Core Concept', q:'Why does resume format matter as much as the substance behind it?',
       a:"During high-volume recruiting seasons, an analyst doing first-pass resume screens might genuinely spend well under a minute per resume. In that window, format does the sorting before content gets a fair read: one page, clean structure, and a strong first bullet under each role are what actually get a resume a second, slower look." },
@@ -523,6 +774,18 @@ const DEALS = [
       "Plot all three ranges plus the $1.65B offer (≈20x EBITDA) on the Football Field Calculator. Where does the offer land relative to the overlap zone?",
       "Form a recommendation: if the offer sits inside the overlap of most methods, it's defensible. If it sits well above or below, explain why using the specific assumptions driving the gap.",
     ],
+    solution:{
+      headline:'The $1.65B offer sits inside a defensible range — but at the low end of it. Recommend engaging, and push.',
+      range:'Roughly $1.3B – $2.0B across methods, with an overlap zone around $1.5B – $1.8B.',
+      steps:[
+        { t:'Comps: ~$1.0B – $1.5B', d:'Atlas EBITDA is ~$82M (24% of $340M). Industrial automation peers at 12–18x give $0.98B – $1.48B. The $1.65B offer is ABOVE this entire range — expected, because trading comps carry no control premium.' },
+        { t:'Precedent transactions: ~$1.3B – $2.0B', d:'Robotics/automation deals at 16–24x on $82M EBITDA give $1.31B – $1.97B. The $1.65B offer (≈20x) lands almost exactly mid-range. This is the most relevant benchmark, since it is also a control transaction.' },
+        { t:'DCF: ~$1.5B – $1.9B', d:'At ~15% revenue growth decaying toward GDP, a 24% margin, ~10% WACC and 2.5% terminal growth, the DCF should land in the high-$1B range. If yours is far outside that, check terminal growth — it dominates the answer.' },
+        { t:'Where the offer lands', d:'$1.65B sits inside the overlap of precedents and DCF, and above comps. That makes it defensible — a board could accept it without breaching its duty. It is not, however, a knockout number.' },
+      ],
+      verdict:'A fairness opinion could support $1.65B — it is within the range of what similar control transactions have paid. But it is mid-precedent and at the DCF low end, for an asset growing 15% a year. The correct advice is not "accept" or "reject": it is engage, and run a process. A single unsolicited bidder rarely produces the best price, and the analysis says there is room above $1.65B. If the buyer is strategic and synergies are real, $1.8B+ is arguable.',
+      pitfall:'The most common mistake here is comparing the offer to trading comps and concluding it is generous. Trading comps price minority stakes; this is a purchase of 100% control. Comparing a control offer to trading multiples without adjusting for the control premium will make almost any takeover look like a great deal.'
+    },
     links:['dcf-calc','comps','prec','football']
   },
   {
@@ -537,6 +800,18 @@ const DEALS = [
       "Stress-test the downside: freight volumes fell double digits in past recessions. Cut EBITDA growth to -10% for one year in your mental model — does coverage stay above the bank's minimum, or does the covenant break?",
       "Reach a verdict from both seats: would the PE firm do this deal, and would the bank approve this loan? They don't have to agree.",
     ],
+    solution:{
+      headline:'The PE firm probably does this deal. The bank should be uncomfortable underwriting it at 65% leverage.',
+      range:'Entry EV $1.62B, ~$1.05B debt, ~$567M equity. Base-case IRR lands in the high teens to low 20s.',
+      steps:[
+        { t:'Entry structure', d:'$180M EBITDA × 9x = $1.62B EV. At 65% leverage that is ~$1.05B of debt and ~$567M of sponsor equity. Entry leverage is 1,053/180 = ~5.9x EBITDA — already high.' },
+        { t:'PE view: returns are adequate, not exciting', d:'At 5–8% EBITDA growth over 5 years with entry multiple = exit multiple, IRR should come out roughly 17–22% depending on where in that growth band you sit and how fast debt amortizes. It clears a 15% hurdle comfortably; it clears 20% only at the optimistic end.' },
+        { t:'Credit view: coverage is thin', d:'Interest at ~7% on $1.05B is ~$74M against $180M EBITDA — interest coverage ~2.4x. Add scheduled amortization and DSCR falls toward 1.2–1.4x. For a stable business that is acceptable. For freight it is not much cushion.' },
+        { t:'The downside case decides it', d:'Freight volumes fell double digits in 2008–09 and again in the 2022–23 freight recession. A 20% EBITDA decline takes $180M to $144M: leverage jumps to ~7.3x and coverage falls under 2.0x. A 30% decline breaches most realistic covenant packages.' },
+      ],
+      verdict:'Both seats are rational and they disagree — which is the point of the case. The sponsor is buying an option: their downside is capped at the $567M equity cheque and their upside is levered. The bank has no upside beyond its coupon and takes the same cyclical risk. A credit committee would likely approve this only with lower leverage (55–60%), tighter covenants, or higher pricing. This tension is exactly why leveraged finance desks and sponsors negotiate rather than simply agree.',
+      pitfall:'Assuming multiple expansion. If you set exit multiple above 9x, returns look great and the analysis becomes meaningless — you have assumed the answer. Cyclical businesses should never be underwritten on exit multiple expansion; if the deal only works at 10x exit, it does not work.'
+    },
     links:['lbo-calc','credit']
   },
   {
@@ -551,41 +826,130 @@ const DEALS = [
       "Use the Comps lesson's peer-set logic to sanity check whether 12x revenue is a fair price for Cascade given its growth rate, or whether Northwind is paying a premium that needs strategic justification beyond the spreadsheet.",
       "Write the one-paragraph case to the board: cash, stock, or blended — and why.",
     ],
+    solution:{
+      headline:'Blended cash-and-stock. All-stock is cheapest optically but hands Cascade shareholders too much of the upside.',
+      range:'Cascade at 12x revenue on $400M = ~$4.8B purchase price.',
+      steps:[
+        { t:'The multiple mismatch is a trap', d:'Northwind trades at 18x EBITDA; Cascade is priced at 12x REVENUE. These are not comparable metrics. Cascade is unprofitable, so it has no EBITDA multiple at all. Any accretion/dilution conclusion drawn from comparing 18x to 12x is meaningless.' },
+        { t:'The deal is dilutive to EPS, and that is fine', d:'Cascade has no earnings. Adding a loss-making business to Northwind reduces pro forma EPS under every financing structure. Accretion/dilution is the wrong lens for acquiring an unprofitable high-growth asset — the right lens is strategic value and long-run cash flow.' },
+        { t:'All-cash / all-debt', d:'$4.8B is large relative to Northwind. Funding it entirely with debt loads a mature but not enormous company with significant leverage to buy an asset that burns cash. Interest expense worsens the EPS dilution immediately.' },
+        { t:'All-stock', d:'Avoids the leverage, but Northwind is issuing shares at 18x EBITDA to buy an asset it believes is undervalued. It also hands Cascade shareholders a permanent claim on the combined upside — including the synergies Northwind creates.' },
+        { t:'Synergies: trust cost, discount revenue', d:'Overlapping G&A and sales infrastructure are credible and largely controllable. Cross-selling Cascade into Northwind\'s base is the classic revenue synergy that arrives late and smaller than modelled. Underwrite the cost synergies; treat revenue synergies as upside.' },
+      ],
+      verdict:'Recommend a blend — meaningful cash or debt for the portion Northwind can service comfortably, with stock covering the rest. Cash signals confidence and limits dilution of the existing shareholder base; stock shares risk on an asset whose value depends on growth continuing. Tell the board plainly that the deal will be EPS-dilutive for several years and that this is the wrong metric to judge it by — the question is whether Cascade\'s growth is worth $4.8B, not what next year\'s EPS prints.',
+      pitfall:'Presenting an accretion/dilution table as the primary recommendation. Boards ask for it, and you should produce it — but leading with it on a loss-making, high-growth target shows you have applied a framework without asking whether it fits.'
+    },
     links:['merger','comps']
+  },
+  {
+    id:'harbor', tag:'credit', tagLabel:'CREDIT / RESTRUCTURING', name:'Harbor Foods — Covenant Breach',
+    desc:'A PE-owned packaged-foods company is 8 months from breaching its leverage covenant as EBITDA slides. Sit on the lender side: assess the damage, and decide what you\'d demand before granting a waiver.',
+    pills:['Credit','DSCR','Scenario'], difficulty:3,
+    brief:"Harbor Foods was bought by a PE sponsor three years ago at 7.5x EBITDA with 60% leverage. Since then, input costs rose and a key retail customer cut orders — EBITDA has fallen from $95M at entry to $71M today, while the debt balance has barely amortized. The credit agreement has a maintenance covenant requiring Net Debt/EBITDA to stay below 5.5x, tested quarterly. You're the lender's workout analyst: management is asking for a covenant waiver before the next test date, and you need to recommend terms.",
+    approach:[
+      "Open the Credit Ratio Calculator. Enter Harbor's current EBITDA ($71M) and outstanding debt from the original 60%-leverage structure on a 7.5x entry multiple — calculate today's actual leverage ratio and compare it to the 5.5x covenant.",
+      "Check interest coverage and DSCR at the current EBITDA level. Is this a covenant problem only, or is Harbor actually at risk of failing to make cash interest payments?",
+      "Model a downside case: if EBITDA falls another 10% next year (input cost pressure hasn't fully reversed), does leverage cross a level where the equity is effectively wiped out and the debt itself is impaired?",
+      "Decide what you'd require for a waiver: extra amortization, a pricing step-up (higher spread), an equity cure right (letting the sponsor inject cash to cure the breach), or tighter reporting. Real lenders rarely just say yes for free.",
+      "Write the one-paragraph credit memo: grant the waiver on your proposed terms, or push Harbor toward a broader restructuring? Justify it with the ratios, not just a gut call.",
+    ],
+    solution:{
+      headline:'Harbor is already in breach on a look-forward basis. Grant a waiver only with an equity cure, tighter terms, and higher pricing.',
+      range:'Entry debt ~$427M against $71M EBITDA = ~6.0x leverage, versus a 5.5x covenant.',
+      steps:[
+        { t:'Establish today\'s leverage', d:'Entry EV was $95M × 7.5x = $712M, with 60% leverage = ~$427M of debt. Against current EBITDA of $71M, leverage is ~6.0x. The covenant is 5.5x. Harbor is already through it — the next test date simply makes it official.' },
+        { t:'Distinguish covenant breach from payment distress', d:'This is the key analytical step. At, say, a 7% rate, interest is ~$30M against $71M EBITDA — coverage ~2.4x. Harbor can still PAY. It is a covenant problem, not yet a liquidity problem. That distinction determines whether you are negotiating a waiver or running a restructuring.' },
+        { t:'Run the downside', d:'Another 10% EBITDA decline takes $71M to ~$64M: leverage rises to ~6.7x and coverage falls toward 2.1x. At a 20% decline coverage approaches 1.7x and free cash flow after capex gets thin. The equity is deeply underwater well before the debt is impaired — sponsor equity was ~$285M against an enterprise now worth roughly 7.5x × $71M = $533M versus $427M of debt.' },
+        { t:'Price the waiver', d:'The sponsor needs this waiver far more than you do. Standard asks: an equity cure (sponsor injects cash to bring leverage back under the covenant), a 50–150bp pricing step-up, mandatory excess-cash-flow sweep, a reset covenant schedule with step-downs, and monthly rather than quarterly reporting.' },
+      ],
+      verdict:'Grant the waiver, but priced and conditioned. Harbor is not a liquidation candidate — it services its debt, the enterprise still covers the debt quantum, and forcing a default here destroys value for everyone including the lender. But a free waiver rewards the sponsor for a deterioration the lender did not cause. Require the equity cure: it tests whether the sponsor still believes in the asset. A sponsor unwilling to inject cash is telling you they have written the equity off — and that answer changes your recommendation entirely.',
+      pitfall:'Treating a covenant breach as an automatic default and jumping to restructuring. Most breaches are resolved through negotiated waivers because both sides lose in a formal default. The analytical work is figuring out what the borrower can afford to give, not whether to pull the trigger.'
+    },
+    links:['credit','lbo']
+  },
+  {
+    id:'solstice', tag:'sellside', tagLabel:'SELL-SIDE M&A', name:'Solstice Health — Quick Comps Read',
+    desc:'A founder-owned diagnostics company just got an unsolicited offer and wants a same-day gut check before hiring a bank. Build a comps-only valuation range fast — no DCF, no data room, just public multiples.',
+    pills:['Comps','Football Field'], difficulty:1,
+    brief:"Solstice Health is a founder-owned diagnostics-testing company doing $60M revenue and $14M EBITDA (≈23% margin), growing about 12% a year. A strategic buyer just sent an unsolicited letter offering $180M (≈12.9x EBITDA). The founder hasn't hired a bank yet and wants a rough, fast answer this week: is that offer even in the right neighborhood, or is it worth paying for real advice before responding? This is the case every junior analyst does first — one method, done well, under time pressure.",
+    approach:[
+      "Skip the DCF — you don't have a management forecast or enough time to build one credibly. This case is a comps-only gut check, which is exactly what happens in the real world before a formal process kicks off.",
+      "Open the Comps Calculator. Enter Solstice's EBITDA ($14M) and build a peer set of 3-5 public diagnostics/healthcare-services companies with a plausible EV/EBITDA range for a company this size and growth rate.",
+      "Watch what the median peer multiple implies for Solstice's value, and notice how much a single high or low outlier peer would swing an average versus a median — this is the exact mechanic the calculator is built to show you.",
+      "Plot the comps range against the $180M offer (≈12.9x) on the Football Field Calculator. Does the offer sit inside, above, or below the peer range?",
+      "Give the founder a one-line answer: is $180M worth taking seriously as-is, or does it look light enough that running a real process (with a DCF and precedent transactions too) would likely surface a higher number?",
+    ],
+    solution:{
+      headline:'$180M is in the right neighbourhood but likely light. Worth hiring a bank.',
+      range:'Comps-implied range roughly $154M – $210M on $14M EBITDA at 11–15x.',
+      steps:[
+        { t:'Anchor on EBITDA', d:'Solstice does $14M EBITDA on $60M revenue. The $180M offer is 180/14 = ~12.9x EBITDA, and 3.0x revenue. Always convert an offer into a multiple before judging it — a headline dollar figure means nothing on its own.' },
+        { t:'Build the peer range', d:'Diagnostics and healthcare-services peers with mid-teens growth have generally traded in a low-to-mid teens EV/EBITDA band. Applying 11–15x to $14M gives roughly $154M – $210M. The offer sits just below the midpoint.' },
+        { t:'Median, not mean', d:'If one peer trades at 25x because of a pending acquisition or a one-off EBITDA dip, an average is dragged upward and your whole answer is wrong. The median resists that. Move a single peer multiple in the Comps calculator to see the mean swing while the median barely moves — that is the entire lesson of this case.' },
+        { t:'Remember what is missing', d:'This is a trading-comps range. It contains no control premium, and this is an offer for 100% of the company. A control transaction should reasonably clear the top of a trading-comps range, not sit below its midpoint.' },
+      ],
+      verdict:'Tell the founder: the offer is serious and not insulting — it is inside the range of what comparable businesses are worth. But it is a control offer priced below the midpoint of a minority-stake trading range, from a single unsolicited bidder with no competitive tension. That combination usually means there is room. Hiring a bank to run even a narrow process, and adding a DCF and precedent transactions to the analysis, is very likely worth more than the fee. Do not respond with a counter-number yet — respond by starting a process.',
+      pitfall:'Doing this in ten minutes and calling it a valuation. A one-method, no-diligence range is a gut check to decide whether to invest in real analysis — not an answer to give a board. Say that out loud when you present it; being explicit about the limits of a quick read is what makes a junior analyst trusted with the real one.'
+    },
+    links:['comps','football']
   },
 ];
 
-/* ---------- GLOSSARY ---------- */
+/* ---------- GLOSSARY ----------
+   cat is one of: 'Statements','Valuation','Deals','Credit','Careers' — used to render
+   filter chips on the Glossary page. Keep every term tagged; the "All" chip is derived. */
 const GLOSSARY=[
-  {t:'EBITDA',d:'Earnings Before Interest, Taxes, Depreciation and Amortization. The most widely used proxy for operating cash generation. Used in almost every valuation multiple and credit ratio in finance. Strips out capital structure choices and accounting policy.'},
-  {t:'Free Cash Flow (FCF)',d:'Cash generated after maintaining and growing the asset base. = Operating Cash Flow minus CapEx. The input to every DCF model. More honest than net income because it\'s harder to manipulate.'},
-  {t:'Enterprise Value (EV)',d:'Total value of a business to all capital providers — both debt and equity holders. EV = Market Cap + Net Debt. Used in multiples like EV/EBITDA because it\'s capital-structure neutral.'},
-  {t:'WACC',d:'Weighted Average Cost of Capital. The discount rate in a DCF. Blends cost of equity (via CAPM) and after-tax cost of debt, weighted by their proportions in the capital structure.'},
-  {t:'Net Debt',d:'Total Debt minus Cash. The bridge between Enterprise Value and Equity Value: EV minus Net Debt = Equity Value. Negative net debt = the company holds more cash than it owes.'},
-  {t:'Terminal Value',d:'In a DCF, the present value of all cash flows beyond the forecast period, into perpetuity. Typically 60–80% of total EV. Most sensitive and most important assumption in any DCF model.'},
-  {t:'LBO',d:'Leveraged Buyout. A PE firm acquires a company using mostly borrowed money, with the company\'s own cash flows repaying the debt over time. Leverage amplifies equity returns — and equity losses.'},
-  {t:'IRR',d:'Internal Rate of Return. The annualised return on equity invested. PE firms target 20–25%+. Below 15% is generally considered a failed investment that still returned capital but missed the hurdle rate.'},
-  {t:'MOIC',d:'Multiple on Invested Capital. Exit Equity divided by Entry Equity. 3x MOIC means you tripled the money. PE target: 2.5–3.5x. Below 2x = failed investment even if IRR looks acceptable.'},
-  {t:'DSCR',d:'Debt Service Coverage Ratio. EBITDA divided by all debt service (interest + scheduled principal). Lenders typically require 1.25–1.50x at underwriting. Below 1.0x means the company cannot service its debt from operations.'},
-  {t:'Leverage Ratio',d:'Net Debt divided by EBITDA. Primary measure of debt burden relative to cash generation. Below 2x is conservative. 3–4x is standard investment grade. Above 5x is speculative territory requiring scrutiny.'},
-  {t:'Control Premium',d:'Extra price paid above market value to acquire a controlling stake. Historical average: 25–40% above the unaffected share price. Justified by synergies and full operational control.'},
-  {t:'Comps',d:'Comparable Company Analysis. Values a company by applying trading multiples (EV/EBITDA, P/E, EV/Revenue) from similar publicly traded peers. The market\'s live verdict — fast and market-anchored.'},
-  {t:'DCF',d:'Discounted Cash Flow. Values a company based on present value of all future free cash flows discounted at WACC. The theoretical intrinsic value method — most rigorous but most assumption-sensitive.'},
-  {t:'Accretion / Dilution',d:'In M&A, whether the deal increases (accretive) or decreases (dilutive) the acquirer\'s EPS. Boards are intensely focused on this. A deal can be accretive while still destroying long-run shareholder value.'},
-  {t:'Goodwill',d:'Premium paid above fair value of net identifiable assets in an acquisition. Not a real asset. When acquisitions disappoint, goodwill is impaired — a large non-cash charge destroying book equity instantly.'},
-  {t:'Working Capital',d:'Current Assets minus Current Liabilities. Rising working capital relative to revenue is a cash drain — the business is growing faster than it can collect cash or is paying suppliers faster than it collects from customers.'},
-  {t:'CapEx',d:'Capital Expenditures. Cash spent on long-term physical assets. Maintenance CapEx keeps assets working; growth CapEx expands capacity. Subtracted from Operating Cash Flow to calculate Free Cash Flow.'},
-  {t:'Covenant',d:'Contractual guardrails in a loan agreement. Maintenance covenants must be met every quarter — breach is a technical default. Incurrence covenants only apply when the borrower takes a specific action. Cov-lite = incurrence only.'},
-  {t:'Retained Earnings',d:'Cumulative profits ever earned minus all dividends ever paid. Grows by net income each period. The critical link between Income Statement and Balance Sheet. Negative retained earnings = accumulated deficit.'},
-  {t:'Interest Coverage',d:'EBITDA divided by Interest Expense. Below 3x is a warning sign. Below 1.5x means the company struggles to pay even interest from operations — any EBITDA miss triggers potential default.'},
-  {t:'LTV/CAC',d:'Lifetime Value to Customer Acquisition Cost. Above 3x = healthy unit economics. Below 1x = destroying value with every customer acquired regardless of revenue growth.'},
-  {t:'EV/EBITDA',d:'Enterprise Value divided by EBITDA. The most widely used valuation multiple. Capital-structure neutral. Typical ranges: Enterprise SaaS 20–40x, Consumer 8–14x, Industrials 8–13x, Energy 5–9x.'},
-  {t:'Football Field Chart',d:'Standard pitch book visual showing valuation ranges from all methods (DCF, Comps, Precedent Tx, LBO, trading range) as horizontal bars, with the current offer as a vertical dashed line. In nearly every M&A pitch book.'},
-  {t:'Synergies',d:'Value created by combining two businesses that neither could generate alone. Cost synergies (headcount, procurement) are more reliable. Revenue synergies (cross-selling, new markets) are harder to achieve and should be discounted.'},
-  {t:'Fairness Opinion',d:'Formal written statement from an investment bank that the deal consideration is fair from a financial point of view to shareholders. The football field chart is the analytical core of every fairness opinion.'},
-  {t:'Multiple Expansion',d:'Selling a business at a higher valuation multiple than it was bought at. Can be a legitimate result of improving business quality, or purely market-driven. Never assume it in a base-case LBO return.'},
-  {t:'Credit Rating',d:'A letter grade (AAA down to D) from agencies like Moody\'s or S&P estimating a borrower\'s default risk. Investment grade (BBB-/Baa3 or above) borrows far more cheaply than speculative/junk grade.'},
-  {t:'Exchange Ratio',d:'In an all-stock acquisition, the number of acquirer shares each target shareholder receives per share of the target they owned.'},
-  {t:'Channel Stuffing',d:'Pushing more product onto distributors or customers than they actually need, to inflate reported revenue in a given period — usually reverses as returns or cancelled orders in the following period.'},
-  {t:'Non-GAAP / Adjusted Metric',d:'A profitability figure that excludes certain costs management considers non-representative (like stock compensation or restructuring charges). Useful when used honestly; a red flag when the "adjustments" recur every period.'},
+  {t:'EBITDA',cat:'Statements',d:'Earnings Before Interest, Taxes, Depreciation and Amortization. The most widely used proxy for operating cash generation. Used in almost every valuation multiple and credit ratio in finance. Strips out capital structure choices and accounting policy.'},
+  {t:'Free Cash Flow (FCF)',cat:'Statements',d:'Cash generated after maintaining and growing the asset base. = Operating Cash Flow minus CapEx. The input to every DCF model. More honest than net income because it\'s harder to manipulate.'},
+  {t:'Enterprise Value (EV)',cat:'Valuation',d:'Total value of a business to all capital providers — both debt and equity holders. EV = Market Cap + Net Debt. Used in multiples like EV/EBITDA because it\'s capital-structure neutral.'},
+  {t:'WACC',cat:'Valuation',d:'Weighted Average Cost of Capital. The discount rate in a DCF. Blends cost of equity (via CAPM) and after-tax cost of debt, weighted by their proportions in the capital structure.'},
+  {t:'Net Debt',cat:'Statements',d:'Total Debt minus Cash. The bridge between Enterprise Value and Equity Value: EV minus Net Debt = Equity Value. Negative net debt = the company holds more cash than it owes.'},
+  {t:'Terminal Value',cat:'Valuation',d:'In a DCF, the present value of all cash flows beyond the forecast period, into perpetuity. Typically 60–80% of total EV. Most sensitive and most important assumption in any DCF model.'},
+  {t:'LBO',cat:'Deals',d:'Leveraged Buyout. A PE firm acquires a company using mostly borrowed money, with the company\'s own cash flows repaying the debt over time. Leverage amplifies equity returns — and equity losses.'},
+  {t:'IRR',cat:'Deals',d:'Internal Rate of Return. The annualised return on equity invested. PE firms target 20–25%+. Below 15% is generally considered a failed investment that still returned capital but missed the hurdle rate.'},
+  {t:'MOIC',cat:'Deals',d:'Multiple on Invested Capital. Exit Equity divided by Entry Equity. 3x MOIC means you tripled the money. PE target: 2.5–3.5x. Below 2x = failed investment even if IRR looks acceptable.'},
+  {t:'DSCR',cat:'Credit',d:'Debt Service Coverage Ratio. EBITDA divided by all debt service (interest + scheduled principal). Lenders typically require 1.25–1.50x at underwriting. Below 1.0x means the company cannot service its debt from operations.'},
+  {t:'Leverage Ratio',cat:'Credit',d:'Net Debt divided by EBITDA. Primary measure of debt burden relative to cash generation. Below 2x is conservative. 3–4x is standard investment grade. Above 5x is speculative territory requiring scrutiny.'},
+  {t:'Control Premium',cat:'Deals',d:'Extra price paid above market value to acquire a controlling stake. Long-run historical average: roughly 25–40% above the unaffected share price, though it varies widely by sector, deal competition, and cycle. Justified by synergies and full operational control.'},
+  {t:'Comps',cat:'Valuation',d:'Comparable Company Analysis. Values a company by applying trading multiples (EV/EBITDA, P/E, EV/Revenue) from similar publicly traded peers. The market\'s live verdict — fast and market-anchored.'},
+  {t:'DCF',cat:'Valuation',d:'Discounted Cash Flow. Values a company based on present value of all future free cash flows discounted at WACC. The theoretical intrinsic value method — most rigorous but most assumption-sensitive.'},
+  {t:'Accretion / Dilution',cat:'Deals',d:'In M&A, whether the deal increases (accretive) or decreases (dilutive) the acquirer\'s EPS. Boards are intensely focused on this. A deal can be accretive while still destroying long-run shareholder value.'},
+  {t:'Goodwill',cat:'Statements',d:'Premium paid above fair value of net identifiable assets in an acquisition. Not a real asset. When acquisitions disappoint, goodwill is impaired — a large non-cash charge destroying book equity instantly.'},
+  {t:'Working Capital',cat:'Statements',d:'Current Assets minus Current Liabilities. Rising working capital relative to revenue is a cash drain — the business is growing faster than it can collect cash or is paying suppliers faster than it collects from customers.'},
+  {t:'CapEx',cat:'Statements',d:'Capital Expenditures. Cash spent on long-term physical assets. Maintenance CapEx keeps assets working; growth CapEx expands capacity. Subtracted from Operating Cash Flow to calculate Free Cash Flow.'},
+  {t:'Covenant',cat:'Credit',d:'Contractual guardrails in a loan agreement. Maintenance covenants must be met every quarter — breach is a technical default. Incurrence covenants only apply when the borrower takes a specific action. Cov-lite = incurrence only.'},
+  {t:'Retained Earnings',cat:'Statements',d:'Cumulative profits ever earned minus all dividends ever paid. Grows by net income each period. The critical link between Income Statement and Balance Sheet. Negative retained earnings = accumulated deficit.'},
+  {t:'Interest Coverage',cat:'Credit',d:'EBITDA divided by Interest Expense. Below 3x is a warning sign. Below 1.5x means the company struggles to pay even interest from operations — any EBITDA miss triggers potential default.'},
+  {t:'LTV/CAC',cat:'Valuation',d:'Lifetime Value to Customer Acquisition Cost. Above 3x = healthy unit economics. Below 1x = destroying value with every customer acquired regardless of revenue growth.'},
+  {t:'EV/EBITDA',cat:'Valuation',d:'Enterprise Value divided by EBITDA. The most widely used valuation multiple. Capital-structure neutral. Indicative ranges (2024–25 market): Enterprise SaaS 15–30x, Consumer 8–14x, Industrials 8–13x, Energy 4–8x. Treat these as directional only — sector multiples reprice sharply with interest rates, so always pull a live peer set rather than quoting a remembered range.'},
+  {t:'Football Field Chart',cat:'Valuation',d:'Standard pitch book visual showing valuation ranges from all methods (DCF, Comps, Precedent Tx, LBO, trading range) as horizontal bars, with the current offer as a vertical dashed line. In nearly every M&A pitch book.'},
+  {t:'Synergies',cat:'Deals',d:'Value created by combining two businesses that neither could generate alone. Cost synergies (headcount, procurement) are more reliable. Revenue synergies (cross-selling, new markets) are harder to achieve and should be discounted.'},
+  {t:'Fairness Opinion',cat:'Deals',d:'Formal written statement from an investment bank that the deal consideration is fair from a financial point of view to shareholders. The football field chart is the analytical core of every fairness opinion.'},
+  {t:'Multiple Expansion',cat:'Deals',d:'Selling a business at a higher valuation multiple than it was bought at. Can be a legitimate result of improving business quality, or purely market-driven. Never assume it in a base-case LBO return.'},
+  {t:'Credit Rating',cat:'Credit',d:'A letter grade (AAA down to D) from agencies like Moody\'s or S&P estimating a borrower\'s default risk. Investment grade (BBB-/Baa3 or above) borrows far more cheaply than speculative/junk grade.'},
+  {t:'Exchange Ratio',cat:'Deals',d:'In an all-stock acquisition, the number of acquirer shares each target shareholder receives per share of the target they owned.'},
+  {t:'Channel Stuffing',cat:'Statements',d:'Pushing more product onto distributors or customers than they actually need, to inflate reported revenue in a given period — usually reverses as returns or cancelled orders in the following period.'},
+  {t:'Non-GAAP / Adjusted Metric',cat:'Statements',d:'A profitability figure that excludes certain costs management considers non-representative (like stock compensation or restructuring charges). Useful when used honestly; a red flag when the "adjustments" recur every period.'},
+  {t:'Amortization',cat:'Statements',d:'The systematic write-down of an intangible asset (like acquired goodwill\'s identifiable intangibles, or a loan\'s premium/discount) over its useful life. Depreciation\'s counterpart for intangible, not physical, assets — added back to get EBITDA.'},
+  {t:'Quality of Earnings (QoE)',cat:'Deals',d:'A due-diligence deep-dive, usually by an accounting firm, that normalizes a target\'s reported EBITDA — stripping out one-time items, aggressive accruals, and owner perks — to find the "real," sustainable number a buyer should actually pay a multiple on.'},
+  {t:'Add-Back',cat:'Statements',d:'An expense added back to net income to reach an adjusted EBITDA — e.g. one-time legal fees, owner\'s above-market salary, a lawsuit settlement. Legitimate add-backs improve comparability; aggressive ones are a diligence red flag (see Quality of Earnings).'},
+  {t:'Cap Table',cat:'Deals',d:'Capitalization Table. A ledger of everyone who owns a piece of a company — founders, employees (via options), and every investor round — and how much of the company each stake represents, including how a new financing round dilutes existing holders.'},
+  {t:'Dilution',cat:'Deals',d:'The reduction in an existing shareholder\'s ownership percentage when a company issues new shares — to raise capital, pay for an acquisition, or grant employee equity. Distinct from EPS dilution in the Accretion/Dilution sense, though the mechanism (more shares outstanding) is the same idea.'},
+  {t:'Vesting Schedule',cat:'Careers',d:'The timeline over which an employee earns the equity or options they were granted, most commonly four years with a one-year "cliff" (nothing vests until year one, then it starts accruing). Leaving before the cliff usually means forfeiting all of it.'},
+  {t:'Rule of 40',cat:'Valuation',d:'A SaaS health check: revenue growth rate (%) plus profit margin (%) should add up to 40 or more. A company growing 50% with a -15% margin (35 total) is considered less healthy than one growing 25% at a 20% margin (45 total).'},
+  {t:'Burn Rate',cat:'Statements',d:'How fast a company is spending its cash reserves, usually expressed per month. "Gross burn" is total cash out; "net burn" nets out revenue collected. The number that determines how much runway is left before the company needs to raise again.'},
+  {t:'Runway',cat:'Statements',d:'Cash on hand divided by monthly net burn rate — how many months a company can keep operating before running out of money, assuming no new financing or change in spending.'},
+  {t:'Carried Interest',cat:'Deals',d:'The PE firm\'s share of investment profits — typically 20% — paid to the fund\'s general partners once investors have gotten their capital back plus a minimum return (the hurdle rate). The primary long-term compensation mechanism in private equity.'},
+  {t:'Dry Powder',cat:'Deals',d:'Capital that a PE or VC fund has raised and committed from investors but not yet deployed into deals. High industry-wide dry powder is often cited as a driver of rising purchase-price multiples — more capital chasing the same pool of targets.'},
+  {t:'Club Deal',cat:'Deals',d:'An LBO where multiple PE firms jointly buy a target, splitting the equity check. Used for deals too large or too risky for a single fund\'s concentration limits — at the cost of shared control and split economics.'},
+  {t:'Bolt-On Acquisition',cat:'Deals',d:'A smaller acquisition made by a PE-owned "platform" company to add capabilities, geography, or customers — cheaper per dollar of EBITDA than the original platform purchase, and a core lever for building returns during the hold period.'},
+  {t:'Break-Up Fee',cat:'Deals',d:'A penalty a target company agrees to pay an acquirer if the target\'s board walks away from a signed deal — usually to accept a higher competing bid. Typically 2–4% of deal value; compensates the original acquirer for time and exposed strategy.'},
+  {t:'Go-Shop Period',cat:'Deals',d:'A window after a merger agreement is signed during which the target is allowed to actively solicit competing offers, rather than passively waiting for one. A governance mechanism meant to prove the board didn\'t just accept the first bid on the table.'},
+  {t:'PIK Interest',cat:'Credit',d:'Payment-in-Kind interest — instead of paying interest in cash, the borrower\'s debt balance simply grows by the interest amount. Preserves the borrower\'s cash in the near term but compounds the total amount owed at exit. A common feature in stretched or subordinated LBO debt tranches.'},
+  {t:'Bridge Loan',cat:'Credit',d:'Short-term financing that "bridges" a company to a longer-term, permanent financing solution — e.g. a bank commits bridge debt to guarantee an LBO closes, intending to refinance it into high-yield bonds or a term loan shortly after.'},
+  {t:'Precedent Transaction',cat:'Valuation',d:'A valuation method (distinct from trading Comps) that looks at multiples paid in prior real M&A deals for similar targets. Reflects an actual control premium a buyer paid, not just where a stock trades today — which is why precedent multiples usually run above trading comps.'},
+  {t:'Circular Reference',cat:'Valuation',d:'When a formula in a financial model depends on its own output — classically, interest expense depends on the debt balance, which depends on the cash flow available to pay down debt, which depends on interest expense. Handled with a plug, an iterative-calculation setting, or a debt schedule built to avoid it entirely.'},
+  {t:'Behavioral Fit',cat:'Careers',d:'The non-technical half of an interview — "walk me through your resume," "why this firm," "tell me about a time you disagreed with a teammate." Interviewers use it to judge whether they\'d want to sit next to you at 1am during a live deal, not just whether you can build a DCF.'},
+  {t:'Cold Outreach',cat:'Careers',d:'Emailing or messaging an alum, banker, or investor you don\'t know to ask for a short call — the primary way students without a existing network get their resume in front of the right person. Effective outreach is short, specific about why you\'re reaching out to that person, and asks for time, not a job.'},
+  {t:'Case Study Interview',cat:'Careers',d:'A recruiting round (common in PE and consulting) where a candidate is given a business scenario or a small model to build under time pressure, then presents a recommendation. Tests applied judgment, not just whether you\'ve memorized formulas.'},
 ];
