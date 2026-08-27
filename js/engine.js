@@ -160,6 +160,23 @@ function renderBlock(b){
       wrap.append(renderKeyTerms(b.items));
       return wrap;
     }
+    case 'exercise': {
+      // A practice problem embedded directly in a lesson, e.g. "here's a mini
+      // model to build — check your work against ours." Same gated-reveal
+      // pattern as Deal Room solutions, generalized via buildSolutionGate().
+      const wrap = el('div', { class:'concept-block' });
+      wrap.append(el('div', { class:'block-label' }, '✍ ' + (b.label || 'Practice')));
+      wrap.append(el('div', { class:'concept-q' }, b.prompt));
+      if (b.data) wrap.append(el('div', { class:'formula-card', html:b.data }));
+      wrap.append(buildSolutionGate({
+        gateTitle: b.gateTitle || 'Have you actually tried building it?',
+        gateSub: b.gateSub || "Work it out yourself first, on paper or in a blank sheet — that's the entire value of this exercise. Then compare your numbers to ours, not just the final answer.",
+        headline: b.solution.headline, range: b.solution.range, rangeLabel: b.solution.rangeLabel || 'Answer',
+        steps: b.solution.steps, verdictLabel: b.solution.verdictLabel || 'Why', verdict: b.solution.verdict,
+        pitfall: b.solution.pitfall, trackEvent: 'exercise_reveal', trackProps: { id:b.id||b.label },
+      }));
+      return wrap;
+    }
     default: return el('div');
   }
 }
@@ -1518,8 +1535,11 @@ function buildDealRoomPage(){
 /* Worked solution, deliberately collapsed behind a click. The whole value of a
    case is attempting it first — so this never renders open, and the button text
    says plainly what revealing it costs. */
-function buildDealSolution(d){
-  const s = d.solution;
+/* Shared gated-reveal used by both Deal Room solutions and lesson practice
+   exercises — the whole point of either is attempting it first, so the answer
+   never renders open. cfg: { gateTitle, gateSub, headline, rangeLabel, range,
+   steps, verdictLabel, verdict, pitfallLabel, pitfall, trackEvent, trackProps } */
+function buildSolutionGate(cfg){
   const wrap = el('div', { class:'solution-wrap' });
   const panel = el('div', { class:'solution-panel', hidden:'' });
   const btn = el('button', { type:'button', class:'solution-toggle' },
@@ -1527,32 +1547,40 @@ function buildDealSolution(d){
     el('span', {}, 'Reveal the worked solution'));
   btn.setAttribute('aria-expanded', 'false');
   wrap.append(el('div', { class:'solution-gate' },
-    el('div', { class:'solution-gate-title' }, 'Have you actually attempted it?'),
-    el('div', { class:'solution-gate-sub' }, "Build your own numbers first — even rough ones. Reading a solution you haven't attempted feels like learning and isn't. There's no single right answer here, so compare your reasoning to this, not just your figures."),
+    el('div', { class:'solution-gate-title' }, cfg.gateTitle || 'Have you actually attempted it?'),
+    el('div', { class:'solution-gate-sub' }, cfg.gateSub || "Build your own answer first — even a rough one. Reading a solution you haven't attempted feels like learning and isn't."),
     btn));
 
-  panel.append(el('div', { class:'solution-headline' }, s.headline));
-  if (s.range) panel.append(el('div', { class:'solution-range' },
-    el('span', { class:'solution-range-lbl' }, 'Reference range'), el('span', {}, s.range)));
+  if (cfg.headline) panel.append(el('div', { class:'solution-headline' }, cfg.headline));
+  if (cfg.range) panel.append(el('div', { class:'solution-range' },
+    el('span', { class:'solution-range-lbl' }, cfg.rangeLabel || 'Reference'), el('span', {}, cfg.range)));
   const list = el('div', { class:'steps-list', style:'margin-top:16px;' });
-  s.steps.forEach((step,i) => list.append(el('div', { class:'step-item' },
+  (cfg.steps||[]).forEach((step,i) => list.append(el('div', { class:'step-item' },
     el('div', { class:'step-num', 'aria-hidden':'true' }, String(i+1)),
     el('div', { class:'step-text', html:`<strong>${step.t}</strong> — ${step.d}` }))));
   panel.append(list);
-  panel.append(el('div', { class:'solution-verdict' },
-    el('div', { class:'solution-verdict-lbl' }, 'The recommendation'),
-    el('div', { html:s.verdict })));
-  if (s.pitfall) panel.append(el('div', { class:'warn-block', style:'margin-top:14px;' },
-    el('div', { class:'warn-label' }, '⚠ Most common mistake'),
-    el('div', { html:s.pitfall })));
+  if (cfg.verdict) panel.append(el('div', { class:'solution-verdict' },
+    el('div', { class:'solution-verdict-lbl' }, cfg.verdictLabel || 'The recommendation'),
+    el('div', { html:cfg.verdict })));
+  if (cfg.pitfall) panel.append(el('div', { class:'warn-block', style:'margin-top:14px;' },
+    el('div', { class:'warn-label' }, '⚠ ' + (cfg.pitfallLabel || 'Most common mistake')),
+    el('div', { html:cfg.pitfall })));
   wrap.append(panel);
 
   btn.addEventListener('click', () => {
     const open = !panel.hasAttribute('hidden');
     if (open) { panel.setAttribute('hidden',''); btn.setAttribute('aria-expanded','false'); btn.lastChild.textContent = 'Reveal the worked solution'; }
-    else { panel.removeAttribute('hidden'); btn.setAttribute('aria-expanded','true'); btn.lastChild.textContent = 'Hide the worked solution'; track('deal_solution_reveal', { deal:d.id }); }
+    else { panel.removeAttribute('hidden'); btn.setAttribute('aria-expanded','true'); btn.lastChild.textContent = 'Hide the worked solution'; if (cfg.trackEvent) track(cfg.trackEvent, cfg.trackProps||{}); }
   });
   return wrap;
+}
+function buildDealSolution(d){
+  const s = d.solution;
+  return buildSolutionGate({
+    gateSub: "Build your own numbers first — even rough ones. Reading a solution you haven't attempted feels like learning and isn't. There's no single right answer here, so compare your reasoning to this, not just your figures.",
+    headline: s.headline, range: s.range, rangeLabel: 'Reference range', steps: s.steps,
+    verdict: s.verdict, pitfall: s.pitfall, trackEvent: 'deal_solution_reveal', trackProps: { deal:d.id },
+  });
 }
 
 function buildDealDetailPage(d){
@@ -1677,7 +1705,14 @@ function renderGlossaryList(filter){
    The server only ever sees what's needed to sync (see server.js) — no
    emails, no names, nothing else about the visitor. */
 function genSyncCode(){
-  const part = () => Array.from({length:4}, () => SYNC_ALPHABET[Math.floor(Math.random()*SYNC_ALPHABET.length)]).join('');
+  // The code is the entire access-control model here (no login) — anyone who
+  // has it can read/overwrite that progress — so it's generated with a CSPRNG,
+  // not Math.random(), which carries no such guarantee.
+  const randIndex = () => {
+    if (window.crypto && crypto.getRandomValues) return crypto.getRandomValues(new Uint32Array(1))[0] % SYNC_ALPHABET.length;
+    return Math.floor(Math.random() * SYNC_ALPHABET.length); // very old browsers only
+  };
+  const part = () => Array.from({length:4}, () => SYNC_ALPHABET[randIndex()]).join('');
   return `${part()}-${part()}`;
 }
 function getSyncCode(){
@@ -1700,6 +1735,7 @@ function schedulePush(){
   pushTimer = setTimeout(pushProgress, 1500);
 }
 async function pushProgress(){
+  pushTimer = null; // this debounce has now fired — flushPushNow() should no longer treat one as pending
   if (!isSyncEnabled()) return;
   try {
     await fetch(`/api/sync/${encodeURIComponent(getSyncCode())}`, {
@@ -1742,6 +1778,29 @@ function linkDeviceToCode(code){
   try { localStorage.setItem(SYNC_CODE_KEY, code); } catch(e){}
   setSyncEnabled(true);
   return pullProgress(code);
+}
+async function deleteSyncedData(code){
+  try {
+    const res = await fetch(`/api/sync/${encodeURIComponent(code)}`, { method:'DELETE' });
+    return { ok: res.ok };
+  } catch(e) { return { ok:false }; }
+}
+// Flushes any pending debounced push immediately, using sendBeacon where
+// available — a normal fetch() can be cancelled mid-flight when the tab
+// closes/backgrounds, which is exactly the moment this needs to survive.
+function flushPushNow(){
+  if (!isSyncEnabled() || pushTimer == null) return;
+  clearTimeout(pushTimer);
+  pushTimer = null;
+  const body = JSON.stringify({ state: {
+    xp: STATE.xp, completed: STATE.completed, quizAnswers: STATE.quizAnswers,
+    streak: STATE.streak, recall: STATE.recall || {},
+  }});
+  const url = `/api/sync/${encodeURIComponent(getSyncCode())}`;
+  if (navigator.sendBeacon) {
+    try { navigator.sendBeacon(url, new Blob([body], { type:'application/json' })); return; } catch(e){ /* fall through to fetch */ }
+  }
+  fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body, keepalive:true }).catch(()=>{});
 }
 // Runs once at boot: adopt ?sync=CODE from a tapped link, or silently resume
 // syncing if this device already opted in on a previous visit.
@@ -1856,9 +1915,22 @@ function openBackupModal(){
       });
       actions.append(copyLinkBtn, refreshBtn);
       syncSection.append(actions);
-      const disableBtn = el('button', { type:'button', style:'background:none;border:none;color:var(--ink4);font-size:11.5px;cursor:pointer;text-decoration:underline;margin-top:10px;padding:0;' }, 'Turn off sync on this device');
+      const disableBtn = el('button', { type:'button', style:'background:none;border:none;color:var(--ink4);font-size:11.5px;cursor:pointer;text-decoration:underline;margin-top:10px;padding:0;display:block;' }, 'Turn off sync on this device');
       disableBtn.addEventListener('click', () => { setSyncEnabled(false); renderSyncSection(); showStatus(true, 'Sync turned off for this device. Local progress is untouched.'); track('sync_disabled', {}); });
       syncSection.append(disableBtn);
+      // "Turn off" above only stops THIS browser from pushing/pulling — the
+      // record under this code otherwise sits on the server indefinitely,
+      // readable by anyone who still has the code. This is the actual delete.
+      const deleteBtn = el('button', { type:'button', style:'background:none;border:none;color:var(--red);font-size:11.5px;cursor:pointer;text-decoration:underline;margin-top:6px;padding:0;display:block;' }, '🗑 Delete my synced data from the server');
+      deleteBtn.addEventListener('click', async () => {
+        if (!confirm(`Permanently delete the progress stored under ${code} from FinLab's server? This can\'t be undone. Your local progress in this browser is not affected.`)) return;
+        deleteBtn.disabled = true; deleteBtn.textContent = 'Deleting…';
+        const r = await deleteSyncedData(code);
+        deleteBtn.disabled = false; deleteBtn.textContent = '🗑 Delete my synced data from the server';
+        if (r.ok) { setSyncEnabled(false); renderSyncSection(); track('sync_data_deleted', {}); }
+        showStatus(!!r.ok, r.ok ? 'Deleted from the server, and sync turned off on this device. Your local progress here is untouched.' : 'Couldn\'t reach the sync server — check your connection and try again.');
+      });
+      syncSection.append(deleteBtn);
     }
     // Manual link-by-code — works even if the "copy link" flow isn't convenient
     // (e.g. typing the code by hand while looking at the other device's screen).
@@ -1963,6 +2035,18 @@ function init(){
   renderRoute(initial);
 
   initSync(); // fire-and-forget: merges in server progress and refreshes the UI when it lands
+
+  // A tab left open in the background otherwise never sees what another
+  // device pushed meanwhile — initSync() only runs once at boot. Re-pull
+  // whenever this tab regains focus/visibility, and flush any pending
+  // debounced push the instant it's about to lose focus (a plain fetch can
+  // get cancelled mid-flight when a tab backgrounds or closes; sendBeacon,
+  // used inside flushPushNow(), is built to survive exactly that).
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushPushNow();
+    else if (isSyncEnabled()) pullProgress(getSyncCode(), { silent:true });
+  });
+  window.addEventListener('pagehide', flushPushNow);
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

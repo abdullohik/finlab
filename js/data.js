@@ -44,6 +44,46 @@ const LESSONS = [
 },
 
 {
+  id:'bookkeeping-basics', module:'fs', type:'lesson', title:'Debits, Credits & How an Entry Actually Moves',
+  minutes:11,
+  blocks:[
+    { type:'concept', label:'Why This Lesson Exists', q:'The last lesson told you Assets = Liabilities + Equity always holds. This one explains the mechanism that keeps it that way.',
+      a:"Every transaction a company makes — a sale, a purchase, a loan — is recorded as a <strong>journal entry</strong>: at least two lines that move money between accounts, always in a way that keeps the books balanced. This is the actual mechanical layer underneath every financial statement you've read so far. You don't need to become an accountant to work in finance, but not knowing this layer at all is what makes candidates freeze on \"walk me through what happens to the balance sheet if we do X\" — because they never learned <em>why</em> it balances, only that it does." },
+    { type:'analogy', text:"Think of a company's accounts as a set of buckets — Cash, Inventory, Debt, Equity, and so on. Every transaction takes water out of one bucket and pours it into another; nothing is ever created or destroyed, just moved. Buy $10 of inventory with cash: $10 leaves the Cash bucket, $10 fills the Inventory bucket. Total water in all buckets never changes just from moving it around — which is exactly why the balance sheet balances after every single transaction, not just at year-end." },
+    { type:'concept', label:'Debit and Credit Are Not Good and Bad', q:'The single most common misconception — fix it now and everything downstream gets easier.',
+      a:"In everyday language \"credit\" sounds positive and \"debit\" sounds negative. In accounting, <strong>debit just means the left side of an entry, and credit means the right side</strong> — neither is inherently good or bad. What a debit or credit actually <em>does</em> depends entirely on which type of account it hits:<br><br>Assets and Expenses increase with a <strong>debit</strong>, decrease with a credit. Liabilities, Equity, and Revenue increase with a <strong>credit</strong>, decrease with a debit. Memorize that one table and every journal entry becomes mechanical rather than mysterious." },
+    { type:'formula', html:`<span class="cm">// The rule, as a table — memorize this, not each individual entry:</span>
+
+              <span class="fc">DEBIT (left)</span>        <span class="fc">CREDIT (right)</span>
+  Assets        <span class="fv">↑ increase</span>          ↓ decrease
+  Expenses      <span class="fv">↑ increase</span>          ↓ decrease
+  Liabilities   ↓ decrease           <span class="fv">↑ increase</span>
+  Equity        ↓ decrease           <span class="fv">↑ increase</span>
+  Revenue       ↓ decrease           <span class="fv">↑ increase</span>
+
+<span class="cm">// Every single journal entry: total debits MUST equal total credits.</span>
+<span class="cm">// That equality, repeated across every transaction all year, is the actual</span>
+<span class="cm">// reason Assets = Liabilities + Equity holds at the end of it.</span>` },
+    { type:'concept', label:'Walking Through Real Entries', q:'Four transactions. Same method every time: identify the two accounts, ask which increases and which decreases, apply the table.', steps:[
+        { t:'Sell $500 of product for cash', d:'Cash (asset) increases → debit Cash $500. Revenue increases → credit Revenue $500. Debits ($500) = Credits ($500). ✓' },
+        { t:'Buy $200 of inventory on credit (pay later)', d:'Inventory (asset) increases → debit Inventory $200. Accounts Payable (liability) increases → credit Accounts Payable $200. Nothing touched cash — this is exactly why a purchase on credit doesn\'t show up on the Cash Flow Statement yet.' },
+        { t:'Take out a $1,000 bank loan', d:'Cash (asset) increases → debit Cash $1,000. Debt (liability) increases → credit Debt $1,000. Notice: no Revenue or Expense account is touched at all — raising debt never runs through the Income Statement, which is exactly why the "$100 of debt raised" variant in the three-statement-linkage lesson leaves Retained Earnings untouched.' },
+        { t:'Pay $50 of rent in cash', d:'Rent Expense increases → debit Rent Expense $50. Cash (asset) decreases → credit Cash $50. An expense increasing is a debit, same rule as an asset increasing — that\'s the part people usually get backwards on the first pass.' },
+      ] },
+    { type:'concept', label:'A T-Account Makes This Visual', q:'The classic teaching tool — a T shape, debits on the left, credits on the right, for one single account at a time.',
+      a:"Take the loan example: a <strong>Cash T-account</strong> gets a $1,000 debit on the left side (cash increased). A <strong>Debt T-account</strong> gets a $1,000 credit on the right side (debt increased). Add up every debit and credit ever posted to the Cash T-account and you get the Cash balance sitting on today's Balance Sheet — a T-account is really just a running history of one bucket from the analogy above, and the Balance Sheet is a snapshot of every T-account's ending balance on one page." },
+    { type:'warn', label:'You will not build journal entries at your desk', text:'Nobody manually posts debits and credits at an investment bank or PE fund — that\'s what a company\'s accounting system does automatically. This lesson exists so that when an interviewer asks "what happens to the balance sheet if we write off $10 of goodwill" or "walk me through this transaction," you can reason from the actual mechanism instead of guessing — and so the depreciation walkthrough and working-capital sign conventions from other lessons stop feeling like memorized trivia and start feeling like the same rule applied four different ways.' },
+    { type:'insight', text:'Reread the working-capital sign convention from the Excel model-building lesson through this lens: "an increase in a current asset is a use of cash" is just the debit/credit rule again — an asset increasing is a debit, and debiting an asset while nothing else changes on the cash side has to come from somewhere, usually a credit to Cash. You don\'t need to re-derive it from scratch each time; you need to recognize it\'s the same rule.' },
+  ],
+  quiz:[
+    { q:'In accounting, what does a "credit" fundamentally mean?', opts:['A decrease in any account', 'The right side of a journal entry — whether it increases or decreases a balance depends on the account type', 'A positive event for the company', 'Cash coming into the business'], correct:1 },
+    { q:'A company takes out a $1,000 bank loan. Which accounts are affected, and how?', opts:['Revenue increases $1,000, Cash increases $1,000','Cash (asset) increases $1,000, Debt (liability) increases $1,000 — no Income Statement account is touched','Cash decreases $1,000, Debt decreases $1,000','Equity increases $1,000, Cash increases $1,000'], correct:1 },
+    { q:'A company pays $50 of rent in cash. What is the journal entry?', opts:['Debit Cash $50, Credit Rent Expense $50','Debit Rent Expense $50, Credit Cash $50','Debit Rent Expense $50, Debit Cash $50','Credit Rent Expense $50, Credit Cash $50'], correct:1 },
+    { q:'Why must total debits always equal total credits in every journal entry?', opts:['It\'s an arbitrary accounting convention with no deeper reason','It is the actual mechanism that keeps Assets = Liabilities + Equity true after every transaction, not just at year-end','Tax law requires it','It only matters for public companies'], correct:1 },
+  ]
+},
+
+{
   id:'income-stmt', module:'fs', type:'lesson', title:'The Income Statement',
   minutes:10,
   blocks:[
@@ -186,6 +226,7 @@ const LESSONS = [
     { q:'Which financial statement would you check FIRST to find out how much debt a company currently has outstanding?', opts:['Income Statement','Balance Sheet','Cash Flow Statement','None of the three — debt isn\'t disclosed'], correct:1 },
     { q:'EBITDA is intended to approximate:', opts:['Net cash in the bank','Operating cash generation, before financing and accounting choices','Total shareholder equity','Revenue growth rate'], correct:1 },
     { q:'A company reports positive Net Income but negative Free Cash Flow every year for three years straight. What should an analyst do?', opts:['Nothing — profitable companies always have positive FCF eventually', 'Investigate why: heavy growth CapEx can explain it honestly, but so can earnings manipulation — the statements need to be read together, not separately', 'Assume fraud immediately','Only look at the next quarter\'s Income Statement'], correct:1 },
+    { q:'A company takes out a $200 loan in cash. Applying the debit/credit rule, which is correct?', opts:['Debit Cash $200, Credit Debt $200 — an asset and a liability both increase, no Income Statement account touched','Debit Debt $200, Credit Cash $200','Credit Cash $200, Credit Debt $200','Debit Revenue $200, Credit Cash $200'], correct:0 },
   ]
 },
 
@@ -342,6 +383,44 @@ const LESSONS = [
 },
 
 {
+  id:'excel-practice', module:'excel', type:'lesson', title:'Sensitivity Tables — and Build One Yourself',
+  minutes:15,
+  blocks:[
+    { type:'concept', label:'Why This Lesson Exists', q:'Every calculator on FinLab shows you a sensitivity table already built. This lesson is how you actually build one, and then a real exercise to check yourself against.',
+      a:"A sensitivity table shows an output (like Enterprise Value) recalculated across a grid of two input assumptions (like WACC and terminal growth) — exactly the table you've been reading in the DCF calculator. Building one by hand, one combination at a time, would take forever and invite typos. Excel has a built-in tool for exactly this, and it's one of the most commonly tested modelling-test skills — because it proves you can build a model whose output actually updates live, not one that was hardcoded to look right once." },
+    { type:'concept', label:'Building a Two-Way Data Table', q:'Excel: select the range, then Data → What-If Analysis → Data Table.', steps:[
+        { t:'Set up the grid', d:'Put one input\'s values down the left column (say, WACC: 8%, 9%, 10%, 11%) and the other input\'s values across the top row (terminal growth: 2%, 2.5%, 3%, 3.5%). The single cell where that row and column intersect — the very top-left corner of the grid — must contain a formula referencing your model\'s actual output cell (e.g. =EV_cell).' },
+        { t:'Select the whole grid', d:'Select the entire range, including that corner formula cell, the row of column-inputs, and the column of row-inputs.' },
+        { t:'Data → What-If Analysis → Data Table', d:'Excel asks for a "Row input cell" and a "Column input cell." The row input cell is wherever your model reads the value that\'s laid out across the TOP ROW of your grid (here, terminal growth\'s input cell). The column input cell is wherever your model reads the value laid out down the LEFT COLUMN (WACC\'s input cell). This is the step everyone gets backwards on the first try — row input goes with the values arranged in a row, column input with the values arranged in a column.' },
+        { t:'Excel fills the whole grid', d:'For every combination, Excel temporarily substitutes that pair of values into your row/column input cells, recalculates the whole model, and drops the resulting output into that grid cell — then reverts your model back to its real assumptions. The grid is now a live array formula: change any assumption anywhere else in the model and the whole table recalculates.' },
+      ] },
+    { type:'warn', label:'The most common Data Table mistake', text:'Selecting the wrong corner cell — or a blank cell — instead of one containing an actual formula that references the output you care about. If the corner cell doesn\'t point at the right output, Excel will happily fill the entire grid with the wrong number, and it will look completely plausible until someone checks it against the base case by hand. Always sanity-check that the center-ish cell of your finished table (the one closest to your model\'s actual current assumptions) matches your model\'s current live output exactly.' },
+    { type:'concept', label:'Data Table vs. Goal Seek', q:'Two different tools for two different questions.',
+      a:"A <strong>Data Table</strong> answers \"show me the output across a whole grid of input combinations\" — what you want for a sensitivity table. <strong>Goal Seek</strong> (Data → What-If Analysis → Goal Seek) answers a narrower, single-variable question: \"what value of WACC makes Enterprise Value exactly equal $2.0B?\" You tell Excel which cell to set, what value you want it to hit, and which single input cell it's allowed to change, and it iterates until it finds the answer. Useful for questions like \"what exit multiple does this LBO need to hit a 20% IRR\" — a single target, a single lever." },
+    { type:'exercise', label:'Practice: Roll Forward a Simple Debt Schedule',
+      prompt: "A company starts the year with $500 of debt at an 8% interest rate. Free cash flow available to repay debt this year is $120. Using the roll-forward pattern from the model-building lesson (Closing = Opening + Additions − Reductions, with no new debt drawn this year), work out by hand: (1) this year's interest expense, using the opening balance, and (2) the closing debt balance after repayment. Then check your numbers below.",
+      solution:{
+        headline: 'Interest expense: $40. Closing debt: $380.',
+        rangeLabel: 'The two numbers', range: 'Interest = $500 × 8% = $40. Closing debt = $500 − $120 = $380.',
+        steps:[
+          { t:'Interest on the opening balance', d:'This lesson\'s companion (Model Integrity) teaches opening-balance interest as the circularity-free approach — exactly what\'s used here. Interest = Opening Debt × Rate = $500 × 8% = $40.' },
+          { t:'Apply the roll-forward pattern', d:'Closing = Opening + Additions − Reductions. There\'s no new debt drawn (Additions = $0), and the $120 of free cash flow is fully applied to repayment (Reductions = $120). Closing Debt = $500 + $0 − $120 = $380.' },
+          { t:'Sanity-check it', d:'Debt fell from $500 to $380 — a $120 decrease, matching the $120 of free cash flow applied. If your number doesn\'t show a $120 decrease, re-check whether you accidentally used the closing balance to compute interest instead of the opening balance — that\'s the single most common error on this exact exercise.' },
+        ],
+        verdictLabel: 'Why opening balance, not average',
+        verdict: 'Some real models use the average of opening and closing debt to compute interest, which is slightly more precise — but that creates circularity, since the closing balance depends on cash flow which depends on interest. Using the opening balance (as this exercise does) breaks that loop entirely, at the cost of a small amount of precision. That trade-off, and when each approach is used in practice, is exactly what the Model Integrity lesson covers in depth.',
+      }
+    },
+  ],
+  quiz:[
+    { q:'In a two-way Data Table, what must the top-left corner cell of the selected range contain?', opts:['Nothing — it should be left blank','A formula that references the actual model output you want to sensitize','The name of the table','The first input value'], correct:1 },
+    { q:'You\'re building a Data Table with WACC values down the left column and terminal growth values across the top row. Which cell is the "Row input cell" in the Data Table dialog?', opts:['Wherever the model reads WACC, since WACC is in a column','Wherever the model reads terminal growth, since terminal growth is laid out across the top ROW','Either one — it doesn\'t matter','The corner cell'], correct:1 },
+    { q:'When should you use Goal Seek instead of a Data Table?', opts:['When you want a full grid of output across many input combinations','When you have one specific target output and want to solve for the single input that hits it','They are interchangeable for every use case','Goal Seek is only for currency conversions'], correct:1 },
+    { q:'A company has $500 of opening debt at 8% and repays $120 from free cash flow. What is the closing debt balance?', opts:['$620','$460','$380','$500'], correct:2 },
+  ]
+},
+
+{
   id:'excel-quiz', module:'excel', type:'quiz', title:'Excel & Modeling Quiz',
   subtitle:'Module 2 · Capstone Quiz · 6 min', minutes:6,
   intro:'Covers the whole module: shortcuts, the colour convention, build order, and how professionals handle circularity and debugging. Written at the level a modelling-test grader actually checks for — not just definitions.',
@@ -351,6 +430,7 @@ const LESSONS = [
     { q:'Why must you build to EBIT and stop, rather than finishing the Income Statement top to bottom on the first pass?', opts:['EBIT is always the most important line','Interest expense depends on the debt schedule, which depends on cash flow, which depends on Net Income — you cannot finish without circling back','Excel cannot calculate below EBIT until the workbook is saved','Tax rates are only known after the Balance Sheet is built'], correct:1 },
     { q:'Receivables rise by $15 and payables rise by $9 in the same period, with no other changes. What is the net effect on cash from working capital?', opts:['+$24 — both are current items so they add','−$15 + $9 = −$6, a net use of cash','+$15 − $9 = +$6, a net source of cash','No effect until both are collected or paid'], correct:1 },
     { q:'A circuit breaker cell in an iterative-calculation model is used to:', opts:['Speed up recalculation permanently','Force interest to zero on demand, so a model full of propagated errors can be cleared and recalculated clean before switching back on','Automatically fix broken formulas','Disable all macros in the workbook'], correct:1 },
+    { q:'Building a two-way Data Table with WACC down the left column and terminal growth across the top row, what must the top-left corner cell contain?', opts:['Nothing, it should be blank','A formula referencing the actual output you want to sensitize','The word "WACC"','A hardcoded number'], correct:1 },
   ]
 },
 
@@ -634,15 +714,89 @@ const LESSONS = [
 },
 
 {
+  id:'bonds', module:'deals', type:'lesson', title:'Bond Mechanics — Price, Yield & Duration',
+  minutes:12,
+  blocks:[
+    { type:'concept', label:'Core Concept', q:'The Credit Analysis lesson taught you how to judge whether a borrower can pay. This one covers the bond itself — a tradeable claim on that debt, with its own price that moves every single day.',
+      a:"A bond is a loan that trades. A company (or government) borrows money by selling bonds; each bond promises fixed interest payments (the <strong>coupon</strong>) and repayment of the original amount (<strong>face value</strong>, usually $1,000) at a set date (<strong>maturity</strong>). Unlike a private bank loan, bonds trade freely in the market after they're issued — which means their <strong>price moves</strong>, separately from the coupon rate printed on the bond itself. That price-versus-rate relationship is what this lesson is actually about, and it's the mechanism behind the \"higher rates hurt valuations\" story that runs through the DCF and WACC lessons." },
+    { type:'analogy', text:"Imagine you own a bond paying a fixed $50/year forever. Rates in the broader market are 5%, so that $50 looks fair — it's worth about $1,000. Now imagine market rates jump to 10%. Nobody will pay $1,000 for your old bond anymore, because a brand-new bond now pays $100/year for the same $1,000. Your old bond is still paying its fixed $50 — the only way to make it competitive is for its PRICE to fall, until $50 looks like a 10% return on whatever someone actually pays for it. That's the entire mechanism: fixed coupon, moving price, and price and yield always move in opposite directions." },
+    { type:'formula', html:`<span class="cm">// The inverse relationship, the single most important fact about bonds:</span>
+
+  <span class="fc">Bond Price</span> <span class="fo">↑</span>   <span class="fo">⟺</span>   <span class="fc">Yield</span> <span class="fo">↓</span>
+  <span class="fc">Bond Price</span> <span class="fo">↓</span>   <span class="fo">⟺</span>   <span class="fc">Yield</span> <span class="fo">↑</span>
+
+<span class="cm">// Simplified annual-coupon bond price:</span>
+<span class="fc">Price</span> = <span class="fo">Σ</span> [<span class="fv">Coupon</span> ÷ (<span class="fc">1 + YTM</span>)<span class="fv">ᵗ</span>]  +  <span class="fc">Face Value</span> ÷ (<span class="fc">1 + YTM</span>)<span class="fv">ⁿ</span>
+
+<span class="cm">// This is a DCF — a bond's price is just the present value of its own</span>
+<span class="cm">// future cash flows (coupons + face value), discounted at the market's</span>
+<span class="cm">// required yield. Same formula shape as the DCF lesson, applied to debt.</span>` },
+    { type:'concept', label:'Four Terms That Get Confused With Each Other', q:'Coupon rate, current yield, and yield to maturity are three different numbers on the same bond — know which one answers which question.', keyterms:[
+        { n:'Coupon Rate', d:'The fixed annual interest rate printed on the bond when issued, as a percentage of face value. Never changes for the life of the bond, regardless of what happens to its price.' },
+        { n:'Current Yield', d:'Annual coupon ÷ current market price. Moves as price moves, but ignores the gain or loss you\'d realize by holding to maturity — an incomplete measure on its own.' },
+        { n:'Yield to Maturity (YTM)', d:'The single discount rate that makes the bond\'s discounted future cash flows equal its current price — the true, all-in annualized return if held to maturity. This is "the yield" bond traders actually quote and compare across bonds.' },
+        { n:'Par, Premium, Discount', d:'A bond trading at exactly face value is "at par" (price = YTM = coupon rate). Trading above face value is "at a premium" (YTM < coupon — rates fell since issuance). Trading below is "at a discount" (YTM > coupon — rates rose since issuance).' },
+      ] },
+    { type:'concept', label:'Duration — Why Some Bonds Move More Than Others', q:'Not every bond reacts to a rate change by the same amount. Duration measures how much.',
+      a:"<strong>Duration</strong> is a measure (roughly, in years) of how sensitive a bond's price is to a change in interest rates — the higher the duration, the more the price swings for the same rate move. Two things drive duration up: <strong>longer maturity</strong> (more distant cash flows to discount, each more sensitive to the rate used) and <strong>lower coupon</strong> (more of the bond's value sits in that single distant face-value payment, rather than being returned earlier through coupons). A 30-year zero-coupon bond has very high duration; a 2-year bond paying a large coupon has very low duration — same direction of price move on a rate change, very different magnitude." },
+    { type:'insight', text:'This is the exact same mechanism as "raising WACC lowers a DCF valuation" from the Valuation module — a bond is nothing but a simpler, more literal version of that idea: fixed future cash flows, discounted at a rate that moves with the market. A high-growth stock with most of its value in distant, uncertain cash flows behaves like a long-duration, low-coupon bond — which is exactly why growth stocks got hit hardest when rates rose in 2022, a connection worth being able to state explicitly in an interview.' },
+    { type:'warn', label:'Credit spread is not the same thing as the risk-free rate', text:'A corporate bond\'s yield is the risk-free rate (Treasury yield) PLUS a credit spread — extra yield demanded for the issuer\'s default risk, on top of the general level of rates. When rates rise, EVERY bond\'s yield tends to rise together with the risk-free rate. When a specific company\'s credit quality deteriorates, only ITS spread widens — its yield rises (and its price falls) even if broad rates haven\'t moved at all. Reading a bond price move correctly means asking which of the two just happened.' },
+    { type:'realworld', label:'The 2022–2023 Bond Selloff', body:'As the Fed raised rates from near-zero to over 5% through 2022–2023, existing bonds issued at the old, lower coupon rates became far less attractive than newly issued ones — so their prices fell sharply to compensate, in some cases by 20%+ for longer-duration bonds. Silicon Valley Bank\'s 2023 collapse traced directly to this mechanic: the bank held a large portfolio of long-duration government bonds bought when rates were near zero; as rates rose, those bonds\' market value fell substantially, and when the bank was forced to sell some to cover withdrawals, it had to realize losses it had been able to ignore on paper until then.' },
+  ],
+  quiz:[
+    { q:'Interest rates in the broader market rise. What happens to the price of an existing bond with a fixed coupon?', opts:['Price rises, since the bond becomes more valuable','Price falls, since the fixed coupon becomes less attractive versus new, higher-paying bonds','No effect on price — only the coupon matters','Price rises only if the bond is investment grade'], correct:1 },
+    { q:'A bond is trading below its face value. What does that tell you about its yield to maturity versus its coupon rate?', opts:['YTM is lower than the coupon rate','YTM is higher than the coupon rate — rates have risen since the bond was issued','They must be exactly equal','Nothing — price and yield are unrelated'], correct:1 },
+    { q:'Which bond has the HIGHEST duration, all else equal?', opts:['A 2-year bond with a large coupon','A 30-year bond with a very low (or zero) coupon','A 5-year bond trading at par','A bond that matures next month'], correct:1 },
+    { q:'A specific company\'s bonds fall in price while broad Treasury yields stay flat. What is the most likely explanation?', opts:['The risk-free rate must have risen','That company\'s credit spread widened — the market now sees more default risk in that specific issuer','Bond prices never move independently of Treasuries','The bond must be about to mature'], correct:1 },
+  ]
+},
+
+{
+  id:'ecm-ipo', module:'deals', type:'lesson', title:'Going Public — The IPO Process',
+  minutes:11,
+  blocks:[
+    { type:'concept', label:'Core Concept', q:'Every deal case so far has been M&A or a leveraged buyout. This lesson covers the other major way a company changes hands with capital markets: raising equity from the public for the first time.',
+      a:"An <strong>IPO</strong> (Initial Public Offering) is the process by which a private company sells shares to public investors for the first time, becoming listed on a stock exchange. It's run by <strong>Equity Capital Markets (ECM)</strong> bankers — a different desk from the M&A bankers who run the deals in this course's other lessons, though the valuation tools (Comps, precedent transactions, a DCF) are the exact same ones you've already learned; ECM's job is applying them to price a NEW issuance rather than a sale of an existing business." },
+    { type:'concept', label:'The Process, In Order', q:'Six stages, typically stretched over several months.', steps:[
+        { t:'Hire underwriters', d:'The company selects one or more investment banks to run the IPO — the "underwriters." A lead underwriter (bookrunner) coordinates; others join a syndicate to share distribution and risk.' },
+        { t:'File the S-1', d:'A detailed public registration document filed with regulators (the SEC, in the US): the business, financials, risk factors, and how proceeds will be used. This is the first time most of a private company\'s financials become public — and, as the WeWork example elsewhere in this course shows, the first time outsiders can scrutinize how a company presents its own numbers.' },
+        { t:'The roadshow', d:'Management and the underwriters travel (physically or virtually) to pitch institutional investors — pension funds, mutual funds, hedge funds — over one to two weeks, gauging demand and answering questions before a single share trades.' },
+        { t:'Build the order book, price it', d:'Underwriters collect indications of interest from investors during the roadshow and use that demand to set a final price the night before trading begins — balancing "priced low enough that it trades well on day one" against "priced high enough that the company isn\'t leaving money on the table."' },
+        { t:'First day of trading', d:'Shares begin trading publicly. A large "pop" (price jumping well above the IPO price) is often read as a sign the deal was priced too conservatively — a valid trade-off, since underpricing protects against a stock that opens and instantly falls, but it also means the company sold shares for less than the market was actually willing to pay.' },
+        { t:'Lock-up expires', d:'Existing shareholders (founders, employees, early investors) are typically barred from selling for 90–180 days after the IPO. When the lock-up expires, a wave of new selling can hit the stock — a well-known, predictable event that traders watch for.' },
+      ] },
+    { type:'keyterms', items:[
+        { n:'Underwriter / Bookrunner', d:'The investment bank(s) managing the IPO — pricing it, building the order book, and often committing to buy unsold shares themselves ("firm commitment" underwriting), taking on real risk if the deal doesn\'t sell.' },
+        { n:'S-1', d:'The core IPO registration document. Publicly available once filed — the first real look outsiders get at a formerly private company\'s full financials.' },
+        { n:'Roadshow', d:'The multi-day investor pitch tour ahead of pricing, used to gauge demand and build the order book.' },
+        { n:'Lock-Up Period', d:'A contractual window (commonly 180 days) after the IPO during which insiders cannot sell shares — designed to prevent an immediate flood of selling from people who already have all their gains.' },
+        { n:'Underwriting Discount', d:'The fee underwriters take, typically 3–7% of proceeds, for pricing, marketing, and guaranteeing the deal gets sold.' },
+      ] },
+    { type:'concept', label:'IPO vs. Direct Listing vs. SPAC', q:'Three different ways to become a public company — not interchangeable.',
+      a:"A traditional <strong>IPO</strong> sells NEW shares to raise capital, with underwriters actively marketing and pricing the deal. A <strong>direct listing</strong> skips underwriters and new-share issuance almost entirely — existing shareholders' shares simply begin trading on an exchange, with the opening price set by market supply and demand rather than a roadshow-built order book; it's cheaper (no underwriting discount) but raises no new capital and offers no price-stability support on day one. A <strong>SPAC</strong> (Special Purpose Acquisition Company) is a shell company that IPOs first with no operating business, raises cash, then merges with a private company — effectively taking that company public through a merger instead of a traditional offering. Each trades off cost, capital raised, and pricing risk differently; know the trade-off, not just the definitions." },
+    { type:'warn', label:'A first-day pop is not free money for the company', text:'It\'s tempting to read a stock popping 40% on its first trading day as an unambiguous win. From the COMPANY\'s side, it usually means shares were sold to underwriters\' investor clients for meaningfully less than the market was actually willing to pay the very next day — value that went to those initial investors, not to the company\'s own balance sheet. Underwriters have to balance this against the real cost of an IPO trading DOWN on day one, which can taint a company\'s reputation with public investors for years. Neither extreme is free; both are pricing-risk trade-offs.' },
+    { type:'realworld', label:'Airbnb vs. a Cautionary SPAC Wave', body:'Airbnb priced its December 2020 IPO at $68/share and closed its first day near $144 — more than doubling, a textbook example of an IPO priced conservatively relative to actual demand. Contrast that with the SPAC boom of 2020–2021, when hundreds of shell companies raised money first and searched for a merger target after — many of the resulting mergers performed poorly once public, and SPAC volume collapsed by 2022 as investors grew warier of paying up for a company before knowing what business they\'d actually end up owning.' },
+  ],
+  quiz:[
+    { q:'What is the S-1?', opts:['The final share price set the night before trading','The core IPO registration document, filed publicly, containing the company\'s financials and risk factors','A contract preventing insiders from selling shares','The underwriting fee agreement'], correct:1 },
+    { q:'A stock IPOs at $30 and closes its first day at $55. What is the most balanced read of this "pop"?', opts:['An unambiguous win with no downside for anyone','It suggests underwriters priced conservatively — great for investors who got shares, but the company likely left money on the table it could have raised','It means the company will definitely fail','It has no meaningful interpretation'], correct:1 },
+    { q:'What is the main structural difference between a traditional IPO and a direct listing?', opts:['A direct listing always raises more capital','A direct listing skips underwriters actively marketing and pricing new shares — existing shares simply begin trading, raising no new capital in the process','They are functionally identical','Only private companies can do a direct listing'], correct:1 },
+    { q:'Why does a lock-up period expiring matter to a stock\'s price?', opts:['It has no effect — lock-ups are a formality','A wave of previously-restricted insider selling can hit the market at once, a well-known and anticipated event','It automatically raises the share price','It only affects companies that did a SPAC merger'], correct:1 },
+  ]
+},
+
+{
   id:'deals-quiz', module:'deals', type:'quiz', title:'Deals & Transactions Quiz',
   subtitle:'Module 4 · Capstone Quiz · 6 min', minutes:6,
-  intro:'LBO mechanics, merger accretion/dilution, and credit underwriting — the three lenses this module built, and the judgment calls that separate a defensible deal recommendation from a spreadsheet exercise.',
+  intro:'LBO mechanics, merger accretion/dilution, credit underwriting, bonds, and IPOs — the full deal-execution toolkit this module built.',
   quiz:[
     { q:'An LBO base case assumes 3x of multiple expansion (8x entry, 11x exit) to hit its target IRR. How should this be underwritten?', opts:['Favorably — multiple expansion is the most reliable lever available','Cautiously — multiple expansion is market-dependent and should never be the base case; it is upside, not a plan','It has no effect on IRR','This guarantees the deal succeeds'], correct:1 },
     { q:'A merger is accretive to EPS in year one. Does that alone prove it creates real value?', opts:['Yes, always','No — accretion can come purely from a valuation-multiple mismatch between acquirer and target rather than real operating benefit','Only in an all-stock deal','Only if the target is unprofitable'], correct:1 },
     { q:'Why does a lender care more about a company\'s downside case than its upside potential?', opts:['Lenders get a fixed return at best and bear real loss risk on default — the risk is asymmetric','Lenders always lose money if a company grows','Lenders are legally barred from considering upside','There is no real reason'], correct:0 },
     { q:'In the LBO calculator, raising the D&A assumption (holding EBITDA fixed) improves returns slightly. Why?', opts:['Depreciation is added to revenue','D&A is deducted before computing cash taxes, so more D&A means a larger tax shield even though it never leaves as cash','D&A directly repays debt','It has no real effect — the calculator has a bug'], correct:1 },
     { q:'What is the correct order of priority when underwriting a leveraged loan?', opts:['Upside potential first, downside case second','Leverage and coverage ratios, covenant headroom, then a stress case — all before considering any upside','Only the interest rate matters','Whatever the sponsor\'s own model shows'], correct:1 },
+    { q:'Interest rates rise across the market. What happens to the price of an existing fixed-coupon bond?', opts:['Price rises','Price falls — the fixed coupon is less attractive versus new bonds paying more','No effect on price','It depends only on the issuer, never on rates'], correct:1 },
+    { q:'What is the main trade-off of a direct listing versus a traditional IPO?', opts:['A direct listing always raises more money','A direct listing skips underwriter marketing and new-share issuance — cheaper, but raises no new capital and has less price-stability support on day one','They are functionally identical','Direct listings are only for SPACs'], correct:1 },
   ]
 },
 
@@ -696,21 +850,63 @@ const LESSONS = [
 },
 
 {
+  id:'bank-reit-valuation', module:'adv', type:'lesson', title:'When the Standard Playbook Breaks: Banks & REITs',
+  minutes:12,
+  blocks:[
+    { type:'concept', label:'Core Concept', q:'Every valuation lesson so far quietly assumed a normal operating company. Two entire sectors break that assumption — and interviewers know it.',
+      a:"EV/EBITDA, a standard DCF, even Enterprise Value itself, all assume a business with clean operating cash flow and a capital structure that's a financing choice separate from its operations. <strong>Banks and REITs (Real Estate Investment Trusts) don't fit that mold</strong> — for a bank, debt (deposits, borrowings) isn't a financing choice layered on top of the business, it <em>is</em> the raw material of the business. Try to run standard EV/EBITDA on a bank and you'll get a nonsensical answer. Interviewers ask about this specifically to see if you understand WHY the standard toolkit breaks, not just that a different formula exists." },
+    { type:'concept', label:'Why Banks Don\'t Use EV/EBITDA', q:'The core problem: what even counts as "debt" for a bank?',
+      a:"Enterprise Value = Market Cap + Net Debt, on the logic that EV represents the value of the business to <em>all</em> capital providers, debt and equity combined — deliberately capital-structure-neutral. For a normal company, debt funds operations from outside; strip it out and you're left with the core operating business. For a bank, <strong>customer deposits are literally the funding for the loans it makes</strong> — deposits and borrowings aren't a financing layer on top of the business, they ARE the business's raw material, the way flour is raw material for a bakery. \"Strip out the debt\" doesn't leave you with a clean operating business; it leaves you with nothing, because there's no bank left to value. This is why banks are valued on <strong>equity value directly</strong> (P/E, Price/Book) rather than Enterprise Value multiples at all." },
+    { type:'keyterms', items:[
+        { n:'Price / Book (P/B)', d:'Market Cap ÷ Book Value of Equity. The primary bank valuation multiple — book value approximates a bank\'s net asset value, since most of a bank\'s balance sheet (loans, deposits) is already carried close to fair value.' },
+        { n:'Net Interest Margin (NIM)', d:'(Interest Income − Interest Expense) ÷ Average Earning Assets. The bank equivalent of a gross margin — how much a bank earns on the spread between what it pays depositors and what it charges borrowers.' },
+        { n:'Return on Equity (ROE)', d:'Net Income ÷ Average Equity. The single most-watched profitability metric for a bank — heavily linked to P/B, since a bank earning a higher ROE than its peers typically trades at a higher Price/Book multiple.' },
+        { n:'Tier 1 Capital Ratio', d:'A regulatory solvency measure — core capital as a percentage of risk-weighted assets. Banks are required to hold minimums set by regulators; this is the bank-specific analog of the leverage ratios from the Credit Analysis lesson.' },
+      ] },
+    { type:'concept', label:'Why REITs Don\'t Use Standard EBITDA Either', q:'The problem here is different: standard accounting depreciation badly understates a REIT\'s real cash flow.',
+      a:"A REIT owns and operates real estate — office buildings, malls, apartments — and is required to distribute most of its taxable income to shareholders as dividends. Real estate is depreciated on an accounting schedule that assumes the building's value steadily declines to zero, which is usually <strong>false</strong> — well-maintained real estate often holds or gains value over time. Because standard Net Income subtracts that (largely fictional) depreciation charge, it badly <em>understates</em> how much cash a REIT is actually generating, which is why the industry built its own metric instead of relying on GAAP net income at all." },
+    { type:'formula', html:`<span class="cm">// FFO — Funds From Operations, the REIT-industry-standard cash metric:</span>
+
+<span class="fc">FFO</span> = <span class="fv">Net Income</span> <span class="fo">+</span> <span class="fv">Depreciation & Amortization</span> <span class="fo">−</span> <span class="fv">Gains on Property Sales</span>
+
+<span class="cm">// AFFO — Adjusted FFO, a further refinement subtracting recurring</span>
+<span class="cm">// capital expenditures needed just to maintain the properties:</span>
+<span class="fc">AFFO</span> = <span class="fv">FFO</span> <span class="fo">−</span> <span class="fv">Recurring CapEx</span>
+
+<span class="cm">// REITs are valued on a multiple of FFO or AFFO (like a P/E, but on the</span>
+<span class="cm">// metric that actually reflects cash generation) — or on implied Cap Rate:</span>
+<span class="fc">Cap Rate</span> = <span class="fv">Net Operating Income</span> ÷ <span class="fv">Property Value</span>
+<span class="cm">// A LOWER cap rate means investors are paying MORE per dollar of income —</span>
+<span class="cm">// the real-estate equivalent of a higher valuation multiple.</span>` },
+    { type:'insight', text:'Notice the shape of both fixes: banks strip Enterprise Value down to equity value because debt isn\'t separable from the business; REITs add depreciation back because standard accounting mismeasures the real economics. Different sectors, same underlying instinct from the Red Flags lesson — ask what a standard metric assumes, and check whether this specific business actually satisfies that assumption before trusting the number.' },
+    { type:'warn', label:'The interview trap', text:'"Walk me through how you\'d value a bank" is a common technical question specifically because it tests whether a candidate will reflexively reach for EV/EBITDA out of habit. Reaching for it on a bank is one of the fastest ways to signal you\'re pattern-matching rather than actually understanding what Enterprise Value represents. The strong answer explains WHY it breaks (debt is raw material, not financing) before naming the replacement (P/B, ROE) — the reasoning is the actual signal, not just landing on the right multiple.' },
+    { type:'realworld', label:'Silicon Valley Bank (2023)', body:'SVB\'s collapse is a case study in why bank-specific metrics matter: its Price/Book looked reasonable on reported numbers, but a large portion of its assets were long-duration government bonds whose true market value had fallen sharply as rates rose (the exact duration mechanic from the bond-mechanics lesson) while still being carried near original cost on the balance sheet under "held to maturity" accounting. Book value overstated the bank\'s real net worth — a reminder that even the bank-specific playbook still requires checking what\'s actually sitting inside the numbers, not just quoting the right formula.' },
+  ],
+  quiz:[
+    { q:'Why doesn\'t standard EV/EBITDA work for valuing a bank?', opts:['Banks don\'t have EBITDA at all','A bank\'s deposits and borrowings are the raw material of its business, not a financing layer that can be stripped away to isolate operations','Banks are always too large for multiples','EBITDA is only used for technology companies'], correct:1 },
+    { q:'What is the primary valuation multiple used for banks instead?', opts:['EV/Revenue','Price/Book (P/B), often alongside ROE','EV/EBITDA','P/FFO'], correct:1 },
+    { q:'Why do REITs use FFO instead of standard GAAP Net Income?', opts:['FFO is required by law','Standard depreciation assumes real estate steadily loses value, which is often false, so it understates a REIT\'s real cash generation — FFO adds it back','FFO is always a larger number and looks better','Net Income cannot be calculated for real estate companies'], correct:1 },
+    { q:'A REIT\'s cap rate falls from 6% to 4.5% on a similar property. What does that imply?', opts:['Investors are paying LESS per dollar of income — the property got cheaper','Investors are paying MORE per dollar of income — the property\'s implied valuation rose','Cap rate has no relationship to valuation','The property\'s income must have fallen'], correct:1 },
+  ]
+},
+
+{
   id:'adv-quiz', module:'adv', type:'quiz', title:'Advanced Analysis Quiz',
   subtitle:'Module 5 · Capstone Quiz · 5 min', minutes:5,
-  intro:'Football field charts and red-flag detection together — reading a valuation range and reading a set of financials with the same skeptical eye.',
+  intro:'Football field charts, red-flag detection, and the sectors where the standard playbook breaks — reading a valuation range and a set of financials with the same skeptical eye.',
   quiz:[
     { q:'On a football field chart, an offer price sits inside the overlap zone of DCF, Comps, and Precedent Transactions. What does this suggest?', opts:['The offer is fraudulent','The offer is well-supported across independent valuation methods — the most defensible position for a fairness opinion','The chart is invalid','Nothing meaningful'], correct:1 },
     { q:'Which single financial-statement relationship is most repeated as a fraud and red-flag indicator throughout this course?', opts:['Revenue growing while headcount grows','Operating cash flow diverging significantly and persistently from reported net income','Marketing spend rising','Inventory turning over quickly'], correct:1 },
     { q:'A company shows two or three items from the red-flag checklist at once. What is the correct response?', opts:['Assume fraud and stop analysis immediately','Treat each flag alone as meaningless and ignore all of them','Investigate further — the accumulation of flags, and how management responds when asked, matters more than any single flag','Only trust the company\'s own press releases'], correct:2 },
     { q:'A DCF shows $2.0B, Comps shows $1.4B, and the offer on the table is $1.65B. Where does the offer sit relative to the football field, and what does that suggest?', opts:['Above every method — the offer is clearly excessive','Between the two — a defensible number, though closer to the Comps floor than the DCF ceiling','Below every method — the offer is clearly too low','Football fields cannot be used to judge a single offer'], correct:1 },
+    { q:'Why is EV/EBITDA not used to value banks?', opts:['Banks don\'t report EBITDA','A bank\'s deposits and borrowings are the raw material of its business, not a separable financing layer — banks are valued on equity metrics like P/B instead','Banks are too large for any multiple','EV/EBITDA is only for tech companies'], correct:1 },
   ]
 },
 
 /* ============ MODULE 6 — RECRUITING & FIT ============ */
 {
   id:'story', module:'recruit', type:'lesson', title:'Your Story & Behavioral Fit',
-  minutes:9,
+  minutes:13,
   blocks:[
     { type:'concept', label:'Core Concept', q:'Why does "walk me through your resume" decide more first-round outcomes than any technical question?',
       a:"Most first-round interviews spend their opening minutes almost entirely on fit — your story, your \"why banking,\" your \"why us.\" It's not a formality before the real interview starts; for a lot of interviewers, it <em>is</em> the interview. A strong technical answer rarely saves a rambling, generic story. A strong story often buys real slack on a shaky technical answer, because the interviewer is trying to answer one question above all others: <strong>would I want to sit next to this person for 80 hours a week?</strong>" },
@@ -722,18 +918,40 @@ const LESSONS = [
         { t:'Answer "why this bank/fund" specifically', d:'"I want to work in finance" answers nothing — every candidate wants that. Name something real: the group\'s deal history, a specific person you spoke with, the culture you\'ve actually heard about from alumni.' },
         { t:'Prepare for the follow-up, not just the opener', d:'A good interviewer will push on whatever you said. If your story mentions a deal or project, be ready to go two levels deeper on it — that\'s often where the real evaluation happens.' },
       ] },
+    { type:'concept', label:'The Rest of the Behavioral Round: STAR', q:'"Walk me through your resume" has its own structure above. Everything else in a behavioral round — "tell me about a time you failed," "a time you disagreed with a teammate," "a time you led under pressure" — uses a different, equally learnable structure.',
+      a:"<strong>STAR</strong> stands for Situation, Task, Action, Result. It's the standard structure for answering any \"tell me about a time when...\" question, in finance interviews or otherwise — not because it's clever, but because it forces you to actually answer the question instead of drifting into a vague, unverifiable story. Interviewers who've heard hundreds of behavioral answers can tell within the first sentence whether a candidate has a structure or is making it up as they go." },
+    { type:'formula', html:`<span class="cm">// STAR — four parts, roughly in this proportion for a 60-90 second answer:</span>
+
+<span class="fc">Situation</span>  <span class="cm">(~15%)</span>  — brief context: where, when, what was going on
+<span class="fc">Task</span>       <span class="cm">(~10%)</span>  — what YOU specifically were responsible for
+<span class="fc">Action</span>     <span class="cm">(~50%)</span>  — what YOU actually did, step by step — the longest part
+<span class="fc">Result</span>     <span class="cm">(~25%)</span>  — the outcome, ideally with a number, PLUS what you learned
+
+<span class="cm">// The most common failure: spending 80% of the answer on Situation and</span>
+<span class="cm">// Task (context) and rushing Action (what you actually did) — backwards.</span>
+<span class="cm">// Action is where the interviewer learns anything about YOU specifically.</span>` },
+    { type:'concept', label:'STAR Applied to the Hardest Question', q:'"Tell me about a time you failed" — walked through, end to end.', steps:[
+        { t:'Situation (brief)', d:'"In my role leading a student investment club, we were evaluating a stock pitch for a competition with a two-week deadline." One sentence of real context, not a paragraph.' },
+        { t:'Task', d:'"I was responsible for the valuation section and had committed to a DCF-based price target." Specific, personal, sets up exactly what you were on the hook for.' },
+        { t:'Action — the longest part', d:'"I built the model too late to sanity-check it against comps, and didn\'t flag to the team that I was behind until two days before the deadline. When I finally shared it, the WACC I\'d used was noticeably out of line with the sector." Concrete, specific, and — importantly — actually admits a real mistake rather than a disguised humblebrag.' },
+        { t:'Result + what you learned', d:'"We had to rebuild the valuation section in 48 hours as a team, and still placed, but it taught me to flag being behind early rather than trying to quietly catch up — I now build in a check-in with teammates at the halfway point of any deadline, not just the end." A real outcome, plus a genuine behavior change — this is the line most likely to actually get remembered.' },
+      ] },
     { type:'keyterms', items:[
         { n:'Fit', d:'Shorthand for whether you\'d be pleasant, reliable, and low-drama to work alongside under real pressure. Evaluated constantly, rarely stated explicitly.' },
         { n:'Throughline', d:'The honest, single thread connecting your experiences into one coherent case — the backbone of a good "walk me through your resume" answer.' },
         { n:'"Why This Seat"', d:'The specific-to-this-firm version of "why finance." Generic answers here are one of the most common reasons a strong candidate doesn\'t advance.' },
+        { n:'STAR', d:'Situation, Task, Action, Result — the standard structure for any "tell me about a time..." behavioral question. Action should be roughly half the answer; most candidates under-weight it.' },
       ] },
     { type:'warn', label:'"I\'ve always been passionate about finance" is a red flag, not an opener', text:'Interviewers on a busy recruiting season hear some version of this dozens of times a week. It signals a story that was written to sound good rather than to be true, and experienced interviewers can tell the difference almost immediately. A specific, slightly less polished true story consistently beats a smooth generic one.' },
+    { type:'insight', text:'A "failure" story that isn\'t a real failure — "I worked too hard" or "I cared too much about details" — is one of the most obvious tells in a behavioral round, for the same reason "I\'ve always been passionate about finance" is: it was optimized to sound good instead of being true. Interviewers ask this question specifically to see how you handle a real setback; a disguised humblebrag answers a question nobody asked.' },
     { type:'realworld', label:'The 15-Minute Rule', body:'It\'s common practice at large banks for a first-round interview to spend the first 10–15 minutes almost entirely on background and fit before a single technical question is asked — and for interviewers to privately decide within that window whether they\'re rooting for a candidate or not. The technical questions that follow are frequently scored more generously for candidates the interviewer is already rooting for. The fit portion isn\'t a warm-up; it\'s often the highest-leverage part of the entire interview.' },
   ],
   quiz:[
     { q:'Why does the "walk me through your resume" question carry so much weight in finance interviews?', opts:['It\'s a legal requirement','It\'s often where interviewers form their overall impression of the candidate before any technical question is asked','It tests memorization ability','It doesn\'t actually matter much'], correct:1 },
     { q:'What is the biggest problem with the answer "I\'ve always been passionate about finance"?', opts:['It\'s too short','It\'s generic — interviewers hear a version of it constantly and it signals a rehearsed, not a true, story','It\'s factually incorrect','It\'s too long'], correct:1 },
     { q:'A good "why this bank" answer should be:', opts:['As broad as possible so it applies to any firm','Specific to that firm — something real about the group, people, or culture, not just "I want to work in finance"','Focused entirely on compensation','Left out of the interview entirely'], correct:1 },
+    { q:'In a STAR-structured answer, which part should typically take up the most time?', opts:['Situation — the context needs to be very detailed','Task — what you were assigned matters most','Action — what you specifically did, step by step','Result — the outcome is all that matters'], correct:2 },
+    { q:'What makes a "tell me about a time you failed" answer weak, even if it\'s well-structured?', opts:['Using specific details','Choosing a disguised non-failure like "I worked too hard" instead of a real setback with a real lesson learned','Including a concrete result','Keeping it under two minutes'], correct:1 },
   ]
 },
 
@@ -810,9 +1028,10 @@ const LESSONS = [
 /* ============ FINAL ASSESSMENT — spans every module above ============ */
 {
   id:'final-quiz', module:'final', type:'quiz', title:'Final Assessment',
-  subtitle:'Final Assessment · All 6 modules · 25 min', minutes:25,
-  intro:'Every module, one exam: statements, Excel mechanics, valuation, deals, credit, red flags, and fit. Written at the level of a real first-round finance interview — the kind of judgment-testing question set that decides who gets a callback.',
+  subtitle:'Final Assessment · All 6 modules · 30 min', minutes:30,
+  intro:'Every module, one exam: statements, bookkeeping, Excel mechanics, valuation, deals, credit, bonds, IPOs, bank/REIT nuance, red flags, and fit. Written at the level of a real first-round finance interview — the kind of judgment-testing question set that decides who gets a callback.',
   quiz:[
+    { q:'A company takes out a $1,000 bank loan in cash. Which accounts move, and how?', opts:['Cash (asset) increases, Debt (liability) increases — no Income Statement account is touched','Revenue increases, Cash increases','Cash decreases, Debt decreases','Equity increases, Cash increases'], correct:0 },
     { q:'Depreciation rises by $10 at a 25% tax rate. What happens to cash?', opts:['Falls $10','Falls $7.50','Rises $2.50 — the tax shield is real cash even though the expense is not','No change'], correct:2 },
     { q:'Your three-statement model does not balance in year 3 only. What is the fastest way to localize the error?', opts:['Rebuild the entire model from scratch','Check whether the imbalance amount matches a specific line item like D&A or CapEx, since year 3 is where the break first appears','Change the tax rate until it balances','Add a plug line to force the check to zero'], correct:1 },
     { q:'Why does an LBO model exhibit circularity?', opts:['Because revenue projections reference themselves','Because interest expense depends on the debt balance, which depends on cash available to repay it, which depends on Net Income, which depends on interest expense','Because Excel recalculates too slowly','Because of a formatting error'], correct:1 },
@@ -825,6 +1044,9 @@ const LESSONS = [
     { q:'An interviewer opens with "walk me through your resume." What are they actually evaluating?', opts:['Whether you can recite your resume verbatim','A coherent throughline that makes a case for this specific seat, delivered in about 90 seconds — often the most heavily weighted moment of the interview','Nothing of substance — it is pure small talk','Your GPA specifically'], correct:1 },
     { q:'Blue font, black font, green font, red font. In standard modelling convention, what does each represent?', opts:['Random styling with no meaning','Blue = hardcoded input, black = same-sheet formula, green = link from another tab, red = external workbook link','All four represent different currencies','Blue = error, black = correct, green = pending, red = approved'], correct:1 },
     { q:'Pulling it together: a company\'s Net Income is rising, but its accounts receivable are growing even faster than revenue, its auditor recently changed, and its "adjusted EBITDA" excludes an expense that recurs every quarter. What should an analyst conclude?', opts:['Nothing — each item is explainable in isolation and should be dismissed individually','Individually any one item might be innocent, but the combination is exactly the pattern this course repeatedly flags — it warrants real diligence before trusting the reported numbers','Immediately assume fraud and stop all further analysis','Only the receivables issue matters; the rest is noise'], correct:1 },
+    { q:'Market interest rates rise sharply. What happens to the price of existing fixed-coupon bonds, and why does this connect to the WACC lesson?', opts:['Prices rise — same mechanism as WACC pushing DCF values up','Prices fall — the same discounting mechanism that lowers a DCF at a higher WACC also lowers a bond\'s price at a higher required yield','No effect — bonds and equities respond to entirely unrelated mechanisms','Prices fall only for government bonds, never corporate ones'], correct:1 },
+    { q:'Why is EV/EBITDA the wrong tool for valuing a bank?', opts:['Banks don\'t report EBITDA at all','A bank\'s deposits and borrowings are the raw material of the business itself, not a financing layer that can be stripped out — banks are valued on equity metrics like P/B and ROE instead','EV/EBITDA only works for private companies','Banks are always undervalued relative to EV/EBITDA'], correct:1 },
+    { q:'In a STAR-structured behavioral answer, which part should get the most airtime, and why do most candidates get this backwards?', opts:['Situation — because context is everything','Action — what you specifically did; most candidates over-invest in context (Situation/Task) and rush the part that actually reveals anything about them','Result — the outcome is the only part that matters','Task — being assigned something is the most impressive part'], correct:1 },
   ]
 },
 

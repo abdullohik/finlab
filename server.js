@@ -44,6 +44,22 @@ function rateLimited(ip) {
 }
 
 const app = express();
+// Railway (like any PaaS) terminates TLS and proxies every request through its
+// own edge — without this, req.ip resolves to the proxy's address for EVERY
+// visitor, which silently turns the per-IP rate limit below into one global
+// budget shared by the whole site. This makes req.ip (and rateLimited(), which
+// keys on it) actually per-visitor again.
+app.set('trust proxy', 1);
+
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // frame-ancestors can't be set via the <meta> CSP tag in index.html (spec
+  // limitation), so it's set here instead as a real header.
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
+  next();
+});
+
 app.use(express.json({ limit: MAX_BODY_BYTES }));
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
@@ -87,6 +103,19 @@ app.post('/api/sync/:code', async (req, res) => {
     res.json({ ok: true, updatedAt: new Date().toISOString() });
   } catch (e) {
     console.error('POST /api/sync error', e);
+    res.status(500).json({ ok: false, error: 'server_error' });
+  }
+});
+
+app.delete('/api/sync/:code', async (req, res) => {
+  const code = String(req.params.code || '').toUpperCase();
+  if (!CODE_RE.test(code)) return res.status(400).json({ ok: false, error: 'bad_code' });
+  if (rateLimited(req.ip)) return res.status(429).json({ ok: false, error: 'rate_limited' });
+  try {
+    await pool.query('DELETE FROM progress WHERE code = $1', [code]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('DELETE /api/sync error', e);
     res.status(500).json({ ok: false, error: 'server_error' });
   }
 });
