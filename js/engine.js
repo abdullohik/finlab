@@ -282,6 +282,14 @@ function buildSidebar(){
   applyCompletionState();
 }
 
+// Count / completeness measured by MEMBERSHIP in NAV_ORDER, never by
+// STATE.completed.length — the stored list can hold ids from a previous
+// content version (a lesson since renamed or removed), which would otherwise
+// push the count past 100% and, worse, make the "=== NAV_ORDER.length"
+// certificate gate impossible to ever satisfy.
+function pathCompletedCount(){ return NAV_ORDER.reduce((n,id) => n + (STATE.completed.includes(id) ? 1 : 0), 0); }
+function pathIsComplete(){ return NAV_ORDER.length > 0 && NAV_ORDER.every(id => STATE.completed.includes(id)); }
+
 function applyCompletionState(){
   NAV_ORDER.forEach(id => {
     const dot = byId('dot-'+id), line = byId('line-'+id), item = byId('path-'+id);
@@ -292,9 +300,11 @@ function applyCompletionState(){
     if (line) line.classList.toggle('done', done);
     if (item) item.classList.toggle('active', false);
   });
-  const pct = Math.round(STATE.completed.length / NAV_ORDER.length * 100);
+  const pct = NAV_ORDER.length ? Math.round(pathCompletedCount() / NAV_ORDER.length * 100) : 0;
   byId('progressPct').textContent = pct + '%';
   byId('progressFill').style.width = pct + '%';
+  const progressBar = byId('progressBarWrap');
+  if (progressBar) { progressBar.setAttribute('aria-valuenow', pct); progressBar.setAttribute('aria-valuetext', pct + '% complete'); }
   byId('xpCount').textContent = STATE.xp;
   byId('streakCount').textContent = STATE.streak;
   // Keep the home CTA pointed at the next unfinished item — the home page is
@@ -317,8 +327,7 @@ function renderCertSection(){
   const section = byId('certSection');
   if (!section) return;
   section.innerHTML = '';
-  const isComplete = NAV_ORDER.length > 0 && STATE.completed.length === NAV_ORDER.length;
-  if (!isComplete) return;
+  if (!pathIsComplete()) return;
 
   const card = el('div', { class:'cert-card' },
     el('div', { style:'font-size:28px;', 'aria-hidden':'true' }, '🎓'),
@@ -1095,6 +1104,15 @@ function compsCalc(lessonId){
   byId(p('cp_nd')+'V').textContent = '$'+nd+'M';
   byId(p('cp_sh')+'V').textContent = sh+'M';
 
+  // Every peer field can be blanked or zeroed — the whole point of the calculator
+  // is to be poked at. With no usable peers there's no multiple to apply, so
+  // show an explicit empty state instead of dividing into undefined.
+  if (!peers.length) {
+    ['cp_med','cp_ev','cp_eqv','cp_px'].forEach(k => byId(p(k)).textContent = '—');
+    byId(p('cp_range')).textContent = 'Enter at least one peer EV/EBITDA multiple above.';
+    return;
+  }
+
   const sorted = [...peers].sort((a,b)=>a-b);
   const mid = Math.floor(sorted.length/2);
   const median = sorted.length % 2 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
@@ -1126,8 +1144,8 @@ function mergerCalc(lessonId){
   byId(p('mg_price')+'V').textContent='$'+price+'M';
   byId(p('mg_cash')+'V').textContent=cashPct+'%';
   byId(p('mg_stock')+'V').textContent=stockPct+'%';
-  byId(p('mg_rate')+'V').textContent=rate*100+'%';
-  byId(p('mg_tax')+'V').textContent=taxRate*100+'%';
+  byId(p('mg_rate')+'V').textContent=(+g('mg_rate').value)+'%';
+  byId(p('mg_tax')+'V').textContent=(+g('mg_tax').value)+'%';
   byId(p('mg_syn')+'V').textContent='$'+synergies+'M';
 
   const cashUsed = price*(cashPct/100);
@@ -1165,7 +1183,7 @@ function mergerCalc(lessonId){
 function resumeTarget(){
   const done = new Set(STATE.completed || []);
   const started = done.size > 0;
-  const complete = NAV_ORDER.length > 0 && done.size === NAV_ORDER.length;
+  const complete = pathIsComplete();
   const nextId = NAV_ORDER.find(id => !done.has(id)) || NAV_ORDER[NAV_ORDER.length-1];
   return { id: nextId, title: (LESSON_BY_ID[nextId]||{}).title || 'Continue', started, complete };
 }
@@ -1736,16 +1754,22 @@ function schedulePush(){
 }
 async function pushProgress(){
   pushTimer = null; // this debounce has now fired — flushPushNow() should no longer treat one as pending
-  if (!isSyncEnabled()) return;
+  if (!isSyncEnabled()) return false;
   try {
-    await fetch(`/api/sync/${encodeURIComponent(getSyncCode())}`, {
+    const res = await fetch(`/api/sync/${encodeURIComponent(getSyncCode())}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ state: {
         xp: STATE.xp, completed: STATE.completed, quizAnswers: STATE.quizAnswers,
         streak: STATE.streak, recall: STATE.recall || {},
       }})
     });
-  } catch(e) { /* offline, or no backend on this deployment (e.g. GitHub Pages) — local save already succeeded */ }
+    // A static-only deployment (e.g. GitHub Pages) answers /api/* with its own
+    // 404 HTML page: fetch() resolves, but nothing was stored. Only a real
+    // JSON {ok:true} from server.js counts as a successful push.
+    if (!res.ok) return false;
+    const data = await res.json().catch(() => null);
+    return !!(data && data.ok);
+  } catch(e) { return false; /* offline, or no backend — local save already succeeded */ }
 }
 // Merges server state into STATE using the same union/max logic as the
 // manual code import below, so pulling never deletes local progress.
@@ -1763,9 +1787,12 @@ function mergeServerState(data){
 async function pullProgress(code, { silent } = {}){
   try {
     const res = await fetch(`/api/sync/${encodeURIComponent(code)}`);
-    if (res.status === 404) return { ok:true, found:false };
-    if (!res.ok) return { ok:false };
-    const data = await res.json();
+    const data = await res.json().catch(() => null);
+    // No JSON body means this isn't our API talking (e.g. a static host's 404
+    // HTML page) — report it as unreachable, never as "linked, no data yet".
+    if (!data || typeof data !== 'object') return { ok:false, noBackend:true };
+    if (res.status === 404 || data.error === 'not_found') return { ok:true, found:false };
+    if (!res.ok || !data.ok || !data.state) return { ok:false };
     const added = mergeServerState(data.state);
     saveState();
     applyCompletionState();
@@ -1773,11 +1800,20 @@ async function pullProgress(code, { silent } = {}){
     return { ok:true, found:true, added };
   } catch(e) { return { ok:false }; }
 }
-function linkDeviceToCode(code){
+async function linkDeviceToCode(code){
   code = code.trim().toUpperCase();
+  const prevCode = (() => { try { return localStorage.getItem(SYNC_CODE_KEY); } catch(e){ return null; } })();
+  const prevEnabled = isSyncEnabled();
   try { localStorage.setItem(SYNC_CODE_KEY, code); } catch(e){}
   setSyncEnabled(true);
-  return pullProgress(code);
+  const r = await pullProgress(code);
+  if (!r.ok) {
+    // Couldn't reach a real sync backend — don't leave the device half-linked
+    // to a code that will never sync (the static deployment has no /api).
+    try { prevCode ? localStorage.setItem(SYNC_CODE_KEY, prevCode) : localStorage.removeItem(SYNC_CODE_KEY); } catch(e){}
+    setSyncEnabled(prevEnabled);
+  }
+  return r;
 }
 async function deleteSyncedData(code){
   try {
@@ -1812,8 +1848,12 @@ async function initSync(){
     params.delete('sync');
     const clean = location.pathname + (params.toString() ? '?'+params.toString() : '') + location.hash;
     history.replaceState(null, '', clean);
-    track('sync_device_linked', { via:'link' });
-    if (r.ok) toast(r.found ? `Device linked — pulled in progress from your other device.` : `Device linked. This is now your sync code.`);
+    if (r.ok) {
+      track('sync_device_linked', { via:'link' });
+      toast(r.found ? `Device linked — pulled in progress from your other device.` : `Device linked. This is now your sync code.`);
+    } else {
+      toast(`Couldn't link this device — the sync server isn't reachable from here.`);
+    }
     return;
   }
   if (isSyncEnabled()) pullProgress(getSyncCode(), { silent:true });
@@ -1859,16 +1899,17 @@ function importProgress(code){
   saveState();
   applyCompletionState();
   track('progress_imported', { restored: incoming.length });
-  return { ok:true, msg:`Restored — ${merged.length} of ${NAV_ORDER.length} items now marked complete, ${STATE.xp} XP.` };
+  return { ok:true, msg:`Restored — ${pathCompletedCount()} of ${NAV_ORDER.length} items now marked complete, ${STATE.xp} XP.` };
 }
 
 function openBackupModal(){
   const scrim = el('div', { class:'modal-scrim' });
   const modal = el('div', { class:'modal', role:'dialog', 'aria-modal':'true', 'aria-label':'Sync progress across devices' });
-  const pct = NAV_ORDER.length ? Math.round(STATE.completed.length / NAV_ORDER.length * 100) : 0;
+  const doneCount = pathCompletedCount();
+  const pct = NAV_ORDER.length ? Math.round(doneCount / NAV_ORDER.length * 100) : 0;
   modal.append(el('div', { class:'modal-title' }, 'Sync progress across devices'));
   modal.append(el('div', { class:'modal-sub' },
-    `Your progress right now: ${STATE.completed.length} of ${NAV_ORDER.length} items (${pct}%), ${STATE.xp} XP.`));
+    `Your progress right now: ${doneCount} of ${NAV_ORDER.length} items (${pct}%), ${STATE.xp} XP.`));
 
   const status = el('div', { class:'modal-status', hidden:'' });
   const showStatus = (ok, msg) => { status.className = 'modal-status ' + (ok?'ok':'err'); status.textContent = msg; status.removeAttribute('hidden'); };
@@ -1886,7 +1927,15 @@ function openBackupModal(){
       enableBtn.addEventListener('click', async () => {
         setSyncEnabled(true);
         enableBtn.disabled = true; enableBtn.textContent = 'Turning on…';
-        await pushProgress();
+        const ok = await pushProgress();
+        if (!ok) {
+          // This build has no reachable backend (e.g. the static GitHub Pages
+          // mirror) — don't claim sync is on when it silently isn't.
+          setSyncEnabled(false);
+          enableBtn.disabled = false; enableBtn.textContent = '🔄 Turn on sync';
+          showStatus(false, "Couldn't reach the sync server — this looks like the static version of FinLab, which has no backend. Your progress is still saved locally, and the manual code below works with no server.");
+          return;
+        }
         renderSyncSection();
         showStatus(true, `Sync is on. Your code is ${getSyncCode()} — link another device with the button below.`);
         track('sync_enabled', {});

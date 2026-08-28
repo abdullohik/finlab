@@ -5,7 +5,7 @@ Finance education for students breaking into investment banking, private equity,
 The same analytical frameworks used by analysts at banks, PE firms, and credit funds — taught from first principles, with real examples and live calculators you're encouraged to break on purpose.
 
 ## What's Inside
-- 21-lesson learning path across 6 modules (Financial Statements → Excel & Modeling → Valuation → Deals & Transactions → Advanced Analysis → Recruiting & Fit) — every module ends with its own capstone quiz, plus one comprehensive 12-question Final Assessment spanning all six
+- 26-lesson learning path across 6 core modules (Financial Statements → Excel & Modeling → Valuation → Deals & Transactions → Advanced Analysis → Recruiting & Fit) — every module ends with its own capstone quiz, plus one comprehensive 16-question Final Assessment spanning all six
 - A dedicated **Excel & Modeling** module — shortcuts, the blue/black/green formatting convention, the nine-step three-statement build order, and how professionals handle circularity, checks, and debugging. The mechanics a modelling test actually assesses, not just the theory
 - **How the Three Statements Link** — the single most-asked technical interview question, including the full "$10 of depreciation" walkthrough and four practice variants
 - **WACC & Cost of Capital** — CAPM, the components, unlevering/relevering beta, and why a one-point WACC change moves a DCF 15–25%
