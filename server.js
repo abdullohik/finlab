@@ -92,6 +92,8 @@ app.post('/api/sync/:code', async (req, res) => {
     completed: Array.isArray(state.completed) ? state.completed.filter(x => typeof x === 'string').slice(0, 500) : [],
     quizAnswers: (state.quizAnswers && typeof state.quizAnswers === 'object') ? state.quizAnswers : {},
     streak: Number(state.streak) || 1,
+    streakBest: Number(state.streakBest) || 0,
+    badges: Array.isArray(state.badges) ? state.badges.filter(x => typeof x === 'string').slice(0, 20) : [],
     recall: (state.recall && typeof state.recall === 'object') ? state.recall : {},
   };
   try {

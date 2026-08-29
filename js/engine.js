@@ -12,6 +12,8 @@ const SYNC_CODE_KEY = 'finlab_sync_code_v1';
 const SYNC_ENABLED_KEY = 'finlab_sync_enabled_v1';
 const SYNC_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I — easy to read aloud or off a screen
 let pushTimer = null; // also needed before saveState()'s first call — same TDZ reason as above
+const QUIZ_PASS = 0.7; // a capstone/Final quiz must be answered ≥70% correct to count as done
+let streakBootEvent = null; // 'saved' | <milestone number>, set by loadState(), surfaced once by init()
 // Grouped by MODULES order (not raw array order) so prev/next navigation always
 // matches the sidebar's visual grouping, regardless of where a lesson was
 // inserted into the LESSONS array in data.js.
@@ -24,17 +26,36 @@ function loadState(){
   let s;
   try { s = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch(e){ s = null; }
   if (!s) s = { xp:0, completed:[], quizAnswers:{}, lastVisit:null, streak:0 };
+  if (!Array.isArray(s.completed)) s.completed = [];
+  if (!s.quizAnswers || typeof s.quizAnswers !== 'object') s.quizAnswers = {};
+  if (!Array.isArray(s.badges)) s.badges = [];
+  if (typeof s.streakFreeze !== 'number') s.streakFreeze = 1; // covers one missed day; refills every 7-day run
+  if (typeof s.streakBest !== 'number') s.streakBest = s.streak || 0;
+
   const today = todayStr();
   if (s.lastVisit !== today) {
     if (s.lastVisit) {
       const diffDays = Math.round((new Date(today) - new Date(s.lastVisit)) / 86400000);
-      s.streak = diffDays === 1 ? (s.streak||0) + 1 : 1;
+      if (diffDays === 1) {
+        s.streak = (s.streak || 0) + 1;
+        if (s.streak % 7 === 0 && s.streakFreeze < 2) s.streakFreeze++; // earn a freeze back each full week
+      } else if (diffDays === 2 && s.streakFreeze > 0) {
+        s.streakFreeze--;            // missed exactly one day — spend a freeze, keep the run alive
+        streakBootEvent = 'saved';
+      } else {
+        s.streak = 1;                // longer gap, or no freeze left
+      }
     } else {
       s.streak = 1;
     }
     s.lastVisit = today;
   } else if (!s.streak) {
     s.streak = 1;
+  }
+
+  if (s.streak > s.streakBest) {
+    if (!streakBootEvent && [7, 14, 30, 60, 100, 200, 365].includes(s.streak)) streakBootEvent = s.streak;
+    s.streakBest = s.streak;
   }
   return s;
 }
@@ -184,8 +205,28 @@ function renderBlock(b){
 /* ---------------- QUIZ RENDERING ---------------- */
 function quizKey(lessonId, q){ return lessonId + '-' + hashStr(q.q); }
 
-function renderQuiz(lessonId, quiz){
+// Score a quiz-bearing lesson from the answers currently stored in STATE.
+function quizScore(lesson){
+  const qs = (lesson && lesson.quiz) || [];
+  if (!qs.length) return { answered:0, correct:0, total:0, pct:0, passed:false };
+  let answered = 0, correct = 0;
+  qs.forEach(q => {
+    const rec = STATE.quizAnswers[quizKey(lesson.id, q)];
+    if (rec) { answered++; if (rec.chosen === q.correct) correct++; }
+  });
+  return { answered, correct, total: qs.length, pct: Math.round(correct / qs.length * 100), passed: correct / qs.length >= QUIZ_PASS };
+}
+
+// opts: { graded } — a graded quiz (module capstone / Final Assessment) hides
+// the correct answer on a miss and shows a pass/fail scoreboard; onChange(score)
+// fires after every answer/retry so the page can gate its "Next" button.
+function renderQuiz(lessonId, quiz, opts){
+  opts = opts || {};
+  const graded = !!opts.graded;
+  const lesson = LESSON_BY_ID[lessonId];
   const container = el('div');
+  const paints = [];
+
   quiz.forEach((q, qi) => {
     const key = quizKey(lessonId, q);
     const block = el('fieldset', { class:'quiz-block' });
@@ -197,25 +238,30 @@ function renderQuiz(lessonId, quiz){
 
     function paint(){
       const rec = STATE.quizAnswers[key];
+      const isCorrect = !!rec && rec.chosen === q.correct;
       optsWrap.querySelectorAll('.quiz-option').forEach((btn, oi) => {
         btn.classList.remove('correct','wrong');
         btn.disabled = !!rec;
         if (rec) {
-          if (oi === q.correct) btn.classList.add('correct');
-          else if (oi === rec.chosen) btn.classList.add('wrong');
+          // Graded quiz: only ever highlight the right answer once it's been found.
+          if (oi === q.correct && (isCorrect || !graded)) btn.classList.add('correct');
+          else if (oi === rec.chosen && !isCorrect) btn.classList.add('wrong');
         }
       });
       if (rec) {
-        feedback.className = 'quiz-feedback show ' + (rec.chosen === q.correct ? 'ok' : 'no');
-        feedback.textContent = rec.chosen === q.correct
+        feedback.className = 'quiz-feedback show ' + (isCorrect ? 'ok' : 'no');
+        feedback.textContent = isCorrect
           ? '✓ Correct!' + (rec.xpAwarded ? ' +10 XP' : '') + (q.why ? ' — ' + q.why : '')
-          : '✗ Not quite — the highlighted option is correct. Review the lesson above, then try again.';
-        retryBtn.style.display = rec.chosen === q.correct ? 'none' : 'inline-block';
+          : graded
+            ? '✗ Not quite. Head back to the lesson, then use “Try again” — the answer isn’t shown here.'
+            : '✗ Not quite — the highlighted option is correct. Review the lesson above, then try again.';
+        retryBtn.style.display = isCorrect ? 'none' : 'inline-block';
       } else {
         feedback.className = 'quiz-feedback';
         retryBtn.style.display = 'none';
       }
     }
+    paints.push(paint);
 
     q.opts.forEach((optText, oi) => {
       const btn = el('button', { type:'button', class:'quiz-option', role:'radio', 'aria-checked':'false' },
@@ -225,12 +271,12 @@ function renderQuiz(lessonId, quiz){
       btn.addEventListener('click', () => {
         if (STATE.quizAnswers[key]) return;
         const correct = oi === q.correct;
-        const xpAwarded = correct;
-        STATE.quizAnswers[key] = { chosen:oi, xpAwarded };
+        STATE.quizAnswers[key] = { chosen:oi, xpAwarded:correct };
         saveState();
         if (correct) addXP(10);
         track('quiz_answer', { lessonId, correct });
         paint();
+        afterChange();
       });
       optsWrap.append(btn);
     });
@@ -239,12 +285,45 @@ function renderQuiz(lessonId, quiz){
       delete STATE.quizAnswers[key];
       saveState();
       paint();
+      afterChange();
     });
 
     block.append(optsWrap, feedback, retryBtn);
-    paint();
     container.append(block);
   });
+
+  let scoreboard = null;
+  function renderScore(){
+    if (!scoreboard) return;
+    const s = quizScore(lesson);
+    scoreboard.className = 'quiz-scoreboard' + (s.passed ? ' passed' : s.answered === s.total ? ' failed' : '');
+    scoreboard.innerHTML = '';
+    scoreboard.append(el('div', { class:'quiz-scoreboard-head' },
+      el('span', { class:'quiz-scoreboard-pct', text: s.answered ? s.pct + '%' : '—' }),
+      el('span', { class:'quiz-scoreboard-frac', text: `${s.correct} / ${s.total} correct` })));
+    const need = Math.ceil(s.total * QUIZ_PASS);
+    scoreboard.append(el('div', { class:'quiz-scoreboard-msg', text:
+      s.passed ? '✓ Passed — the next section is unlocked. Retake it anytime to raise the score.'
+      : s.answered < s.total ? `Answer all ${s.total} questions. You need ${need} right (70%) to continue.`
+      : `Not passed — ${s.correct} of ${s.total}. Review the lesson, then “Try again” on what you missed or retake the whole quiz.` }));
+    const retake = el('button', { type:'button', class:'quiz-retry', text:'↻ Retake the whole quiz' });
+    retake.addEventListener('click', () => {
+      quiz.forEach(qq => delete STATE.quizAnswers[quizKey(lessonId, qq)]);
+      saveState();
+      paints.forEach(p => p());
+      afterChange();
+      container.scrollIntoView({ behavior:'smooth', block:'start' });
+    });
+    scoreboard.append(retake);
+  }
+  function afterChange(){
+    renderScore();
+    if (opts.onChange) opts.onChange(quizScore(lesson));
+  }
+  if (graded) { scoreboard = el('div', { class:'quiz-scoreboard' }); container.append(scoreboard); }
+
+  paints.forEach(p => p());
+  renderScore();
   return container;
 }
 
@@ -317,6 +396,7 @@ function applyCompletionState(){
     heroCta.textContent = r.complete ? '🎓 Get your certificate' : r.started ? `Continue → ${r.title}` : 'Start Learning →';
   }
   renderCertSection();
+  renderMasterySection();
 }
 
 /* ---------------- COMPLETION CERTIFICATE ----------------
@@ -436,6 +516,124 @@ function downloadCertificate(name){
   }
 }
 
+/* ---------------- LEVELS, MODULE MASTERY & BADGES ----------------
+   The single 0–100% bar was the only long-term goal. This adds a named
+   rank that climbs with XP and a per-module badge earned by finishing
+   every lesson in a module AND passing its capstone quiz — 14 smaller
+   goals instead of one distant one. All local, no account required. */
+const LEVELS = [
+  { xp:0,    name:'Intern' },
+  { xp:200,  name:'Analyst I' },
+  { xp:500,  name:'Analyst II' },
+  { xp:950,  name:'Analyst III' },
+  { xp:1500, name:'Associate' },
+  { xp:2200, name:'Vice President' },
+];
+function levelInfo(){
+  let i = 0;
+  while (i + 1 < LEVELS.length && STATE.xp >= LEVELS[i + 1].xp) i++;
+  const cur = LEVELS[i], next = LEVELS[i + 1] || null;
+  const span = next ? next.xp - cur.xp : 1;
+  return { name: cur.name, next, pct: next ? Math.round((STATE.xp - cur.xp) / span * 100) : 100, toNext: next ? next.xp - STATE.xp : 0 };
+}
+function moduleProgress(modId){
+  const items = LESSONS.filter(l => l.module === modId);
+  const lessons = items.filter(l => l.type === 'lesson');
+  const quiz = items.find(l => l.type === 'quiz');
+  const lessonsDone = lessons.filter(l => STATE.completed.includes(l.id)).length;
+  const qScore = quiz ? quizScore(quiz) : null;
+  const quizPassed = quiz ? qScore.passed : true;
+  const earned = items.length > 0 && lessonsDone === lessons.length && quizPassed;
+  return { lessons, lessonsDone, quiz, qScore, quizPassed, earned };
+}
+function maybeAwardModuleBadge(modId){
+  if (!modId || !Array.isArray(STATE.badges) || STATE.badges.includes(modId)) return;
+  if (!moduleProgress(modId).earned) return;
+  STATE.badges.push(modId);
+  const mod = MODULES.find(m => m.id === modId);
+  track('module_badge_earned', { modId });
+  addXP(75);            // addXP saves + repaints the XP counter
+  saveState();
+  applyCompletionState();
+  toast(`🏅 Module complete — ${mod ? mod.name : modId} badge unlocked (+75 XP)`);
+}
+function downloadModuleBadge(mod){
+  const mp = moduleProgress(mod.id);
+  const W = 1200, H = 820;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.textAlign = 'center';
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, '#0969da'); grad.addColorStop(1, '#0a6f66');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#ffffff';
+  roundRectPath(ctx, 32, 32, W - 64, H - 64, 20); ctx.fill();
+  const cx = W / 2;
+  ctx.fillStyle = '#0969da'; ctx.font = "800 30px Sora, sans-serif";
+  ctx.fillText('FinLab', cx, 118);
+  ctx.fillStyle = '#5f6672'; ctx.font = "700 12px Inter, sans-serif";
+  ctx.fillText('M O D U L E   B A D G E', cx, 148);
+  ctx.font = "78px serif"; ctx.fillText('🏅', cx, 292);
+  ctx.fillStyle = '#0d1117'; ctx.font = "800 40px Sora, sans-serif";
+  wrapText(ctx, mod.name, cx, 372, 900, 46);
+  ctx.fillStyle = '#24292f'; ctx.font = "400 18px Inter, sans-serif";
+  const quizBit = mp.quiz ? ` · capstone quiz passed at ${mp.qScore.pct}%` : '';
+  wrapText(ctx, `${mp.lessons.length} lesson${mp.lessons.length === 1 ? '' : 's'} completed${quizBit}.`, cx, 460, 940, 26);
+  ctx.fillStyle = '#57606a'; ctx.font = "600 15px JetBrains Mono, monospace";
+  const d = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  ctx.fillText(`Earned ${d}  ·  ${STATE.xp} XP`, cx, 552);
+  ctx.fillStyle = '#8c959f'; ctx.font = "400 12px Inter, sans-serif";
+  wrapText(ctx, 'FinLab is an independent educational project. This badge reflects completion of self-paced coursework and is not an accredited or professional credential.', cx, H - 120, 900, 16);
+  const a = document.createElement('a');
+  a.download = `finlab-${mod.id}-badge.png`;
+  const finish = url => { a.href = url; document.body.appendChild(a); a.click(); a.remove(); };
+  track('module_badge_download', { modId: mod.id });
+  if (canvas.toBlob) canvas.toBlob(b => { const u = URL.createObjectURL(b); finish(u); setTimeout(() => URL.revokeObjectURL(u), 4000); }, 'image/png');
+  else finish(canvas.toDataURL('image/png'));
+}
+
+function renderMasterySection(){
+  const host = byId('masterySection');
+  if (!host) return;
+  host.innerHTML = '';
+  if (!STATE.completed.length) return; // keep the homepage a clean landing page until someone starts
+  const lv = levelInfo();
+  const card = el('div', { class:'mastery-card' });
+  card.append(el('div', { class:'mastery-head' },
+    el('div', {},
+      el('div', { class:'mastery-eyebrow' }, 'Your desk'),
+      el('div', { class:'mastery-level', text: lv.name }),
+      el('div', { class:'mastery-level-sub', text: lv.next ? `${lv.toNext} XP to ${lv.next.name}` : 'Top rank reached' })),
+    el('div', { class:'mastery-streak' },
+      el('div', { class:'mastery-streak-num', text: '🔥 ' + STATE.streak }),
+      el('div', { class:'mastery-streak-lbl', text: `day streak${STATE.streakBest > STATE.streak ? ' · best ' + STATE.streakBest : ''}` }))));
+  card.append(el('div', { class:'mastery-xpbar' }, el('div', { class:'mastery-xpbar-fill', style:`width:${lv.pct}%` })));
+  card.append(el('div', { class:'mastery-grid-lbl' }, 'Modules — finish the lessons and pass the quiz to earn a badge'));
+  const grid = el('div', { class:'mastery-grid' });
+  MODULES.forEach(mod => {
+    const mp = moduleProgress(mod.id);
+    const active = mp.lessonsDone > 0 || (mp.qScore && mp.qScore.answered > 0);
+    const cls = mp.earned ? 'is-earned' : active ? 'is-active' : 'is-locked';
+    const meta = mp.earned ? 'Complete · tap for badge'
+      : mp.lessons.length
+        ? `${mp.lessonsDone}/${mp.lessons.length} lessons` + (mp.quiz ? ` · quiz ${mp.quizPassed ? '✓' : (mp.qScore.answered ? mp.qScore.pct + '%' : '–')}` : '')
+        : (mp.quizPassed ? 'Passed' : 'Not passed yet');
+    const chip = el('button', { type:'button', class:'mastery-mod ' + cls },
+      el('div', { class:'mastery-mod-icon', 'aria-hidden':'true' }, mp.earned ? '🏅' : mod.icon),
+      el('div', { class:'mastery-mod-name', text: mod.name }),
+      el('div', { class:'mastery-mod-meta', text: meta }));
+    chip.addEventListener('click', () => {
+      if (mp.earned) { downloadModuleBadge(mod); return; }
+      const target = mp.lessons.find(l => !STATE.completed.includes(l.id)) || mp.quiz || mp.lessons[0];
+      if (target) openLesson(target.id);
+    });
+    grid.append(chip);
+  });
+  card.append(grid);
+  host.append(card);
+}
+
 function highlightSidebar(id){
   document.querySelectorAll('.path-item').forEach(i => i.classList.remove('active'));
   const item = byId('path-'+id);
@@ -526,6 +724,17 @@ function switchTab(lessonId, tab){
 }
 
 function completeAndNext(id){
+  const lesson = LESSON_BY_ID[id];
+  // Quizzes gate; lessons never do — you can always read on.
+  if (lesson && lesson.type === 'quiz' && !STATE.completed.includes(id) && !quizScore(lesson).passed) {
+    const s = quizScore(lesson);
+    toast(s.answered < s.total
+      ? `Answer all ${s.total} questions — you need 70% to continue.`
+      : `You're at ${s.pct}% — 70% is needed to pass. Review the lesson, then retry.`);
+    const sb = byId('page-'+id) && byId('page-'+id).querySelector('.quiz-scoreboard');
+    if (sb) sb.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
   if (!STATE.completed.includes(id)) {
     STATE.completed.push(id);
     saveState();
@@ -534,6 +743,7 @@ function completeAndNext(id){
     const banner = byId(id+'-complete');
     if (banner) banner.classList.add('show');
     track('lesson_complete', { id });
+    if (lesson) maybeAwardModuleBadge(lesson.module);
   }
   const idx = NAV_ORDER.indexOf(id);
   const next = NAV_ORDER[idx+1];
@@ -569,6 +779,7 @@ function lessonSubtitle(lesson){
 
 function buildLessonPage(lesson){
   const page = el('div', { class:'page', id:'page-'+lesson.id });
+  let quizGateHook = null; // set by the nav block, called by the graded quiz on every answer
   const header = el('div', { class:'lesson-header' });
   const crumb = el('div', { class:'lesson-breadcrumb' },
     el('button', { type:'button', onclick:()=>showPage('home'), text:'Home' }),
@@ -583,7 +794,7 @@ function buildLessonPage(lesson){
   const tabs = el('div', { class:'lesson-tabs', role:'tablist' });
   const tabDefs = [{ id:'learn', label:'📖 Learn' }];
   if (lesson.calc) tabDefs.push({ id:'calc', label:'🔧 Calculator' });
-  if (lesson.quiz) tabDefs.push({ id:'check', label:'✅ Check' });
+  if (lesson.quiz && lesson.type !== 'quiz') tabDefs.push({ id:'check', label:'✅ Check' });
   tabDefs.forEach((t,i) => {
     const btn = el('button', { type:'button', class:'lesson-tab', role:'tab', 'data-tab':t.id, 'aria-selected': i===0?'true':'false', text:t.label });
     btn.addEventListener('click', () => switchTab(lesson.id, t.id));
@@ -614,21 +825,23 @@ function buildLessonPage(lesson){
     page.append(calcPanel);
   }
 
-  // Check panel
-  if (lesson.quiz) {
+  // Check panel — an ungraded self-test attached to a normal lesson.
+  if (lesson.quiz && lesson.type !== 'quiz') {
     const checkPanel = el('div', { class:'lesson-body tab-panel', 'data-tab':'check', style:'display:none;' });
-    if (lesson.type === 'quiz' && lesson.intro) checkPanel.append(el('p', { class:'calc-note', text:lesson.intro }));
     checkPanel.append(renderQuiz(lesson.id, lesson.quiz));
     page.append(checkPanel);
   }
 
-  // For quiz-type lessons (fs-quiz/final-quiz) the "learn" tab IS the quiz — no separate tabs
+  // Quiz-type lessons (module capstones + Final Assessment): the page IS the
+  // quiz, and it's graded — must clear 70% before "Next" unlocks.
   if (lesson.type === 'quiz') {
     learnPanel.remove();
     const soloPanel = el('div', { class:'lesson-body' });
     if (lesson.intro) soloPanel.append(el('p', { class:'calc-note', text:lesson.intro }));
-    soloPanel.append(renderQuiz(lesson.id, lesson.quiz));
-    page.querySelector('.tab-panel[data-tab="check"]')?.remove();
+    soloPanel.append(renderQuiz(lesson.id, lesson.quiz, {
+      graded: true,
+      onChange: (s) => { if (quizGateHook) quizGateHook(s); if (s.passed) maybeAwardModuleBadge(lesson.module); },
+    }));
     page.append(soloPanel);
   }
 
@@ -644,8 +857,18 @@ function buildLessonPage(lesson){
       dots.append(el('span', { class:'dot-step' + (l.id===lesson.id?' active':'') }));
     });
   });
-  const nextBtn = el('button', { type:'button', class:'lesson-nav-btn primary', text: nextId ? 'Next: ' + LESSON_BY_ID[nextId].title + ' →' : 'Finish →' });
+  const nextLabel = nextId ? 'Next: ' + LESSON_BY_ID[nextId].title + ' →' : 'Finish →';
+  const nextBtn = el('button', { type:'button', class:'lesson-nav-btn primary', text: nextLabel });
   nextBtn.addEventListener('click', () => completeAndNext(lesson.id));
+  if (lesson.type === 'quiz') {
+    quizGateHook = (s) => {
+      const ok = STATE.completed.includes(lesson.id) || (s || quizScore(lesson)).passed;
+      nextBtn.disabled = !ok;
+      nextBtn.classList.toggle('locked', !ok);
+      nextBtn.textContent = ok ? nextLabel : '🔒 Pass the quiz (70%) to continue';
+    };
+    quizGateHook();
+  }
   nav.append(prevBtn, dots, nextBtn);
   page.append(nav);
 
@@ -1242,6 +1465,7 @@ function buildHomePage(){
   page.append(hero);
   const certSection = el('div', { id:'certSection' });
   page.append(certSection);
+  page.append(el('div', { id:'masterySection' }));
   const content = el('div', { class:'home-content' });
 
   // "How it works" comes before the curriculum grid on purpose — a first-time
@@ -1760,7 +1984,8 @@ async function pushProgress(){
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ state: {
         xp: STATE.xp, completed: STATE.completed, quizAnswers: STATE.quizAnswers,
-        streak: STATE.streak, recall: STATE.recall || {},
+        streak: STATE.streak, streakBest: STATE.streakBest || 0, badges: STATE.badges || [],
+        recall: STATE.recall || {},
       }})
     });
     // A static-only deployment (e.g. GitHub Pages) answers /api/* with its own
@@ -1780,6 +2005,8 @@ function mergeServerState(data){
   STATE.completed = [...new Set([...(STATE.completed||[]), ...incoming])];
   STATE.xp = Math.max(Number(STATE.xp)||0, Number(data.xp)||0);
   STATE.streak = Math.max(Number(STATE.streak)||1, Number(data.streak)||1);
+  STATE.streakBest = Math.max(Number(STATE.streakBest)||0, Number(data.streakBest)||0, STATE.streak);
+  if (Array.isArray(data.badges)) STATE.badges = [...new Set([...(STATE.badges||[]), ...data.badges.filter(x => typeof x === 'string')])];
   if (data.quizAnswers && typeof data.quizAnswers === 'object') STATE.quizAnswers = Object.assign({}, data.quizAnswers, STATE.quizAnswers);
   if (data.recall && typeof data.recall === 'object') STATE.recall = Object.assign({}, data.recall, STATE.recall||{});
   return STATE.completed.length - before;
@@ -1830,7 +2057,8 @@ function flushPushNow(){
   pushTimer = null;
   const body = JSON.stringify({ state: {
     xp: STATE.xp, completed: STATE.completed, quizAnswers: STATE.quizAnswers,
-    streak: STATE.streak, recall: STATE.recall || {},
+    streak: STATE.streak, streakBest: STATE.streakBest || 0, badges: STATE.badges || [],
+    recall: STATE.recall || {},
   }});
   const url = `/api/sync/${encodeURIComponent(getSyncCode())}`;
   if (navigator.sendBeacon) {
@@ -1876,7 +2104,8 @@ function toast(msg){
 function exportProgress(){
   return btoa(unescape(encodeURIComponent(JSON.stringify({
     v:1, xp:STATE.xp, completed:STATE.completed, quizAnswers:STATE.quizAnswers,
-    streak:STATE.streak, lastVisit:STATE.lastVisit, recall:STATE.recall||{}
+    streak:STATE.streak, streakBest:STATE.streakBest||0, badges:STATE.badges||[],
+    lastVisit:STATE.lastVisit, recall:STATE.recall||{}
   }))));
 }
 function importProgress(code){
@@ -1894,6 +2123,8 @@ function importProgress(code){
   STATE.completed = merged;
   STATE.xp = Math.max(Number(STATE.xp)||0, Number(data.xp)||0);
   STATE.streak = Math.max(Number(STATE.streak)||1, Number(data.streak)||1);
+  STATE.streakBest = Math.max(Number(STATE.streakBest)||0, Number(data.streakBest)||0, STATE.streak);
+  if (Array.isArray(data.badges)) STATE.badges = [...new Set([...(STATE.badges||[]), ...data.badges.filter(x => typeof x === 'string')])];
   if (data.quizAnswers && typeof data.quizAnswers === 'object') STATE.quizAnswers = Object.assign({}, data.quizAnswers, STATE.quizAnswers);
   if (data.recall && typeof data.recall === 'object') STATE.recall = Object.assign({}, data.recall, STATE.recall||{});
   saveState();
@@ -2082,6 +2313,15 @@ function init(){
   const initial = parseHash();
   if (!location.hash) history.replaceState(null, '', '#/home');
   renderRoute(initial);
+
+  // Streak feedback, once per boot (loadState() worked out what happened today).
+  if (streakBootEvent === 'saved') {
+    toast('🔥 Streak saved — you missed a day, but a freeze covered it. You earn one back after a full week.');
+  } else if (typeof streakBootEvent === 'number') {
+    const bonus = streakBootEvent >= 30 ? 100 : 25;
+    addXP(bonus);
+    toast(`🔥 ${streakBootEvent}-day streak! +${bonus} XP — keep it going.`);
+  }
 
   initSync(); // fire-and-forget: merges in server progress and refreshes the UI when it lands
 
