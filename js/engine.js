@@ -1415,6 +1415,9 @@ function buildHomePage(){
   const page = el('div', { class:'page active', id:'page-home' });
   const lessonCount = LESSONS.filter(l=>l.type==='lesson').length;
   const calcCount = new Set(LESSONS.filter(l=>l.calc).map(l=>l.calc)).size;
+  // The Final Assessment is a capstone exam, not a teaching module — count it separately
+  // so public copy stays consistent with how the course is described elsewhere.
+  const moduleCount = MODULES.filter(m=>m.id!=='final').length;
 
   // Returning users should resume, not restart. resumeTarget() picks the first
   // incomplete item in NAV_ORDER, so the CTA reflects actual progress. Once
@@ -1458,7 +1461,7 @@ function buildHomePage(){
       )
     ),
     el('div', { class:'hero-float-card hero-float-1' }, el('span', { class:'hero-float-emoji', 'aria-hidden':'true' }, '✓'), 'LBO returns solved'),
-    el('div', { class:'hero-float-card hero-float-2' }, el('span', { class:'hero-float-emoji', 'aria-hidden':'true' }, '🔥'), `${lessonCount} lessons · ${MODULES.length} modules`)
+    el('div', { class:'hero-float-card hero-float-2' }, el('span', { class:'hero-float-emoji', 'aria-hidden':'true' }, '🔥'), `${lessonCount} lessons · ${moduleCount} modules`)
   );
 
   const hero = el('div', { class:'home-hero' }, el('div', { class:'hero-inner' }, heroText, heroVisual));
@@ -1470,7 +1473,7 @@ function buildHomePage(){
 
   // "How it works" comes before the curriculum grid on purpose — a first-time
   // visitor should understand what kind of platform this is and why it's
-  // built this way before being handed the full 5-module syllabus. The
+  // built this way before being handed the full syllabus. The
   // syllabus itself lives one click away on the Curriculum page.
   const howBlock = el('div', { class:'section-block' });
   howBlock.append(el('div', { class:'section-eyebrow' }, 'The Approach'));
@@ -1494,7 +1497,7 @@ function buildHomePage(){
     el('div', {},
       el('div', { class:'section-eyebrow' }, 'The Syllabus'),
       el('div', { class:'section-heading', style:'margin-bottom:8px;' }, 'The curriculum'),
-      el('p', { class:'section-sub', style:'margin-bottom:0;' }, `${MODULES.length} modules, ${lessonCount} lessons, in the order they build on each other.`)));
+      el('p', { class:'section-sub', style:'margin-bottom:0;' }, `${moduleCount} modules plus a final assessment, ${lessonCount} lessons, in the order they build on each other.`)));
   const seeAllLink = el('button', { type:'button', style:'background:none;border:none;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--blue);white-space:nowrap;' }, 'See full breakdown →');
   seeAllLink.addEventListener('click', () => showPage('learn'));
   modHeadRow.append(seeAllLink);
